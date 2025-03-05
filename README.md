@@ -1,3 +1,3 @@
-# ProPhone-Authorization-and-Dashboard
+ProPhone Dashboard
 
-[Edit in StackBlitz next generation editor ⚡️](https://stackblitz.com/~/github.com/ProPhoneCEO/ProPhone-Authorization-and-Dashboard)
+Copyright 2025 ProPhone Inc All Rights Reserved
