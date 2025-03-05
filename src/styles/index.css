@@ -1,0 +1,287 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply antialiased;
+  }
+}
+
+/* Hide scrollbars globally while maintaining scroll functionality */
+* {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+/* Hide scrollbars for WebKit browsers */
+*::-webkit-scrollbar {
+  display: none;
+}
+
+@keyframes popularBadgePulse {
+  0%, 100% {
+    transform: scale(1) translateY(0);
+    box-shadow: 0 4px 6px -1px rgba(179, 139, 63, 0.1), 0 2px 4px -1px rgba(255, 215, 0, 0.06);
+  }
+  50% {
+    transform: scale(1.05) translateY(-1px);
+    box-shadow: 0 10px 15px -3px rgba(179, 139, 63, 0.2), 0 4px 6px -2px rgba(255, 215, 0, 0.1);
+  }
+}
+
+@keyframes cardGlowPulse {
+  0%, 100% {
+    box-shadow: 0 0 8px 0 rgba(179, 139, 63, 0.1);
+  }
+  50% {
+    box-shadow: 0 0 12px 2px rgba(255, 215, 0, 0.15);
+  }
+}
+
+@keyframes glow {
+  0%, 100% {
+    opacity: 0.3;
+    transform: scaleY(1);
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.2);
+  }
+  50% {
+    opacity: 1;
+    transform: scaleY(2);
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
+  }
+}
+
+.writing-mode-vertical {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  transform: rotate(180deg);
+}
+
+@layer components {
+  .animated-gradient {
+    background: linear-gradient(
+      135deg,
+      rgba(0, 0, 0, 0.15) 0%, 
+      rgba(255, 234, 117, 0.08) 20%,
+      rgba(249, 182, 66, 0.12) 40%,
+      rgba(157, 83, 22, 0.08) 60%,
+      rgba(0, 0, 0, 0.15) 100%
+    );
+    background-size: 400% 400%;
+    animation: gradientFlow 25s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  }
+
+  .magic-button-wrapper {
+    position: relative;
+    isolation: isolate;
+  }
+
+  .magic-button-wrapper::before,
+  .magic-button-wrapper::after {
+    content: "✨";
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+    animation: sparkle 700ms ease forwards;
+  }
+
+  .magic-button-wrapper::before {
+    left: -10px;
+    top: -10px;
+  }
+
+  .magic-button-wrapper::after {
+    right: -10px;
+    bottom: -10px;
+  }
+
+  .magic-button-wrapper.animate::before,
+  .magic-button-wrapper.animate::after {
+    opacity: 1;
+  }
+
+  .magic-spark {
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    background: #F9B642;
+    border-radius: 50%;
+    pointer-events: none;
+    opacity: 0;
+  }
+
+  .card-gold-glow {
+    transition: all 0.3s ease;
+    animation: cardGlowPulse 3s ease-in-out infinite;
+  }
+  
+  /* Hide scrollbar but maintain functionality */
+  .scrollbar-hide {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+
+  .popular-badge {
+    animation: popularBadgePulse 2s ease-in-out infinite;
+  }
+
+  .firework {
+    position: absolute;
+    width: 6px;
+    height: 20px;
+    border-radius: 50%;
+    background: #F9B642;
+    box-shadow: 0 0 20px #F9B642, 0 0 40px #F9B642, 0 0 60px #F9B642;
+    animation: firework 1s ease-out forwards;
+    pointer-events: none;
+  }
+
+  .firework-particle {
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    pointer-events: none;
+    animation: fireworkParticle 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards, glowPulse 0.3s ease-in-out infinite;
+    box-shadow: 0 0 10px currentColor;
+  }
+}
+
+@layer utilities {
+  .backdrop-blur-none {
+    backdrop-filter: none;
+  }
+}
+
+/* Animations */
+@keyframes gradientFlow {
+  0% {
+    background-position: 0% 0%;
+    transform: scale(1.02) rotate(0deg);
+  }
+  50% {
+    background-position: 100% 100%;
+    transform: scale(1.04) rotate(1deg);
+  }
+  100% {
+    background-position: 0% 0%;
+    transform: scale(1.02) rotate(0deg);
+  }
+}
+
+@keyframes slideAndFade {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes sparkle {
+  0%, 100% {
+    opacity: 0;
+    transform: scale(0) rotate(0deg);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1) rotate(180deg);
+  }
+}
+
+@keyframes spark {
+  0% {
+    opacity: 0;
+    transform: scale(0) translateY(0);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1) translateY(-20px);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0) translateY(-40px);
+  }
+}
+
+@keyframes glowPulse {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.5); }
+}
+
+@keyframes firework {
+  0% {
+    transform: translate(-50%, 60vh) scale(0.3);
+    opacity: 1;
+  }
+  50% {
+    transform: translate(-50%, -10vh) scale(0.8);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -20vh) scale(0.1);
+    opacity: 0;
+  }
+}
+
+@keyframes fireworkParticle {
+  0% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.9;
+    filter: brightness(1.5);
+  }
+  50% {
+    opacity: 1;
+    filter: brightness(2);
+  }
+  100% {
+    transform: translate(var(--tx), var(--ty)) scale(0);
+    opacity: 0;
+    filter: brightness(1);
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); filter: brightness(1); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes fadeUp {
+  from { 
+    opacity: 0;
+    transform: translateY(10px) scale(0.95);
+  }
+  to { 
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-fade-up {
+  animation: fadeUp 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes soundwave {
+  0% {
+    transform: scale(1);
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
+form {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
