@@ -1,7 +1,7 @@
-const express = require('express');
-const { exec } = require('child_process');
-const crypto = require('crypto');
-const bodyParser = require('body-parser');
+import express from 'express';
+import { exec } from 'child_process';
+import crypto from 'crypto';
+import bodyParser from 'body-parser';
 
 const app = express();
 const PORT = 4000;
