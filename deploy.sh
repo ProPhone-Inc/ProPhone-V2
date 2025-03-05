@@ -1,5 +1,4 @@
-#!/bin/bash
-cd /var/www/stage
-git pull origin stage
+cd /var/www/main
+git pull origin Main
 npm install
-pm2 restart vite-stage
+pm2 restart vite-main
