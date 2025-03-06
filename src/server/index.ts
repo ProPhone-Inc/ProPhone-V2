@@ -1,10 +1,3 @@
-<<<<<<< Updated upstream
-#!/bin/bash
-cd /var/www/stage
-git pull origin stage
-npm install
-pm2 restart vite-stage
-=======
 import express from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
@@ -17,6 +10,18 @@ import { generateToken } from './config/jwt';
 import { User } from './models/User';
 
 dotenv.config();
+
+// MongoDB connection options
+const mongooseOptions = {
+  serverSelectionTimeoutMS: 60000, // Increase timeout to 60 seconds
+  connectTimeoutMS: 60000,
+  socketTimeoutMS: 60000,
+  maxPoolSize: 50,
+  retryWrites: true,
+  retryReads: true,
+  w: 'majority',
+  authSource: 'admin'
+};
 
 // CORS configuration
 const corsOptions = {
@@ -44,7 +49,6 @@ app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Connect to MongoDB
 const connectDB = async () => {
   try {
     await mongoose.connect(process.env.MONGODB_URI!);
@@ -65,8 +69,58 @@ mongoose.connection.on('disconnected', () => {
 
 // Handle process termination
 process.on('SIGINT', async () => {
-  await mongoose.connection.close();
-  process.exit(0);
+}
+)
+// MongoDB connection with retries
+const connectWithRetry = async () => {
+  const maxRetries = 5;
+  let retries = 0;
+
+  while (retries < maxRetries) {
+    try {
+      await mongoose.connect(process.env.MONGODB_URI!, mongooseOptions);
+      console.log('✅ Connected to MongoDB successfully');
+      break;
+    } catch (err) {
+      retries++;
+      console.error(`❌ MongoDB connection attempt ${retries} failed:`, err);
+      
+      if (retries === maxRetries) {
+        console.error('🚨 Maximum retries reached. Could not connect to MongoDB');
+        process.exit(1);
+      }
+      
+      // Wait before retrying (exponential backoff)
+      const waitTime = Math.min(1000 * Math.pow(2, retries), 10000);
+      console.log(`⏳ Retrying in ${waitTime/1000} seconds...`);
+      await new Promise(resolve => setTimeout(resolve, waitTime));
+    }
+  }
+};
+
+// Handle MongoDB connection events
+mongoose.connection.on('error', err => {
+  console.error('🚨 MongoDB connection error:', err);
+});
+
+mongoose.connection.on('disconnected', () => {
+  console.log('❌ MongoDB disconnected. Attempting to reconnect...');
+  connectWithRetry();
+});
+
+// Initial connection
+connectWithRetry();
+
+// Graceful shutdown
+process.on('SIGINT', async () => {
+  try {
+    await mongoose.connection.close();
+    console.log('MongoDB connection closed through app termination');
+    process.exit(0);
+  } catch (err) {
+    console.error('Error during graceful shutdown:', err);
+    process.exit(1);
+  }
 });
 
 // Auth Routes
@@ -137,9 +191,11 @@ app.put('/api/user/profile', auth, async (req: any, res) => {
   const allowedUpdates = ['name', 'email', 'password'];
   const isValidOperation = updates.every(update => allowedUpdates.includes(update));
 
+
   if (!isValidOperation) {
     return res.status(400).json({ error: 'Invalid updates' });
   }
+
 
   try {
     updates.forEach(update => req.user[update] = req.body[update]);
@@ -150,8 +206,17 @@ app.put('/api/user/profile', auth, async (req: any, res) => {
   }
 });
 
+// Team Routes
+app.get('/api/team/members', auth, async (req: any, res) => {
+  try {
+    const users = await User.find().select('-password');
+    res.json(users);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch team members' });
+  }
+});
+
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
 });
->>>>>>> Stashed changes

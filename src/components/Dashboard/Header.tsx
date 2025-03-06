@@ -123,7 +123,6 @@ export function Header({ user, onLogout, collapsed, onPageChange }: HeaderProps)
               <div className="py-2">
                 <button 
                   onClick={() => {
-                    onPageChange?.('settings');
                     setShowUserMenu(false);
                   }}
                   className="w-full flex items-center px-4 py-2 text-sm hover:bg-white/10 transition-colors text-left"

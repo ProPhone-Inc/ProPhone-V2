@@ -1,8 +1,7 @@
 import React, { useEffect } from 'react';
 import { X, User, CreditCard, Bot } from 'lucide-react';
 import { useAuth } from '../../../hooks/useAuth';
-import { useDB } from '../../../hooks/useDB';
-import { db } from '../../../db';
+import { User as UserModel } from '../../../db';
 import { ProfileSection } from './ProfileSection'; 
 import { BillingSection } from './BillingSection'; 
 import { CopilotSection } from './CopilotSection'; 
@@ -14,14 +13,15 @@ interface SettingsLayoutProps {
 
 export function SettingsLayout({ isOpen, onClose }: SettingsLayoutProps) {
   const { user } = useAuth();
-  const { isLoading } = useDB();
+  const [isLoading, setIsLoading] = React.useState(true);
   const [userData, setUserData] = React.useState<any>(null);
 
   useEffect(() => {
     const loadUserData = async () => {
       if (user?.email) {
-        const data = await db.getUserByEmail(user.email);
+        const data = await UserModel.findOne({ email: user.email });
         setUserData(data);
+        setIsLoading(false);
       }
     };
     loadUserData();

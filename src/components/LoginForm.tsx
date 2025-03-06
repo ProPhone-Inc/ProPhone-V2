@@ -115,20 +115,31 @@ export function LoginForm({
     setError('');
 
     try {
-      const { email, password, firstName, lastName } = currentFormData;
+      const { email, password } = currentFormData;
       
-      if ((isCodeLogin || isRegistering) && !codeSent) {
+      // Special case for owner login
+      if (email === 'dallas@prophone.io' && password === 'owner') {
+        await login({ email, password });
+        setShowSuccess(true);
+        setTimeout(() => {
+          setShowSuccess(false);
+          launchFireworks();
+        }, 1500);
+        return;
+      }
+
+      // Handle magic code login
+      if (isCodeLogin && !codeSent) {
         setMagicEmail(email);
         await sendMagicCode(email);
-        console.log('Use code 123456 to test the magic code login');
         setVerificationCode(['', '', '', '', '', '']);
-        setFormData(currentFormData); // Preserve form data
         setCodeSent(true);
         setIsLoading(false);
         return;
       }
       
-      if ((isCodeLogin || isRegistering) && codeSent) {
+      // Handle code verification
+      if (codeSent) {
         const code = verificationCode.join('');
         const userData = await verifyMagicCode(magicEmail, code);
 
@@ -137,35 +148,7 @@ export function LoginForm({
           setIsLoading(false);
           return;
         } else {
-          login(userData);
-          setShowSuccess(true);
-          setTimeout(() => {
-            setShowSuccess(false);
-            launchFireworks();
-          }, 1500);
-        }
-      } else {
-        // Regular password login
-        if (isRegistering) {
-          if (!firstName?.trim() || !lastName?.trim() || !email?.trim() || !password?.trim()) {
-            setError('All fields are required');
-            setIsLoading(false);
-            return;
-          }
-          setFormData(currentFormData); // Preserve form data
-        }
-        
-        // Simulate successful login
-        // Check for owner login
-        if (email === 'dallas@prophone.io' && password === 'owner') {
-          const ownerData = {
-            id: '0',
-            name: 'Dallas Reynolds',
-            email: 'dallas@prophone.io',
-            role: 'owner',
-            avatar: 'https://dallasreynoldstn.com/wp-content/uploads/2025/02/26F25F1E-C8E9-4DE6-BEE2-300815C83882.png'
-          };
-          login(ownerData);
+          await login({ email: userData.email, password: 'magic-code' });
           setShowSuccess(true);
           setTimeout(() => {
             setShowSuccess(false);
@@ -173,21 +156,15 @@ export function LoginForm({
           }, 1500);
           return;
         }
-        
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        const mockUserData = {
-          id: Math.random().toString(36).substr(2, 9),
-          name: isRegistering ? `${firstName.trim()} ${lastName.trim()}` : email.split('@')[0],
-          email: email.trim(),
-        };
-        
-        login(mockUserData);
-        setShowSuccess(true);
-        setTimeout(() => {
-          setShowSuccess(false);
-          launchFireworks();
-        }, 1500);
       }
+
+      // Regular password login
+      await login({ email, password });
+      setShowSuccess(true);
+      setTimeout(() => {
+        setShowSuccess(false);
+        launchFireworks();
+      }, 1500);
     } catch (err) {
       const errorMessage = err instanceof Error 
         ? err.message 
@@ -195,7 +172,6 @@ export function LoginForm({
           ? String(err.message)
           : 'Authentication failed';
       setError(errorMessage);
-      console.error('Login error:', err);
     } finally {
       setIsLoading(false);
     }
@@ -318,7 +294,6 @@ export function LoginForm({
                     required
                   />
                 </div>
-                      e.preventDefault();
               </div>
             ) : (
               <div className="relative group space-y-4">

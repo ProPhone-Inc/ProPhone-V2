@@ -479,11 +479,11 @@ For example, type "use OpenAI" or "choose Anthropic".`,
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-50">
+    <div className="fixed bottom-6 right-6 z-[200]">
       {isOpen && (
-        <div className="absolute bottom-full right-0 mb-4">
+        <div className="absolute bottom-[calc(100%+1rem)] right-0 w-96 z-[201]">
           {/* Main Chat Window */}
-          <div className="w-96 bg-black border border-[#B38B3F]/30 rounded-2xl shadow-2xl transform-gpu animate-fade-up">
+          <div className="bg-black border border-[#B38B3F]/30 rounded-2xl shadow-2xl transform-gpu animate-fade-up">
             <div className="flex items-center justify-between p-4 border-b border-[#B38B3F]/20">
             <div>
               <h3 className="text-lg font-bold bg-gradient-to-r from-[#B38B3F] via-[#FFD700] to-[#B38B3F] text-transparent bg-clip-text">

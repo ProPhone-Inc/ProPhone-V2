@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../hooks/useAuth';
+import { User } from '../../db';
 import { X } from 'lucide-react';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
@@ -74,7 +75,7 @@ export function Dashboard() {
   };
   
   return (
-    <div className="min-h-screen bg-black text-white overflow-hidden">
+    <div className="min-h-screen bg-black text-white">
       {/* Admin Modal */}
       {(user?.role === 'owner' || user?.role === 'super_admin') && (
         <AdminModal 
