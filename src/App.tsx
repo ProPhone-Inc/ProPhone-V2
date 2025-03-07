@@ -1,8 +1,8 @@
 import React from 'react';
 import { AuthContainer } from './components/AuthContainer';
+import { useAuth } from './hooks/useAuth';
 import { PricingPlansLayout } from './components/PricingPlansLayout';
 import { Dashboard } from './components/Dashboard/Dashboard';
-import { useAuth } from './hooks/useAuth';
 
 function App() {
   const [showPricing, setShowPricing] = React.useState(false);
@@ -13,39 +13,36 @@ function App() {
     lastName: string;
     email: string;
   } | null>(null);
-  const { isAuthenticated, user, logout } = useAuth();
+  const { isAuthenticated, isLoading, user, logout } = useAuth();
 
   // Listen for logout events
   React.useEffect(() => {
     const handleLogout = () => {
       logout();
-      window.location.href = '/';
     };
 
     window.addEventListener('logout', handleLogout);
     return () => window.removeEventListener('logout', handleLogout);
   }, [logout]);
 
-  if (isAuthenticated && user) {
-    return <Dashboard />;
+  if (isLoading) {
+    return (
+      <div className="fixed inset-0 flex items-center justify-center bg-black/80 backdrop-blur-sm">
+        <div className="w-8 h-8 border-3 border-t-transparent border-[#B38B3F] rounded-full animate-spin" />
+      </div>
+    );
   }
 
-  if (showPricing) {
+  if (isAuthenticated) {
     return (
-      <PricingPlansLayout
-        selectedPlan={selectedPlan}
-        onSelect={(plan) => {
-          setSelectedPlan(plan); 
-        }}
-        onBack={() => setShowPricing(false)}
-        verifiedEmail={verifiedEmail}
-        userData={userData}
-      />
+      <div className="animate-fade-in duration-300">
+        <Dashboard />
+      </div>
     );
   }
 
   return (
-    <AuthContainer 
+    <AuthContainer
       onVerified={(email, data) => {
         setVerifiedEmail(email);
         setUserData(data);

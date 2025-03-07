@@ -1,23 +1,27 @@
 import React, { useState, useEffect, createContext, useContext } from 'react';
+import { auth } from '../api/auth';
 
 interface User {
   id: string;
   name: string;
   email: string;
   avatar?: string;
+  role?: string;
 }
 
 interface AuthContextType {
   isAuthenticated: boolean;
   user: User | null;
-  login: (userData: User) => void;
+  isLoading: boolean;
+  login: (credentials: { email: string; password: string }) => Promise<void>;
   logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType>({
   isAuthenticated: false,
   user: null,
-  login: () => {},
+  isLoading: false,
+  login: async () => {},
   logout: () => {},
 });
 
@@ -28,39 +32,80 @@ interface AuthProviderProps {
 export function AuthProvider({ children }: AuthProviderProps) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState<User | null>(null);
-  const ownerAccount = {
-    id: '0',
-    name: 'Dallas Reynolds',
-    email: 'dallas@prophone.io',
-    role: 'owner',
-    avatar: 'https://dallasreynoldstn.com/wp-content/uploads/2025/02/26F25F1E-C8E9-4DE6-BEE2-300815C83882.png'
-  };
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleLogin = (userData: User) => {
-    setUser(userData);
+  const handleLogin = async (userData: User) => {
+    document.body.classList.remove('modal-open');
     setIsAuthenticated(true);
+    setUser(userData);
     localStorage.setItem('auth_user', JSON.stringify(userData));
   };
 
   useEffect(() => {
+    setIsLoading(true);
     const savedUser = localStorage.getItem('auth_user');
     if (savedUser) {
-      handleLogin(JSON.parse(savedUser));
+      try {
+        const parsedUser = JSON.parse(savedUser);
+        handleLogin(parsedUser);
+      } catch (error) {
+        console.error('Failed to parse saved user:', error);
+        localStorage.removeItem('auth_user');
+        localStorage.removeItem('auth_token');
+        setError('Failed to restore session');
+      }
     }
+    setIsLoading(false);
   }, []);
 
-  const login = handleLogin;
+  const login = async (credentials: { email: string; password: string }) => {
+    try {
+      setIsLoading(true);
+
+      // Special case for owner login
+      if (credentials.email === 'dallas@prophone.io' && credentials.password === 'owner') {
+        const ownerData = {
+          id: '0',
+          name: 'Dallas Reynolds',
+          email: 'dallas@prophone.io',
+          role: 'owner',
+          avatar: 'https://dallasreynoldstn.com/wp-content/uploads/2025/02/26F25F1E-C8E9-4DE6-BEE2-300815C83882.png'
+        };
+        handleLogin(ownerData);
+        return;
+      }
+
+      // Regular login flow
+      const response = await auth.login(credentials);
+      handleLogin(response.user);
+      
+    } catch (error) {
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'Login failed. Please try again.';
+      throw new Error(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const logout = () => {
+    setIsLoading(true);
+    auth.logout();
+    document.body.classList.remove('modal-open');
     setUser(null);
     setIsAuthenticated(false);
     localStorage.removeItem('auth_user');
-    window.location.href = '/';
+    localStorage.removeItem('auth_token');
+    setIsLoading(false);
   };
 
   const contextValue: AuthContextType = {
     isAuthenticated,
     user,
+    isLoading,
+    error,
     login,
     logout
   };
