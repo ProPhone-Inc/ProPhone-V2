@@ -1,10 +1,9 @@
-<<<<<<< Updated upstream
 #!/bin/bash
 cd /var/www/stage
 git pull origin stage
 npm install
 pm2 restart vite-stage
-=======
+
 import express from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
@@ -154,4 +153,3 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
 });
->>>>>>> Stashed changes
