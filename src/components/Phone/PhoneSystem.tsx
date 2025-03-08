@@ -1,8 +1,9 @@
 import React from 'react';
-import { Phone, MessageSquare, Plus, Mic, Video, MoreVertical, Send, Paperclip, User, Users, Clock, Star, Filter, ChevronDown, CheckCircle, Search } from 'lucide-react';
+import { Phone, MessageSquare, Plus, Mic, Video, MoreVertical, Send, Paperclip, User, Users, Clock, Star, Filter, ChevronDown, CheckCircle, Search, Network } from 'lucide-react';
 import { useResizable } from '../../hooks/useResizable';
 import { useWebSocket } from '../../hooks/useWebSocket';
 import { useNotifications } from '../../hooks/useNotifications';
+import { ProviderModal } from './ProviderModal';
 
 interface PhoneSystemProps {
   selectedMessage: string | null;
@@ -16,6 +17,15 @@ export function PhoneSystem({ selectedMessage, selectedChat, onMessageSelect }: 
   const [selectedLine, setSelectedLine] = React.useState<string | null>(null);
   const [messageInput, setMessageInput] = React.useState('');
   const [currentChat, setCurrentChat] = React.useState<string | null>(null);
+  const [showProviderModal, setShowProviderModal] = React.useState(false);
+  const [selectedProvider, setSelectedProvider] = React.useState<string | null>(null);
+
+  const handleProviderSelect = (providerId: string) => {
+    setSelectedProvider(providerId);
+    setShowProviderModal(false);
+    setSelectedLine(null); // Reset selected line when changing provider
+  };
+
   const [conversations, setConversations] = React.useState([
     // Existing conversations...
     // Line 1: Sales Team Chats
@@ -345,7 +355,15 @@ export function PhoneSystem({ selectedMessage, selectedChat, onMessageSelect }: 
       >
         <div className="p-4 border-b border-[#B38B3F]/20 bg-zinc-900/70">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-bold text-white">Inboxes</h2>
+            <div className="flex items-center justify-between w-full">
+              <h2 className="text-lg font-bold text-white">Inboxes</h2>
+              <button 
+                onClick={() => setShowProviderModal(true)}
+                className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#B38B3F]/20 to-[#FFD700]/10 flex items-center justify-center border border-[#B38B3F]/30 hover:bg-[#B38B3F]/30 transition-colors"
+              >
+                <Network className="w-4 h-4 text-[#FFD700]" />
+              </button>
+            </div>
           </div>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
@@ -357,7 +375,9 @@ export function PhoneSystem({ selectedMessage, selectedChat, onMessageSelect }: 
           </div>
         </div>
         <div className="flex-1 overflow-y-auto">
-          {phoneLines.map((line) => (
+          {phoneLines
+            .filter(line => !selectedProvider || providers.find(p => p.id === selectedProvider)?.lines.includes(line.id))
+            .map((line) => (
             <button
               key={line.id}
               onClick={() => setSelectedLine(line.id)}
@@ -691,6 +711,14 @@ export function PhoneSystem({ selectedMessage, selectedChat, onMessageSelect }: 
       {/* Overlay to prevent text selection while resizing */}
       {(phoneLinesColumn.isResizing || chatsColumn.isResizing || crmColumn.isResizing) && (
         <div className="fixed inset-0 z-50 cursor-col-resize select-none" />
+      )}
+      
+      {showProviderModal && (
+        <ProviderModal
+          onClose={() => setShowProviderModal(false)}
+          onSelect={handleProviderSelect}
+          selectedProvider={selectedProvider}
+        />
       )}
     </div>
   );

@@ -75,8 +75,32 @@ export function useDB() {
   };
 
   const getTeamMembers = async () => {
-    const { data } = await api.get('/team/members');
-    return data;
+    try {
+      // For demo purposes, return mock data
+      return [
+        {
+          id: '1',
+          name: 'Sarah Johnson',
+          email: 'sarah@example.com',
+          role: 'member'
+        },
+        {
+          id: '2',
+          name: 'Mike Chen',
+          email: 'mike@example.com',
+          role: 'member'
+        },
+        {
+          id: '3',
+          name: 'Emma Wilson',
+          email: 'emma@example.com',
+          role: 'member'
+        }
+      ];
+    } catch (error) {
+      console.error('Failed to fetch team members:', error);
+      return [];
+    }
   };
 
   return {

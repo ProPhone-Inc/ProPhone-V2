@@ -14,7 +14,7 @@ const LoadingSpinner = () => (
 );
 
 function App() {
-  const { isAuthenticated, isLoading, user } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
     return <LoadingSpinner />;
