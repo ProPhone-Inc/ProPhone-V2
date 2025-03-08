@@ -1,4 +1,4 @@
-import express, { Request, Response, NextFunction, RequestHandler } from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import mongoose, { ConnectOptions } from 'mongoose';
 import dotenv from 'dotenv';
 import cors from 'cors';
@@ -51,39 +51,41 @@ mongoose
   .catch((err) => console.error('❌ MongoDB Connection Error:', err));
 
 // API Routes
-const registerHandler: RequestHandler = async (req, res, next) => {
-  try {
-    const { email, name, password } = req.body;
-    const existingUser = await User.findOne({ email });
+app.post('/api/auth/register', (req: Request, res: Response, next: NextFunction) => {
+  (async () => {
+    try {
+      const { email, name, password } = req.body;
+      const existingUser = await User.findOne({ email });
 
-    if (existingUser) {
-      return res.status(400).json({ error: 'Email already registered' });
+      if (existingUser) {
+        return res.status(400).json({ error: 'Email already registered' });
+      }
+
+      const newUser = new User({ email, name, password });
+      await newUser.save();
+      return res.status(201).json({ message: 'User registered successfully' });
+    } catch (error) {
+      next(error);
     }
+  })();
+});
 
-    const newUser = new User({ email, name, password });
-    await newUser.save();
-    res.status(201).json({ message: 'User registered successfully' });
-  } catch (error) {
-    next(error);
-  }
-};
-app.post('/api/auth/register', registerHandler);
+app.post('/api/auth/login', (req: Request, res: Response, next: NextFunction) => {
+  (async () => {
+    try {
+      const { email, password } = req.body;
+      const user = await User.findOne({ email });
 
-const loginHandler: RequestHandler = async (req, res, next) => {
-  try {
-    const { email, password } = req.body;
-    const user = await User.findOne({ email });
+      if (!user || !(await (user as any).comparePassword(password))) {
+        return res.status(401).json({ error: 'Invalid credentials' });
+      }
 
-    if (!user || !(await user.comparePassword(password))) {
-      return res.status(401).json({ error: 'Invalid credentials' });
+      return res.status(200).json({ message: 'Login successful' });
+    } catch (error) {
+      next(error);
     }
-
-    res.status(200).json({ message: 'Login successful' });
-  } catch (error) {
-    next(error);
-  }
-};
-app.post('/api/auth/login', loginHandler);
+  })();
+});
 
 // WebSocket Connection
 io.on('connection', (socket) => {
