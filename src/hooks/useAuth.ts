@@ -34,6 +34,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const authCheckComplete = React.useRef<boolean>(false);
 
   const handleLogin = async (userData: User) => {
     document.body.classList.remove('modal-open');
@@ -43,20 +44,28 @@ export function AuthProvider({ children }: AuthProviderProps) {
   };
 
   useEffect(() => {
-    setIsLoading(true);
-    const savedUser = localStorage.getItem('auth_user');
-    if (savedUser) {
-      try {
-        const parsedUser = JSON.parse(savedUser);
-        handleLogin(parsedUser);
-      } catch (error) {
-        console.error('Failed to parse saved user:', error);
-        localStorage.removeItem('auth_user');
-        localStorage.removeItem('auth_token');
-        setError('Failed to restore session');
+    if (authCheckComplete.current) return;
+    
+    const initAuth = async () => {
+      setIsLoading(true);
+      const savedUser = localStorage.getItem('auth_user');
+      
+      if (savedUser) {
+        try {
+          const parsedUser = JSON.parse(savedUser);
+          await handleLogin(parsedUser);
+        } catch (error) {
+          console.error('Failed to parse saved user:', error);
+          localStorage.removeItem('auth_user');
+          localStorage.removeItem('auth_token');
+          setError('Failed to restore session');
+        }
       }
-    }
-    setIsLoading(false);
+      authCheckComplete.current = true;
+      setIsLoading(false);
+    };
+
+    initAuth();
   }, []);
 
   const login = async (credentials: { email: string; password: string }) => {

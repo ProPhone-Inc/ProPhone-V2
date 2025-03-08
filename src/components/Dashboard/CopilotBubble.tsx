@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Sparkles, Send, X } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useCopilot } from '../../hooks/useCopilot'; 
@@ -34,7 +34,7 @@ export function CopilotBubble() {
   const [isTyping, setIsTyping] = React.useState(false);
   const [messages, setMessages] = React.useState<Message[]>([]);
   const [savedChats, setSavedChats] = React.useState<SavedChat[]>([]);
-  const messagesEndRef = React.useRef<HTMLDivElement>(null);
+  const messagesEndRef = React.useRef<HTMLDivElement | null>(null);
   const inputRef = React.useRef<HTMLInputElement>(null);
   const [shouldPlaySound, setShouldPlaySound] = React.useState(false);
   const notificationSound = React.useRef<HTMLAudioElement | null>(null);
@@ -59,18 +59,18 @@ export function CopilotBubble() {
   // Show welcome message when component mounts
   React.useEffect(() => {
     if (welcomeMessageRef.current) return;
-
+    
     // Initialize audio immediately
     initializeAudio();
-
+    
     // Set welcome message after 5 seconds
     welcomeMessageTimeout.current = window.setTimeout(() => {
       welcomeMessageRef.current = true;
-
+      
       // Check if CoPilot needs setup
       const needsSetup = !provider || !apiKey;
       setNeedsSetup(needsSetup);
-      
+
       // Only set welcome message if no messages exist
       if (messages.length === 0) {
         const welcomeMessage: Message = {
@@ -79,18 +79,18 @@ export function CopilotBubble() {
           content: needsSetup ? getWelcomeMessage() : "Hi there! 👋 I'm Dawson, your ProPhone CoPilot. I'm ready to help with calls, automation workflows, templates, designs, and more. How can I assist you today?",
           timestamp: new Date()
         };
-        
+
         setMessages([welcomeMessage]);
         setShowWelcomeMessage(true);
       }
     }, 5000);
-
+    
     return () => {
       if (welcomeMessageTimeout.current) {
         clearTimeout(welcomeMessageTimeout.current);
       }
     }
-  }, [provider, apiKey]);
+  }, [provider, apiKey, messages]);
 
   const getProviderSetupInstructions = (provider: string) => {
     const instructions = {

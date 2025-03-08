@@ -8,6 +8,9 @@ interface TeamNamePromptModalProps {
 
 export function TeamNamePromptModal({ onSubmit, onClose }: TeamNamePromptModalProps) {
   const [teamName, setTeamName] = React.useState('');
+  const handleClose = () => {
+    onClose();
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -18,10 +21,10 @@ export function TeamNamePromptModal({ onSubmit, onClose }: TeamNamePromptModalPr
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
-      <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={handleClose} />
       <div className="relative bg-zinc-900 border border-[#B38B3F]/30 rounded-xl p-6 shadow-2xl transform animate-fade-in max-w-md w-full mx-auto">
         <button
-          onClick={onClose}
+          onClick={handleClose}
           className="absolute right-4 top-4 text-white/70 hover:text-white transition-colors"
         >
           <X className="w-5 h-5" />
@@ -55,7 +58,7 @@ export function TeamNamePromptModal({ onSubmit, onClose }: TeamNamePromptModalPr
           <div className="flex space-x-3">
             <button
               type="button"
-              onClick={onClose}
+              onClick={handleClose}
               className="flex-1 px-4 py-3 bg-zinc-800 hover:bg-zinc-700 text-white rounded-xl transition-colors"
             >
               Cancel

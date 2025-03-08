@@ -29,14 +29,18 @@ export function TeamPanelModal({ isOpen, onClose }: TeamPanelModalProps) {
 
   if (!isOpen) return null;
 
+  const handleClose = () => {
+    onClose();
+  };
+
   return (
     <div className="modal-overlay">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-md" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-md" onClick={handleClose} />
       <div className="modal-container">
         <div className="flex items-center justify-between p-6 border-b border-[#B38B3F]/20">
           <h2 className="text-xl font-bold text-white">Team Management</h2>
           <button
-            onClick={onClose}
+            onClick={handleClose}
             className="text-white/70 hover:text-white p-2 rounded-full hover:bg-white/10 transition-colors"
           >
             <X className="w-5 h-5" />
@@ -44,7 +48,7 @@ export function TeamPanelModal({ isOpen, onClose }: TeamPanelModalProps) {
         </div>
 
         <div className="p-6 max-h-[calc(100vh-12rem)] overflow-y-auto">
-          <TeamPanel />
+          <TeamPanel onClose={handleClose} />
         </div>
       </div>
     </div>
