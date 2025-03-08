@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React from 'react';
 import { MoreHorizontal, PenSquare, Trash2, Ban, UserCheck, LogIn, ShieldBan } from 'lucide-react';
 import { useAuth } from '../../../hooks/useAuth';
 import { isUserInactive } from '../../../utils/user';
@@ -16,6 +16,29 @@ interface UserTableProps {
 export function UserTable({ users, onEdit, onDelete, onSuspend, onBan, onReactivate, login }: UserTableProps) {
   const { user: currentUser } = useAuth();
   
+  // Check if user has permission to edit
+  const canEditUser = React.useCallback((targetUser: any) => {
+    if (!currentUser) return false;
+    
+    const isOwner = currentUser.role === 'owner';
+    const isSuperAdmin = currentUser.role === 'super_admin';
+    const isExecutive = currentUser.role === 'executive';
+    const isEditingOwner = targetUser.role === 'owner';
+    const isEditingSuperAdmin = targetUser.role === 'super_admin';
+    const isEditingExecutive = targetUser.role === 'executive';
+
+    // Owner can edit anyone except themselves
+    if (isOwner) return !isEditingOwner;
+    
+    // Super admins can't edit owner or other super admins
+    if (isSuperAdmin && (isEditingOwner || isEditingSuperAdmin)) return false;
+
+    // Executives can't edit owner, super admins, or other executives
+    if (isExecutive && (isEditingOwner || isEditingSuperAdmin || isEditingExecutive)) return false;
+    
+    return true;
+  }, [currentUser]);
+
   // Check if user should be marked as inactive
   React.useEffect(() => {
     const updatedUsers = users.map(user => {
@@ -30,26 +53,6 @@ export function UserTable({ users, onEdit, onDelete, onSuspend, onBan, onReactiv
       onEdit(updatedUsers.find(u => isUserInactive(u.lastLogin) && u.status === 'active'));
     }
   }, [users]);
-  const canEditUser = useCallback((user: any) => {
-    const isOwner = currentUser?.role === 'owner';
-    const isSuperAdmin = currentUser?.role === 'super_admin';
-    const isExecutive = currentUser?.role === 'executive';
-    const isEditingOwner = user.role === 'owner';
-    const isEditingOwnerStatus = user.status === 'owner';
-    const isEditingSuperAdmin = user.role === 'super_admin';
-    const isEditingExecutive = user.role === 'executive';
-
-    // Owner can edit anyone
-    if (isOwner) return !isEditingOwner;
-    
-    // Super admins can't edit owner or other super admins
-    if (isSuperAdmin && (isEditingOwner || isEditingSuperAdmin)) return false;
-
-    // Executives can't edit owner, super admins, or other executives
-    if (isExecutive && (isEditingOwner || isEditingSuperAdmin || isEditingExecutive)) return false;
-    
-    return true;
-  }, [currentUser]);
 
   const getRoleBadge = (role: string) => {
     switch (role) {

@@ -3,24 +3,19 @@ module.exports = {
     {
       name: 'prophone-server',
       script: 'dist/server/index.js',
-      instances: 'max',
+      instances: 1,
       exec_mode: 'cluster',
+      wait_ready: true,
       autorestart: true,
       watch: false,
-      max_memory_restart: '1G',
+      max_memory_restart: '256M',
+      node_args: '--max-old-space-size=256',
       env: {
         NODE_ENV: 'production',
-        PORT: 3000
-      }
-    },
-    {
-      name: 'prophone-client',
-      script: 'serve',
-      env: {
-        PM2_SERVE_PATH: 'dist',
-        PM2_SERVE_PORT: 8080,
-        PM2_SERVE_SPA: 'true',
-        PM2_SERVE_HOMEPAGE: '/index.html'
+        PORT: 3000,
+        TZ: 'UTC',
+        FORCE_COLOR: '1',
+        UV_THREADPOOL_SIZE: '1'
       }
     }
   ]

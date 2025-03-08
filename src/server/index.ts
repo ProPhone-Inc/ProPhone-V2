@@ -1,222 +1,242 @@
-import express from 'express';
+import express, { Request, Response } from 'express';
 import mongoose from 'mongoose';
-import cors from 'cors';
 import dotenv from 'dotenv';
+import cors from 'cors';
 import helmet from 'helmet';
 import compression from 'compression';
 import morgan from 'morgan';
+import cluster from 'cluster';
+import os from 'os';
 import { auth } from './middleware/auth';
 import { generateToken } from './config/jwt';
 import { User } from './models/User';
+import { createServer } from 'http';
+import { Server } from 'socket.io';
 
 dotenv.config();
 
-// MongoDB connection options
+// Only fork in production
+const app = express();
+const httpServer = createServer(app);
+const io = new Server(httpServer, {
+  cors: {
+    origin: process.env.NODE_ENV === 'production' 
+      ? process.env.CORS_ORIGIN || true
+      : true,
+    credentials: true
+  },
+  transports: ['websocket']
+});
+  
+// Optimized MongoDB connection options
 const mongooseOptions = {
-  serverSelectionTimeoutMS: 60000, // Increase timeout to 60 seconds
-  connectTimeoutMS: 60000,
-  socketTimeoutMS: 60000,
-  maxPoolSize: 50,
+  serverSelectionTimeoutMS: 1000,
+  connectTimeoutMS: 1000,
+  socketTimeoutMS: 30000,
+  maxPoolSize: 5,
+  minPoolSize: 1,
   retryWrites: true,
   retryReads: true,
   w: 'majority',
-  authSource: 'admin'
+  authSource: 'admin',
+  compressors: 'zlib',
+  autoIndex: false,
+  bufferCommands: false
 };
 
-// CORS configuration
-const corsOptions = {
-  origin: true,
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-};
+  // Middleware
+  app.use(helmet({
+    contentSecurityPolicy: false,
+    crossOriginEmbedderPolicy: false,
+    dnsPrefetchControl: false,
+    frameguard: false
+  }));
+  
+  app.use(compression({
+    level: 1,
+    threshold: 0,
+    filter: () => true
+  }));
+  
+  app.use(cors({
+    origin: process.env.NODE_ENV === 'production' 
+      ? process.env.CORS_ORIGIN || true
+      : true,
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    maxAge: 86400 // Cache preflight requests for 24 hours
+  }));
 
-const app = express();
+  app.use(express.json({ limit: '1mb' }));
+  app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 
-// Security middleware
-app.use(helmet());
-app.use(compression());
-
-// Logging in production
-if (process.env.NODE_ENV === 'production') {
-  app.use(morgan('combined'));
-} else {
-  app.use(morgan('dev'));
-}
-
-// CORS and JSON middleware
-app.use(cors(corsOptions));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-const connectDB = async () => {
-  try {
-    await mongoose.connect(process.env.MONGODB_URI!);
-    console.log('Connected to MongoDB');
-  } catch (err) {
-    console.error('MongoDB connection error:', err);
-    process.exit(1); // Exit if DB connection fails
+  // Logging
+  if (process.env.NODE_ENV === 'production') {
+    app.use(morgan('tiny', {
+      skip: (req, res) => res.statusCode < 400
+    }));
+  } else {
+    app.use(morgan('dev'));
   }
-};
 
-connectDB();
+  // MongoDB Connection with retries
+  const connectWithRetry = async () => {
+    const maxRetries = 1;
+    let retries = 0;
 
-// Handle MongoDB disconnection
-mongoose.connection.on('disconnected', () => {
-  console.log('MongoDB disconnected! Attempting to reconnect...');
-  connectDB();
-});
-
-// Handle process termination
-process.on('SIGINT', async () => {
-}
-)
-// MongoDB connection with retries
-const connectWithRetry = async () => {
-  const maxRetries = 5;
-  let retries = 0;
-
-  while (retries < maxRetries) {
-    try {
-      await mongoose.connect(process.env.MONGODB_URI!, mongooseOptions);
-      console.log('✅ Connected to MongoDB successfully');
-      break;
-    } catch (err) {
-      retries++;
-      console.error(`❌ MongoDB connection attempt ${retries} failed:`, err);
-      
-      if (retries === maxRetries) {
-        console.error('🚨 Maximum retries reached. Could not connect to MongoDB');
-        process.exit(1);
+    while (retries < maxRetries) {
+      try {
+        await mongoose.connect(process.env.MONGODB_URI!, mongooseOptions);
+        console.log('MongoDB connected');
+        break;
+      } catch (err) {
+        retries++;
+        console.error(`MongoDB connection attempt ${retries} failed:`, err);
+        
+        if (retries === maxRetries) {
+          throw new Error('Could not connect to MongoDB');
+        }
+        
+        const delay = 250;
+        await new Promise(resolve => setTimeout(resolve, delay));
       }
-      
-      // Wait before retrying (exponential backoff)
-      const waitTime = Math.min(1000 * Math.pow(2, retries), 10000);
-      console.log(`⏳ Retrying in ${waitTime/1000} seconds...`);
-      await new Promise(resolve => setTimeout(resolve, waitTime));
     }
-  }
-};
+  };
 
-// Handle MongoDB connection events
-mongoose.connection.on('error', err => {
-  console.error('🚨 MongoDB connection error:', err);
-});
+  // Handle MongoDB events
+  mongoose.connection.on('error', err => {
+    console.error('🚨 MongoDB connection error:', err);
+  });
 
-mongoose.connection.on('disconnected', () => {
-  console.log('❌ MongoDB disconnected. Attempting to reconnect...');
+  mongoose.connection.on('disconnected', () => {
+    console.log('❌ MongoDB disconnected. Attempting to reconnect...');
+    setTimeout(connectWithRetry, 2000);
+  });
+
+  // Initial connection
   connectWithRetry();
-});
 
-// Initial connection
-connectWithRetry();
+  // Auth Routes
+  app.post('/api/auth/register', async (req: Request, res: Response) => {
+    try {
+      const { email, password, name } = req.body;
 
-// Graceful shutdown
-process.on('SIGINT', async () => {
-  try {
-    await mongoose.connection.close();
-    console.log('MongoDB connection closed through app termination');
-    process.exit(0);
-  } catch (err) {
-    console.error('Error during graceful shutdown:', err);
-    process.exit(1);
-  }
-});
+      const existingUser = await User.findOne({ email }).lean();
+      if (existingUser) {
+        return res.status(400).json({ error: 'Email already registered' });
+      }
 
-// Auth Routes
-app.post('/api/auth/register', async (req, res) => {
-  try {
-    const { email, password, name } = req.body;
-    
-    // Check if user exists
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({ error: 'Email already registered' });
+      const user = new User({ email, password, name });
+      await user.save();
+
+      const token = generateToken(user._id.toString());
+      res.status(201).json({ user, token });
+    } catch (error) {
+      console.error('Registration error:', error);
+      res.status(500).json({ error: 'Registration failed' });
     }
+  });
 
-    // Create new user
-    const user = new User({
-      email,
-      password,
-      name
-    });
+  app.post('/api/auth/login', async (req: Request, res: Response) => {
+    try {
+      const { email, password } = req.body;
 
-    await user.save();
+      const user = await User.findOne({ email }).select('+password');
+      if (!user) {
+        return res.status(401).json({ error: 'Invalid credentials' });
+      }
 
-    // Generate JWT
-    const token = generateToken(user._id.toString());
+      const isMatch = await user.comparePassword(password);
+      if (!isMatch) {
+        return res.status(401).json({ error: 'Invalid credentials' });
+      }
 
-    res.status(201).json({ user, token });
-  } catch (error) {
-    res.status(400).json({ error: 'Registration failed' });
-  }
-});
+      const token = generateToken(user._id.toString());
 
-app.post('/api/auth/login', async (req, res) => {
-  try {
-    const { email, password } = req.body;
-    
-    // Find user
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(401).json({ error: 'Invalid credentials' });
+      // Update last login
+      await User.findByIdAndUpdate(user._id, 
+        { lastLogin: new Date() },
+        { new: true }
+      );
+
+      // Remove password from response
+      const userResponse = user.toObject();
+      delete userResponse.password;
+
+      res.json({ user: userResponse, token });
+    } catch (error) {
+      console.error('Login error:', error);
+      res.status(500).json({ error: 'Login failed' });
     }
+  });
 
-    // Check password
-    const isMatch = await user.comparePassword(password);
-    if (!isMatch) {
-      return res.status(401).json({ error: 'Invalid credentials' });
+  // Protected Routes
+  app.get('/api/user/profile', auth, async (req: any, res: Response) => {
+    try {
+      const user = await User.findById(req.user._id).select('-password').lean();
+      res.json(user);
+    } catch (error) {
+      console.error('Profile fetch error:', error);
+      res.status(500).json({ error: 'Failed to fetch profile' });
     }
+  });
 
-    // Generate JWT
-    const token = generateToken(user._id.toString());
+  app.put('/api/user/profile', auth, async (req: any, res: Response) => {
+    try {
+      const updates = Object.keys(req.body);
+      const allowedUpdates = ['name', 'email', 'password'];
+      const isValidOperation = updates.every(update => allowedUpdates.includes(update));
 
-    // Update last login
-    user.lastLogin = new Date();
-    await user.save();
+      if (!isValidOperation) {
+        return res.status(400).json({ error: 'Invalid updates' });
+      }
 
-    res.json({ user, token });
-  } catch (error) {
-    res.status(400).json({ error: 'Login failed' });
-  }
-});
+      const user = await User.findByIdAndUpdate(
+        req.user._id,
+        { $set: req.body },
+        { new: true, runValidators: true }
+      ).select('-password');
 
-// Protected Routes
-app.get('/api/user/profile', auth, async (req: any, res) => {
-  res.json(req.user);
-});
+      res.json(user);
+    } catch (error) {
+      console.error('Profile update error:', error);
+      res.status(500).json({ error: 'Update failed' });
+    }
+  });
 
-app.put('/api/user/profile', auth, async (req: any, res) => {
-  const updates = Object.keys(req.body);
-  const allowedUpdates = ['name', 'email', 'password'];
-  const isValidOperation = updates.every(update => allowedUpdates.includes(update));
+  // Team Routes
+  app.get('/api/team/members', auth, async (req: any, res: Response) => {
+    try {
+      const users = await User.find()
+        .select('-password')
+        .lean()
+        .exec();
+      res.json(users);
+    } catch (error) {
+      console.error('Team members fetch error:', error);
+      res.status(500).json({ error: 'Failed to fetch team members' });
+    }
+  });
 
+  // Graceful shutdown
+  const gracefulShutdown = async () => {
+    console.log(`🛑 Worker ${process.pid} shutting down...`);
+    try {
+      await mongoose.connection.close();
+      console.log('✅ MongoDB connection closed');
+      process.exit(0);
+    } catch (err) {
+      console.error('❌ Error during shutdown:', err);
+      process.exit(1);
+    }
+  };
 
-  if (!isValidOperation) {
-    return res.status(400).json({ error: 'Invalid updates' });
-  }
+  process.on('SIGTERM', gracefulShutdown);
+  process.on('SIGINT', gracefulShutdown);
 
-
-  try {
-    updates.forEach(update => req.user[update] = req.body[update]);
-    await req.user.save();
-    res.json(req.user);
-  } catch (error) {
-    res.status(400).json({ error: 'Update failed' });
-  }
-});
-
-// Team Routes
-app.get('/api/team/members', auth, async (req: any, res) => {
-  try {
-    const users = await User.find().select('-password');
-    res.json(users);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch team members' });
-  }
-});
-
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
-});
+  // Start server
+  const PORT = process.env.PORT || 5000;
+  httpServer.listen(PORT, () => {
+    console.log(`✨ Worker ${process.pid} running on port ${PORT} (${process.env.NODE_ENV || 'development'})`);
+  });
