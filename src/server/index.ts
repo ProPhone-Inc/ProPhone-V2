@@ -1,4 +1,4 @@
-import express, { Request, Response, NextFunction } from 'express';
+import express, { Request, Response, NextFunction, RequestHandler } from 'express';
 import mongoose, { ConnectOptions } from 'mongoose';
 import dotenv from 'dotenv';
 import cors from 'cors';
@@ -8,7 +8,7 @@ import morgan from 'morgan';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import { auth } from './middleware/auth';
-import User from './models/User';
+import { User } from './models/User';
 
 dotenv.config();
 
@@ -51,7 +51,7 @@ mongoose
   .catch((err) => console.error('❌ MongoDB Connection Error:', err));
 
 // API Routes
-app.post('/api/auth/register', async (req: Request, res: Response, next: NextFunction) => {
+const registerHandler: RequestHandler = async (req, res, next) => {
   try {
     const { email, name, password } = req.body;
     const existingUser = await User.findOne({ email });
@@ -66,9 +66,10 @@ app.post('/api/auth/register', async (req: Request, res: Response, next: NextFun
   } catch (error) {
     next(error);
   }
-});
+};
+app.post('/api/auth/register', registerHandler);
 
-app.post('/api/auth/login', async (req: Request, res: Response, next: NextFunction) => {
+const loginHandler: RequestHandler = async (req, res, next) => {
   try {
     const { email, password } = req.body;
     const user = await User.findOne({ email });
@@ -81,7 +82,8 @@ app.post('/api/auth/login', async (req: Request, res: Response, next: NextFuncti
   } catch (error) {
     next(error);
   }
-});
+};
+app.post('/api/auth/login', loginHandler);
 
 // WebSocket Connection
 io.on('connection', (socket) => {
