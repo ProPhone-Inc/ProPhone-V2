@@ -3,15 +3,15 @@ name: Deploy to Stage
 on:
   push:
     branches:
-      - Stage  # Runs on push to the 'Stage' branch
-  workflow_dispatch:  # Allows manual trigger from GitHub UI
+      - Stage
+  workflow_dispatch:
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout Repository
         uses: actions/checkout@v3
 
       - name: Set up SSH Key
@@ -22,47 +22,34 @@ jobs:
           eval "$(ssh-agent -s)"
           ssh-add ~/.ssh/id_rsa
           ssh-keyscan -p ${{ secrets.SERVER_PORT }} -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
-          echo "✅ SSH Key configured successfully."
 
-      - name: Deploy to Stage Server
+      - name: Debug SSH Connection
         run: |
-          ssh -p ${{ secrets.SERVER_PORT }} -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
-            set -e  # Stop script on error
-            echo "🚀 Connecting to Stage Server..."
+          ssh -vvv -i ~/.ssh/id_rsa -p ${{ secrets.SERVER_PORT }} -o StrictHostKeyChecking=no root@${{ secrets.SERVER_IP }} "echo '✅ SSH Connection Successful'"
 
-            # Navigate to the project directory
+      - name: 🛠️ Deploy to Stage Server
+        run: |
+          ssh -i ~/.ssh/id_rsa -p ${{ secrets.SERVER_PORT }} -o StrictHostKeyChecking=no root@${{ secrets.SERVER_IP }} << 'EOF'
+            set -e  # Stop script on error
+            echo "Connected to Stage Server!"
+
             cd /var/www/stage
-            echo "📂 Changed directory to /var/www/stage."
 
             # Ensure Git is up-to-date
-            echo "📥 Fetching latest changes from GitHub..."
             git fetch origin Stage
             git reset --hard origin/Stage
-            echo "✅ Git repository updated."
 
             # Load environment variables safely
             if [ -f .env ]; then
               export $(grep -v '^#' .env | xargs)
-              echo "✅ Environment variables loaded."
-            else
-              echo "⚠️ No .env file found!"
             fi
 
             # Install dependencies
-            echo "📦 Installing dependencies..."
             npm install --production
-
-            # Build the project
-            echo "🏗️ Running build process..."
             npm run build
-            echo "✅ Build completed successfully."
 
             # Restart PM2 safely
-            echo "🔄 Restarting PM2 service..."
             pm2 delete stage-prophone || true
             pm2 start dist/index.js --name stage-prophone --watch --env production
-            echo "✅ PM2 restarted successfully."
-
-            echo "🚀 Deployment to Stage complete!"
           EOF
 
