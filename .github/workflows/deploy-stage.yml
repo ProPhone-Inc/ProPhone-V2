@@ -17,5 +17,5 @@ jobs:
 
       - name: Deploy explicitly via SSH
         run: |
-          ssh -o StrictHostKeyChecking=no -p 37980 ${{ secrets.SSH_USERNAME }}@${{ secrets.SERVER_IP }} 'bash /var/www/stage/deploy-stage.yml'
+          ssh -o StrictHostKeyChecking=no -p 37980 ${{ secrets.SSH_USERNAME }}@${{ secrets.SERVER_IP }} 'bash /var/www/stage/deploy-stage.yml
 
