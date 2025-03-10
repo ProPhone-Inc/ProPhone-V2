@@ -1,20 +1,20 @@
-name: Deploy to Stage
+name: 🚀 Deploy to Stage
 
 on:
   push:
     branches:
-      - Stage
-  workflow_dispatch:
+      - Stage  # Ensure this matches the correct branch
+  workflow_dispatch:  # Allows manual trigger
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Repository
+      - name: 📥 Checkout Repository
         uses: actions/checkout@v3
 
-      - name: Set up SSH Key
+      - name: 🔑 Set Up SSH Key
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
@@ -23,33 +23,32 @@ jobs:
           ssh-add ~/.ssh/id_rsa
           ssh-keyscan -p ${{ secrets.SERVER_PORT }} -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
 
-      - name: Debug SSH Connection
-        run: |
-          ssh -vvv -i ~/.ssh/id_rsa -p ${{ secrets.SERVER_PORT }} -o StrictHostKeyChecking=no root@${{ secrets.SERVER_IP }} "echo '✅ SSH Connection Successful'"
-
-      - name: 🛠️ Deploy to Stage Server
+      - name: 🚀 Deploy to Stage Server
         run: |
           ssh -i ~/.ssh/id_rsa -p ${{ secrets.SERVER_PORT }} -o StrictHostKeyChecking=no root@${{ secrets.SERVER_IP }} << 'EOF'
-            set -e  # Stop script on error
-            echo "Connected to Stage Server!"
+            set -e  # Stop script if any command fails
+            echo "✅ Connected to server"
 
+            # Navigate to project directory
             cd /var/www/stage
 
             # Ensure Git is up-to-date
             git fetch origin Stage
             git reset --hard origin/Stage
 
-            # Load environment variables safely
+            # Load environment variables
             if [ -f .env ]; then
               export $(grep -v '^#' .env | xargs)
             fi
 
-            # Install dependencies
+            # Install dependencies & build
             npm install --production
             npm run build
 
             # Restart PM2 safely
             pm2 delete stage-prophone || true
             pm2 start dist/index.js --name stage-prophone --watch --env production
+
+            echo "🚀 Deployment to Stage Completed Successfully!"
           EOF
 
