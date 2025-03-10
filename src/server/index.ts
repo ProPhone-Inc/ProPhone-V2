@@ -101,3 +101,4 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
 
 // Start Server
 httpServer.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+
