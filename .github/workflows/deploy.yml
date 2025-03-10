@@ -1,0 +1,20 @@
+name: SSH Auto Deploy
+
+on:
+  push:
+    branches:
+      - main  # or the branch you want to deploy
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Set up SSH Agent
+        uses: webfactory/ssh-agent@v0.8.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: SSH Deploy to Server
+        run: |
+          ssh -o StrictHostKeyChecking=root@${{ secrets.SERVER_IP }} '/var/www/main/deploy.sh'
