@@ -15,25 +15,35 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Set up SSH Key
-        uses: webfactory/ssh-agent@v0.5.3
-        with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          eval "$(ssh-agent -s)"
+          ssh-add ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
 
       - name: Deploy to Stage Server
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
             set -e  # Stop script on error
             cd /var/www/stage
-            git fetch origin stage
-            git reset --hard origin/stage
-            
-            # Load .env variables (if needed)
-            if [ -f .env ]; then export $(grep -v '^#' .env | xargs); fi
 
+            # Ensure Git is up-to-date
+            git fetch origin Stage
+            git reset --hard origin/Stage
+
+            # Load environment variables safely
+            if [ -f .env ]; then
+              export $(grep -v '^#' .env | xargs)
+            fi
+
+            # Install dependencies
             npm install --production
             npm run build
-            
-            # Restart PM2
-            pm2 restart stage-prophone || pm2 start dist/index.js --name stage-prophone
+
+            # Restart PM2 safely
+            pm2 delete stage-prophone || true
+            pm2 start dist/index.js --name stage-prophone --watch --env production
           EOF
 
