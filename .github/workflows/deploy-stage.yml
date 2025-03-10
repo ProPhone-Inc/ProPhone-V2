@@ -3,8 +3,8 @@ name: 🚀 Deploy to Stage
 on:
   push:
     branches:
-      - Stage  # Ensure this matches the correct branch
-  workflow_dispatch:  # Allows manual trigger
+      - Stage
+  workflow_dispatch:
 
 jobs:
   deploy:
@@ -22,6 +22,10 @@ jobs:
           eval "$(ssh-agent -s)"
           ssh-add ~/.ssh/id_rsa
           ssh-keyscan -p ${{ secrets.SERVER_PORT }} -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
+
+      - name: 🔍 Debug SSH Connection
+        run: |
+          ssh -i ~/.ssh/id_rsa -p ${{ secrets.SERVER_PORT }} -o StrictHostKeyChecking=no root@${{ secrets.SERVER_IP }} "echo '✅ SSH Connected Successfully!'"
 
       - name: 🚀 Deploy to Stage Server
         run: |
