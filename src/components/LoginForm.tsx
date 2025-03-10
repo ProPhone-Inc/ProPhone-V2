@@ -4,6 +4,8 @@ import { useAuth } from '../hooks/useAuth';
 import { handleGoogleAuth, handleFacebookAuth, sendMagicCode, verifyMagicCode } from '../utils/auth';
 import { SuccessModal } from './SuccessModal';
 import { PricingPlansLayout } from './PricingPlansLayout';
+import axios from 'axios';
+import { registerVersion } from 'firebase/app';
 
 interface LoginFormProps {
   isCodeLogin: boolean;
@@ -36,6 +38,8 @@ export function LoginForm({
 }: LoginFormProps) {
   const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState('');
+  const [confirmpass, setConfirmpassword] = React.useState('');
+  
   const [showSuccess, setShowSuccess] = React.useState(false);
   const [showPlans, setShowPlans] = React.useState(false);
   const [selectedPlan, setSelectedPlan] = React.useState<string | null>(null);
@@ -57,7 +61,27 @@ export function LoginForm({
       [e.target.name]: e.target.value
     }));
   };
-
+  // const sendMagicEmail = async (emails) => {
+  // // const sendMagicEmail(email)   =>{
+  //   // For demo purposes, we'll simulate an API call
+  //   try {
+  //     const response = await axios.post("http://localhost:3000/api/auth/sendemail", {
+  //       email: emails,
+  //     });
+  //     if (response.data == 1) {
+        
+  //     } else if (response.data == 2) {
+  //       setError('Incorrect Password');
+  //       // setProcessing(false)
+  
+  //     }
+  //     await new Promise(resolve => setTimeout(resolve, 1000));
+  //   console.log('Magic code for testing: 123456');
+  //   } catch (error) {
+  //     console.error("Failed to send Magic Code", error);
+  //   }
+   
+  // }
   const handleSocialAuth = async (provider: 'google' | 'facebook') => {
     setIsLoading(true);
     setError('');
@@ -109,40 +133,132 @@ export function LoginForm({
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
+    // alert("handlesubmit")
     e.preventDefault();
     setIsLoading(true);
     const currentFormData = { ...formData };
     setError('');
+    const { email, password, firstName, lastName } = currentFormData;
 
     try {
-      const { email, password, firstName, lastName } = currentFormData;
-      
+      if (!isRegistering){
+        try {
+          const response = await axios.post('http://localhost:3000/api/auth/login', {
+            email,
+            password,
+            firstName,
+            lastName,
+          });
+          if (response.data.token) {
+            sessionStorage.setItem("token", response.data.token);
+            login(response.data.token);
+            setShowSuccess(true);
+            setTimeout(() => {
+              setShowSuccess(false);
+              launchFireworks();
+            }, 1500);
+          } else if (response.data == 2) {
+            setError('Incorrect Password');
+            // setProcessing(false)
+    
+          } else if (response.data.reason) {
+            setError('Account  Suspended');
+            // setReason(response.data.reason)
+            // setProcessing(false)
+          } 
+          else {
+            setError('Incorrect Credentials');
+    
+          }
+          
+            return;
+         
+        } catch (error: any) {
+          console.error('Login Error:', error);
+          setError(error.response?.data?.message || 'Something went wrong');
+        } finally {
+          setIsLoading(false);
+        } 
+      }
+     
       if ((isCodeLogin || isRegistering) && !codeSent) {
         setMagicEmail(email);
-        await sendMagicCode(email);
-        console.log('Use code 123456 to test the magic code login');
-        setVerificationCode(['', '', '', '', '', '']);
-        setFormData(currentFormData); // Preserve form data
-        setCodeSent(true);
-        setIsLoading(false);
+        const response = await axios.post('http://localhost:3000/api/auth/register', {
+          email,
+          password,
+          firstName,
+          lastName,
+        });
+
+        if (response.data == 1) {
+         
+          setVerificationCode(['', '', '', '', '', '']);
+            setFormData(currentFormData); // Preserve form data
+            setCodeSent(true);
+            setIsLoading(false);
+        } else if (response.data == 2) {
+          setError('Email  Already Exists');
+          // setProcessing(false)
+  
+        }
+       
         return;
       }
-      
-      if ((isCodeLogin || isRegistering) && codeSent) {
-        const code = verificationCode.join('');
-        const userData = await verifyMagicCode(magicEmail, code);
-
-        if (isRegistering) {
-          setShowPasswordCreation(true);
-          setIsLoading(false);
-          return;
-        } else {
-          login(userData);
+      if (confirmpass) {
+        
+        if (password == confirmpass){
+          e.preventDefault();
+          onVerified(magicEmail, {
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+            email: magicEmail,
+            password: formData.password
+          });
+          const userData = {
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+            email: magicEmail,
+            password: formData.password, // Be careful storing passwords in localStorage
+          };
+          
+          localStorage.setItem("userData", JSON.stringify(userData));
           setShowSuccess(true);
           setTimeout(() => {
             setShowSuccess(false);
-            launchFireworks();
-          }, 1500);
+            setIsRegistering(false);
+            setFormData(initialFormState);
+            setCodeSent(false);
+            setShowPasswordCreation(false);
+          }, 1000);
+        }else{
+          setError('Password Do not match');
+          return;
+        }
+        
+      }
+      if ((isCodeLogin || isRegistering) && codeSent) {
+        const code = verificationCode.join('');
+        const userData = await axios.post("http://localhost:3000/api/auth/verify-code", {
+          email: email,
+          code: code,
+          register: 1,
+        });
+        if(userData.data == 1){
+          if (isRegistering) {
+            setShowPasswordCreation(true);
+            setIsLoading(false);
+            return;
+          } else {
+            login(userData);
+            setShowSuccess(true);
+            setTimeout(() => {
+              setShowSuccess(false);
+              launchFireworks();
+            }, 1500);
+        }
+       
+        }else if(userData.data == 2){
+          setError("Invalid Code")
         }
       } else {
         // Regular password login
@@ -157,36 +273,36 @@ export function LoginForm({
         
         // Simulate successful login
         // Check for owner login
-        if (email === 'dallas@prophone.io' && password === 'owner') {
-          const ownerData = {
-            id: '0',
-            name: 'Dallas Reynolds',
-            email: 'dallas@prophone.io',
-            role: 'owner',
-            avatar: 'https://dallasreynoldstn.com/wp-content/uploads/2025/02/26F25F1E-C8E9-4DE6-BEE2-300815C83882.png'
-          };
-          login(ownerData);
-          setShowSuccess(true);
-          setTimeout(() => {
-            setShowSuccess(false);
-            launchFireworks();
-          }, 1500);
-          return;
-        }
+        // if (email === 'dallas@prophone.io' && password === 'owner') {
+        //   const ownerData = {
+        //     id: '0',
+        //     name: 'Dallas Reynolds',
+        //     email: 'dallas@prophone.io',
+        //     role: 'owner',
+        //     avatar: 'https://dallasreynoldstn.com/wp-content/uploads/2025/02/26F25F1E-C8E9-4DE6-BEE2-300815C83882.png'
+        //   };
+        //   login(ownerData);
+        //   setShowSuccess(true);
+        //   setTimeout(() => {
+        //     setShowSuccess(false);
+        //     launchFireworks();
+        //   }, 1500);
+        //   return;
+        // }
         
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        const mockUserData = {
-          id: Math.random().toString(36).substr(2, 9),
-          name: isRegistering ? `${firstName.trim()} ${lastName.trim()}` : email.split('@')[0],
-          email: email.trim(),
-        };
+        // await new Promise(resolve => setTimeout(resolve, 1500));
+        // const mockUserData = {
+        //   id: Math.random().toString(36).substr(2, 9),
+        //   name: isRegistering ? `${firstName.trim()} ${lastName.trim()}` : email.split('@')[0],
+        //   email: email.trim(),
+        // };
         
-        login(mockUserData);
-        setShowSuccess(true);
-        setTimeout(() => {
-          setShowSuccess(false);
-          launchFireworks();
-        }, 1500);
+        // login(mockUserData);
+        // setShowSuccess(true);
+        // setTimeout(() => {
+        //   setShowSuccess(false);
+        //   launchFireworks();
+        // }, 1500);
       }
     } catch (err) {
       const errorMessage = err instanceof Error 
@@ -312,6 +428,8 @@ export function LoginForm({
                   </div>
                   <input
                     name="confirmPassword"
+                    value={confirmpass}
+                    onChange={(e) => setConfirmpassword(e.target.value)}
                     type="password"
                     placeholder="Confirm password"
                     className="w-full pl-12 pr-4 py-3 bg-white/90 border border-[#B38B3F]/20 rounded-xl text-black placeholder-black/60 focus:outline-none focus:ring-2 focus:ring-[#B38B3F]/50 focus:border-transparent transition-all hover:bg-white focus:bg-white focus:text-black"
@@ -439,6 +557,11 @@ export function LoginForm({
           <div className="w-6 h-6 border-3 border-black border-t-transparent rounded-full animate-spin" />
         ) : (
           <div className="flex items-center justify-center space-x-2" onClick={(e) => {
+            // if (showPasswordCreation && formData.password) {
+              
+            // }
+          }}>
+            {/* onClick={(e) => {
             if (showPasswordCreation && formData.password) {
               e.preventDefault();
               onVerified(magicEmail, {
@@ -454,9 +577,9 @@ export function LoginForm({
                 setFormData(initialFormState);
                 setCodeSent(false);
                 setShowPasswordCreation(false);
-              }, 2000);
+              }, 1000);
             }
-          }}>
+          }} */}
             <span>
               {isCodeLogin 
                 ? (codeSent ? 'Verify Code' : 'Send Magic Code')

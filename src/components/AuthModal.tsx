@@ -1,4 +1,5 @@
 import React from 'react';
+import axios from 'axios';
 import { X, Mail, Lock, ArrowRight, Facebook, User } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { PricingPlans } from './PricingPlans';
@@ -96,11 +97,19 @@ export function AuthModal({ mode, onClose, onModeChange, onSuccess }: AuthModalP
 
         if (!codeSent) {
           // Send verification code
-          await sendMagicCode(email);
-          setMagicEmail(email);
-          setSignupEmail(email);
-          setCodeSent(true);
-          setIsLoading(false);
+          const response = await axios.post("http://localhost:3000/api/auth/sendemail", {
+            email: email,
+          });
+          if (response.data == 1) {
+            setMagicEmail(email);
+            setSignupEmail(email);
+            setCodeSent(true);
+            setIsLoading(false);
+          } else if (response.data == 2) {
+            throw new Error('Email not found');
+          }
+       
+         
           return;
         }
         
@@ -149,11 +158,19 @@ export function AuthModal({ mode, onClose, onModeChange, onSuccess }: AuthModalP
           if (!email) {
             throw new Error('Email is required');
           }
-          await sendMagicCode(email);
-          setMagicEmail(email);
-          setSignupEmail(email);
-          setCodeSent(true);
-          setIsLoading(false);
+          // await sendMagicCode(email);
+          const response = await axios.post("http://localhost:3000/api/auth/sendemail", {
+              email: email,
+            });
+            if (response.data == 1) {
+              setMagicEmail(email);
+              setSignupEmail(email);
+              setCodeSent(true);
+              setIsLoading(false);
+            } else if (response.data == 2) {
+              throw new Error('Email not found');
+            }
+         
           return;
         }
 

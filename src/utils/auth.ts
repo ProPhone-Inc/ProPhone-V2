@@ -1,3 +1,5 @@
+import axios from "axios";
+
 export async function handleGoogleAuth(): Promise<{ id: string; name: string; email: string }> {
   const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
   if (!googleClientId) {
@@ -115,25 +117,40 @@ export async function handleFacebookAuth(): Promise<{ id: string; name: string; 
 
 export async function sendMagicCode(email: string): Promise<void> {
   // For demo purposes, we'll simulate an API call
-  await new Promise(resolve => setTimeout(resolve, 1000));
+  try {
+    const response = await axios.post("http://localhost:3000/api/auth/sendemail", {
+      email: email,
+    });
+
+    await new Promise(resolve => setTimeout(resolve, 1000));
   console.log('Magic code for testing: 123456');
+  } catch (error) {
+    console.error("Failed to send Magic Code", error);
+  }
+ 
 }
 
 export async function verifyMagicCode(email: string, code: string): Promise<{ id: string; name: string; email: string }> {
-  const validCode = "123456";
-  
+  // const validCode = "123456";
+  const response = await axios.post("http://localhost:3000/api/auth/verify-code", {
+    email: email,
+    code: code,
+  });
   if (!/^\d{6}$/.test(code)) {
     throw new Error('Please enter a valid 6-digit code');
   }
   
-  if (code !== validCode) {
-    throw new Error('Invalid verification code. For testing, use code: 123456');
+  if (response.data == 2) {
+    throw new Error('Invalid verification code');
+  }else if (response.data.token  ) {
+    
+    return {
+      id: response.data.token,
+      name: '',
+      email: ''
+    };
   }
 
   // Return mock user data
-  return {
-    id: Math.random().toString(36).substr(2, 9),
-    name: email.split('@')[0],
-    email: email
-  };
+  
 }

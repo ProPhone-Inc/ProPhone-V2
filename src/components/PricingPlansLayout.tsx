@@ -1,4 +1,5 @@
 import React from 'react';
+import axios from 'axios';
 import { Check, Sparkles, Rocket, Crown } from 'lucide-react';
 import { SuccessModal } from './SuccessModal';
 
@@ -159,10 +160,15 @@ export function PricingPlansLayout({ selectedPlan, onSelect, onBack, verifiedEma
     }
   }, [fireworksContainer]);
 
-  const handlePlanSelect = (planId: string) => {
+  const handlePlanSelect = async (planId: string) => {
     onSelect(planId);
     setProcessingPlan(planId);
-
+    const savedUserData = JSON.parse(localStorage.getItem("userData") || "{}");
+    const response = await axios.post("http://localhost:3000/api/auth/register-user", {
+            data: savedUserData,
+            plan: planId,
+          });
+  if(response.data == 1 ){
     setTimeout(() => {
       setShowSuccess(true);
       launchFireworks();
@@ -173,6 +179,8 @@ export function PricingPlansLayout({ selectedPlan, onSelect, onBack, verifiedEma
         onBack();
       }, 3000);
     }, 1500);
+  }
+    
   };
 
   return (
