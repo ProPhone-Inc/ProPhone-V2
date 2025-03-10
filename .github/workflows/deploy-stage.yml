@@ -3,7 +3,7 @@ name: Deploy to Stage
 on:
   push:
     branches:
-      - stage  # Make sure this matches the actual branch name
+      - Stage  # Make sure this matches the actual branch name
   workflow_dispatch:  # Allows manual trigger
 
 jobs:

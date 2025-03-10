@@ -2,7 +2,7 @@ module.exports = {
   apps: [
     {
       name: 'prophone-server',
-      script: 'dist/server/index.js',
+      script: 'dist/index.js',
       instances: 1,
       exec_mode: 'cluster',
       wait_ready: true,
@@ -12,7 +12,7 @@ module.exports = {
       node_args: '--max-old-space-size=256',
       env: {
         NODE_ENV: 'production',
-        PORT: 3000,
+        PORT: 5001,
         TZ: 'UTC',
         FORCE_COLOR: '1',
         UV_THREADPOOL_SIZE: '1'
