@@ -1,20 +1,20 @@
-name: SSH Auto Deploy
+name: Deploy to Stage via SSH
 
 on:
   push:
     branches:
-      - main  # or the branch you want to deploy
+      - main  # Explicitly define your stage branch here
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Set up SSH Agent
+      - name: Setup SSH Agent
         uses: webfactory/ssh-agent@v0.8.0
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-      - name: SSH Deploy to Server
+      - name: Deploy explicitly via SSH
         run: |
-          ssh -o StrictHostKeyChecking=root@${{ secrets.SERVER_IP }} '/var/www/main/deploy.sh'
+          ssh -o StrictHostKeyChecking=no -p 37980 ${{ secrets.SSH_USERNAME }}@${{ secrets.SERVER_IP }} 'bash /var/www/stage/deploy.sh'
