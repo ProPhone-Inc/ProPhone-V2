@@ -1,9 +1,9 @@
-name: Deploy to Stage via SSH
+name: Deploy via SSH on push to Stage
 
 on:
   push:
     branches:
-      - main  # Explicitly define your stage branch here
+      - Stage  # Replace explicitly if using another branch name
 
 jobs:
   deploy:
@@ -15,6 +15,6 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-      - name: Deploy explicitly via SSH
+      - name: Deploy explicitly via SSH (Custom Port)
         run: |
           ssh -o StrictHostKeyChecking=no -p 37980 ${{ secrets.SSH_USERNAME }}@${{ secrets.SERVER_IP }} 'bash /var/www/main/deploy.sh'
