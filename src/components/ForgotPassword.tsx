@@ -38,8 +38,8 @@ export function ForgotPassword({
   const formRef = React.useRef<HTMLFormElement>(null);
 
   const resendemail = async ()  => {
-
     const response = await axios.post(`/api/auth/sendemail`, {
+    const response = await axios.post("http://localhost:3000/api/auth/sendemail", {
       email: resetEmail,
       forget: 'forget',
     });
@@ -57,6 +57,7 @@ export function ForgotPassword({
         return;
       }
       const response = await axios.post(`/api/auth/sendemail`, {
+      const response = await axios.post("http://localhost:3000/api/auth/sendemail", {
         email: email,
         forget: 'forget',
       });
@@ -93,7 +94,7 @@ export function ForgotPassword({
       // const email = (e.currentTarget as HTMLFormElement).email.value;
 
       const response = await axios.post(`/api/auth/verify-code`, {
-        email: resetEmail,
+      const response = await axios.post("http://localhost:3000/api/auth/verify-code", { email: resetEmail,
         code: code,
       });
       if (response.data.token){
@@ -130,6 +131,7 @@ export function ForgotPassword({
       setError('');
       setIsLoading(true);
       const response = await axios.post(`/api/auth/reset-password`, {
+      const response = await axios.post("http://localhost:3000/api/auth/reset-password", {
         email: resetEmail,
         password: newPassword,
       });

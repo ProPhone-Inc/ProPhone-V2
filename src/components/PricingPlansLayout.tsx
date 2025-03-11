@@ -165,6 +165,7 @@ export function PricingPlansLayout({ selectedPlan, onSelect, onBack, verifiedEma
     setProcessingPlan(planId);
     const savedUserData = JSON.parse(localStorage.getItem("userData") || "{}");
     const response = await axios.post(`/api/auth/register-user`, {
+    const response = await axios.post("http://localhost:3000/api/auth/register-user", {
             data: savedUserData,
             plan: planId,
           });

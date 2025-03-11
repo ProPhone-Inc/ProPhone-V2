@@ -64,8 +64,8 @@ export function LoginForm({
   // const sendMagicEmail = async (emails) => {
   // // const sendMagicEmail(email)   =>{
   //   // For demo purposes, we'll simulate an API call
-  //   try {
-  //     const response = await axios.post(`/api/auth/sendemail", {
+  //   try { const response = await axios.post(`/api/auth/sendemail", {
+  //     const response = await axios.post("http://localhost:3000/api/auth/sendemail", {
   //       email: emails,
   //     });
   //     if (response.data == 1) {
@@ -142,8 +142,8 @@ export function LoginForm({
 
     try {
       if (!isRegistering){
-        try {
-          const response = await axios.post(`/api/auth/login`, {
+        try { const response = await axios.post(`/api/auth/login`, {
+          const response = await axios.post('http://localhost:3000/api/auth/login', {
             email,
             password,
             firstName,
@@ -162,12 +162,16 @@ export function LoginForm({
             if (response.data.ownerData ) {
             sessionStorage.setItem("token", response.data.ownerData.token);
             login(response.data.ownerData);
+          if (response.data.token) {
+            sessionStorage.setItem("token", response.data.token);
+            login(response.data.token);
             setShowSuccess(true);
             setTimeout(() => {
               setShowSuccess(false);
               launchFireworks();
             }, 1500);
           }else if (response.data == 2) {
+          } else if (response.data == 2) {
             setError('Incorrect Password');
             // setProcessing(false)
     
@@ -194,6 +198,7 @@ export function LoginForm({
       if ((isCodeLogin || isRegistering) && !codeSent) {
         setMagicEmail(email);
         const response = await axios.post(`/api/auth/register`, {
+        const response = await axios.post('http://localhost:3000/api/auth/register', {
           email,
           password,
           firstName,
@@ -249,6 +254,7 @@ export function LoginForm({
       if ((isCodeLogin || isRegistering) && codeSent) {
         const code = verificationCode.join('');
         const userData = await axios.post(`/api/auth/verify-code`, {
+        const userData = await axios.post("http://localhost:3000/api/auth/verify-code", {
           email: email,
           code: code,
           register: 1,

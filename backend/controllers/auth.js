@@ -252,6 +252,10 @@ exports.login = async (req, res) => {
       const ownerData = {
 
         token: token,
+  try {
+    if (email === 'dallas@prophone.io' && password === 'owner') {
+      const ownerData = {
+        id: '0',
         name: 'Dallas Reynolds',
         email: 'dallas@prophone.io',
         role: 'owner',
@@ -259,6 +263,7 @@ exports.login = async (req, res) => {
       };
       return res.json({ownerData });
       // return res.send(ownerData);
+      return ownerData;
       // login(ownerData);
     }
     try {
@@ -306,6 +311,8 @@ exports.login = async (req, res) => {
               };
               return res.json({ownerData }); 
               // return res.json({ id: user.id, token });
+
+              return res.json({ id: user.id, token });
           } else {
               return res.send("0"); 
           }
@@ -333,6 +340,8 @@ exports.login = async (req, res) => {
               };   
               return res.json({ownerData }); 
               // return res.json({ id: user.id, token });
+
+              return res.json({ id: user.id, token });
           }
       } else {
           return res.send("2"); 
