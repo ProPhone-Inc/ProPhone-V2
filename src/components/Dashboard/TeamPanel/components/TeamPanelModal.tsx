@@ -1,7 +1,7 @@
 import React from 'react';
 import { X, UserCog } from 'lucide-react';
 import { TeamPanel } from '../TeamPanel';
-import { db } from '../../../../db';
+import { api } from '../../../../api/client';
 
 interface TeamPanelModalProps {
   isOpen: boolean;
@@ -16,22 +16,31 @@ export function TeamPanelModal({ isOpen, onClose }: TeamPanelModalProps) {
 
   React.useEffect(() => {
     const loadTeamMembers = async () => {
-      const users = await db.users.toArray();
-      setTotalMembers(users.length);
+      try {
+        const { data } = await api.get('/team/members');
+        setTotalMembers(data.length);
+      } catch (error) {
+        console.error('Failed to load team members:', error);
+        setTotalMembers(0);
+      }
     };
     loadTeamMembers();
   }, []);
 
   if (!isOpen) return null;
 
+  const handleClose = () => {
+    onClose();
+  };
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-md" onClick={onClose} />
-      <div className="relative bg-zinc-900/70 backdrop-blur-xl border border-[#B38B3F]/30 rounded-xl shadow-2xl w-[calc(100%-4rem)] max-w-7xl max-h-[calc(100vh-4rem)] overflow-hidden">
+    <div className="modal-overlay">
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-md" onClick={handleClose} />
+      <div className="modal-container">
         <div className="flex items-center justify-between p-6 border-b border-[#B38B3F]/20">
           <h2 className="text-xl font-bold text-white">Team Management</h2>
           <button
-            onClick={onClose}
+            onClick={handleClose}
             className="text-white/70 hover:text-white p-2 rounded-full hover:bg-white/10 transition-colors"
           >
             <X className="w-5 h-5" />
@@ -39,7 +48,7 @@ export function TeamPanelModal({ isOpen, onClose }: TeamPanelModalProps) {
         </div>
 
         <div className="p-6 max-h-[calc(100vh-12rem)] overflow-y-auto">
-          <TeamPanel />
+          <TeamPanel onClose={handleClose} />
         </div>
       </div>
     </div>

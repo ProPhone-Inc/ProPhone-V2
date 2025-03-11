@@ -4,19 +4,25 @@
 
 @layer base {
   body {
-    @apply antialiased;
+    @apply antialiased min-h-screen;
+  }
+
+  #root {
+    @apply min-h-screen;
   }
 }
 
 /* Hide scrollbars globally while maintaining scroll functionality */
 * {
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none !important; /* Firefox */
+  -ms-overflow-style: none !important; /* IE and Edge */
 }
 
 /* Hide scrollbars for WebKit browsers */
 *::-webkit-scrollbar {
-  display: none;
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
 }
 
 @keyframes popularBadgePulse {
@@ -58,7 +64,79 @@
   transform: rotate(180deg);
 }
 
+/* Navigation Menu Border Styles */
+.nav-border {
+  @apply absolute right-0 top-0 bottom-0 w-px;
+  background: linear-gradient(to bottom,
+    transparent 0%,
+    rgba(179, 139, 63, 0.3) 15%,
+    rgba(255, 215, 0, 0.6) 50%,
+    rgba(179, 139, 63, 0.3) 85%,
+    transparent 100%
+  );
+  box-shadow:
+    0 0 25px rgba(255, 215, 0, 0.2),
+    0 0 50px rgba(255, 215, 0, 0.15);
+  transition: all 0.15s ease;
+}
+
+.nav-border:hover {
+  background: linear-gradient(to bottom,
+    transparent 0%,
+    rgba(179, 139, 63, 0.4) 15%,
+    rgba(255, 215, 0, 0.8) 50%,
+    rgba(179, 139, 63, 0.4) 85%,
+    transparent 100%
+  );
+  box-shadow: 
+    0 0 30px rgba(255, 215, 0, 0.25),
+    0 0 60px rgba(255, 215, 0, 0.2);
+}
+
+/* Sidebar Overlay Animation */
+@keyframes slideIn {
+  from {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideOut {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+}
+
 @layer components {
+  /* Base modal styles */
+  .modal-overlay {
+    @apply fixed inset-0 z-[100] flex items-center justify-center overflow-hidden;
+    position: fixed !important;
+    height: 100vh;
+    width: 100vw;
+  }
+  
+  .modal-backdrop {
+    @apply absolute inset-0 bg-black/80 backdrop-blur-sm;
+  }
+  
+  .modal-container {
+    @apply relative bg-zinc-900/70 backdrop-blur-xl border border-[#B38B3F]/30 rounded-xl shadow-2xl;
+    max-height: 90vh;
+    max-width: min(90vw, 1400px);
+    width: 100%;
+    margin: 2rem;
+  }
+
   .animated-gradient {
     background: linear-gradient(
       135deg,
@@ -145,6 +223,49 @@
     pointer-events: none;
     animation: fireworkParticle 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards, glowPulse 0.3s ease-in-out infinite;
     box-shadow: 0 0 10px currentColor;
+  }
+
+  .phone-border {
+    @apply absolute inset-y-0 w-px;
+    background: linear-gradient(to bottom,
+      rgba(0, 0, 0, 0) 0%,
+      rgba(179, 139, 63, 0.2) 15%,
+      rgba(255, 215, 0, 0.4) 50%,
+      rgba(179, 139, 63, 0.2) 85%,
+      rgba(0, 0, 0, 0) 100%
+    );
+    box-shadow:
+      0 0 20px rgba(255, 215, 0, 0.15),
+      0 0 40px rgba(255, 215, 0, 0.1);
+    transition: all 0.15s ease;
+  }
+
+  .phone-border:hover {
+    background: linear-gradient(to bottom,
+      rgba(0, 0, 0, 0) 0%,
+      rgba(179, 139, 63, 0.3) 15%,
+      rgba(255, 215, 0, 0.6) 50%,
+      rgba(179, 139, 63, 0.3) 85%,
+      rgba(0, 0, 0, 0) 100%
+    );
+    box-shadow: 
+      0 0 25px rgba(255, 215, 0, 0.2),
+      0 0 50px rgba(255, 215, 0, 0.15);
+    transform: scaleX(1.3);
+  }
+
+  .phone-border.resizing {
+    background: linear-gradient(to bottom,
+      rgba(0, 0, 0, 0) 0%,
+      rgba(179, 139, 63, 0.4) 15%,
+      rgba(255, 215, 0, 0.8) 50%,
+      rgba(179, 139, 63, 0.4) 85%,
+      rgba(0, 0, 0, 0) 100%
+    );
+    box-shadow: 
+      0 0 30px rgba(255, 215, 0, 0.25),
+      0 0 60px rgba(255, 215, 0, 0.2);
+    transform: scaleX(1.6);
   }
 }
 
@@ -245,12 +366,18 @@
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-10px); }
-  to { opacity: 1; transform: translateY(0); filter: brightness(1); }
+  from { 
+    opacity: 0; 
+    transform: scale(0.98);
+  }
+  to { 
+    opacity: 1; 
+    transform: scale(1); 
+  }
 }
 
 .animate-fade-in {
-  animation: fadeIn 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation: fadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
 @keyframes fadeUp {

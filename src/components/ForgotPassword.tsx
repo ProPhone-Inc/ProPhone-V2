@@ -1,5 +1,4 @@
 import React from 'react';
-import axios from 'axios';
 import { Mail, Lock, Key, ArrowLeft, Send } from 'lucide-react';
 
 interface ForgotPasswordProps {
@@ -37,18 +36,7 @@ export function ForgotPassword({
 }: ForgotPasswordProps) {
   const formRef = React.useRef<HTMLFormElement>(null);
 
-  const resendemail = async ()  => {
-
-    const response = await axios.post(`/api/auth/sendemail`, {
-      email: resetEmail,
-      forget: 'forget',
-    });
-  }
-
-
   const handleResetSubmit = async (e: React.FormEvent) => {
- 
-    
     e.preventDefault();
     if (resetStep === 'email') {
       const email = (e.currentTarget as HTMLFormElement).email.value;
@@ -56,24 +44,14 @@ export function ForgotPassword({
         setError('Please enter your email address to begin the reset process');
         return;
       }
-      const response = await axios.post(`/api/auth/sendemail`, {
-        email: email,
-        forget: 'forget',
-      });
-      if (response.data == 1){
-        setError('');
-        setIsLoading(true);
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        setResetEmail(email);
-        setCooldownTime(30);
-        setResetStep('code');
-        setIsLoading(false);
-      }else{
-        setError('No Account Were Found ');
-
-      }
-      
+      setError('');
+      setIsLoading(true);
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      setResetEmail(email);
+      setCooldownTime(30);
+      setResetStep('code');
+      setIsLoading(false);
       // Slide animation
       if (formRef.current) {
         formRef.current.style.transform = 'translateX(-50%) scale(0.9)';
@@ -90,25 +68,12 @@ export function ForgotPassword({
         setError('Please enter the 6-digit verification code sent to your email');
         return;
       }
-      // const email = (e.currentTarget as HTMLFormElement).email.value;
-
-      const response = await axios.post(`/api/auth/verify-code`, {
-        email: resetEmail,
-        code: code,
-      });
-      if (response.data.token){
-        setError('');
+      setError('');
       setIsLoading(true);
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
       setResetStep('password');
       setIsLoading(false);
-      }else{
-        setError('invalid Code');
-
-      }
-
-      
       if (formRef.current) {
         formRef.current.style.transform = 'translateX(-50%) scale(0.9)';
         formRef.current.style.opacity = '0';
@@ -129,10 +94,7 @@ export function ForgotPassword({
 
       setError('');
       setIsLoading(true);
-      const response = await axios.post(`/api/auth/reset-password`, {
-        email: resetEmail,
-        password: newPassword,
-      });
+      
       try {
         await new Promise(resolve => setTimeout(resolve, 1500));
         setShowSuccessModal(true);
@@ -242,7 +204,6 @@ export function ForgotPassword({
                     setCooldownTime(30);
                     setIsLoading(true);
                     setTimeout(() => setIsLoading(false), 1000);
-                    resendemail();
                   }
                 }}
                 disabled={cooldownTime > 0}
@@ -362,7 +323,7 @@ export function ForgotPassword({
           onClick={() => {
             setIsForgotPassword(false);
             setResetStep('email');
-            // setCodeSent(false);
+            setCodeSent(false);
             setResetEmail('');
             setCooldownTime(0);
             setError('');
