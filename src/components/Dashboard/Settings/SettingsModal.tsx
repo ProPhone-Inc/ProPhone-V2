@@ -82,9 +82,9 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const currentSection = sections.find(s => s.id === activeSection);
 
   return (
-    <div className="modal-overlay">
-      <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
-      <div className="modal-container">
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-md" onClick={onClose} />
+      <div className="relative bg-zinc-900/70 backdrop-blur-xl border border-[#B38B3F]/30 rounded-xl shadow-2xl w-[1400px] h-[800px] overflow-hidden">
         <div className="flex items-center justify-between p-6 border-b border-[#B38B3F]/20">
           <div className="flex items-center space-x-3">
             <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#B38B3F]/20 to-[#FFD700]/10 flex items-center justify-center border border-[#B38B3F]/30">

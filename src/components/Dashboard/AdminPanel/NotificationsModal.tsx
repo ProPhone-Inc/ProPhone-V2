@@ -1,7 +1,6 @@
 import React from 'react';
-import { X, Bell, Mail, AlertTriangle, Settings, Search, Filter, Star, TrendingUp, Zap, Sparkles, LayoutTemplate, Globe, GitMerge, UserCheck, Store, Send } from 'lucide-react';
+import { X, Bell, Mail, AlertTriangle, Settings, Search, Filter, CheckCircle2, Clock, Ban, UserCheck, Trash2, Send, PenSquare } from 'lucide-react';
 import { EmailTemplatesModal } from './EmailTemplatesModal';
-import { NotificationComposer } from './NotificationComposer';
 
 interface NotificationLog {
   id: string;
@@ -19,13 +18,12 @@ interface NotificationsModalProps {
 
 export function NotificationsModal({ onClose, onOpenEmailTemplates }: NotificationsModalProps) {
   const [activeTab, setActiveTab] = React.useState<'logs' | 'settings'>('logs');
-  const [showEmailTemplates, setShowEmailTemplates] = React.useState(false);
-  const [showComposer, setShowComposer] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState('');
   const [typeFilter, setTypeFilter] = React.useState('all');
   const [statusFilter, setStatusFilter] = React.useState('all');
   const [selectedLog, setSelectedLog] = React.useState<NotificationLog | null>(null);
   const [isResending, setIsResending] = React.useState(false);
+  const [showEmailTemplates, setShowEmailTemplates] = React.useState(false);
 
   // Mock notification logs - in a real app, these would come from your database
   const notificationLogs: NotificationLog[] = [
@@ -177,13 +175,6 @@ export function NotificationsModal({ onClose, onOpenEmailTemplates }: Notificati
             <div className="p-6 space-y-6">
               {/* Filters */}
               <div className="flex items-center space-x-4">
-                <button
-                  onClick={() => setShowComposer(true)}
-                  className="px-4 py-2 bg-gradient-to-r from-[#B38B3F] to-[#FFD700] text-black font-medium rounded-lg hover:opacity-90 transition-opacity flex items-center space-x-2"
-                >
-                  <Send className="w-4 h-4" />
-                  <span>Send Notification</span>
-                </button>
                 <div className="flex-1 relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
                   <input
@@ -416,31 +407,6 @@ export function NotificationsModal({ onClose, onOpenEmailTemplates }: Notificati
       </div>
       {showEmailTemplates && (
         <EmailTemplatesModal onClose={() => setShowEmailTemplates(false)} />
-      )}
-      {showComposer && (
-        <NotificationComposer 
-          onClose={() => setShowComposer(false)}
-          users={[
-            {
-              id: '1',
-              name: 'Sarah Johnson',
-              email: 'sarah@example.com',
-              avatar: 'https://randomuser.me/api/portraits/women/44.jpg'
-            },
-            {
-              id: '2', 
-              name: 'Mike Chen',
-              email: 'mike@example.com',
-              avatar: 'https://randomuser.me/api/portraits/men/22.jpg'
-            },
-            {
-              id: '3',
-              name: 'Emma Wilson',
-              email: 'emma@example.com',
-              avatar: 'https://randomuser.me/api/portraits/women/28.jpg'
-            }
-          ]}
-        />
       )}
     </div>
   );

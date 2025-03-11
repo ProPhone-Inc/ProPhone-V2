@@ -7,6 +7,8 @@ import {
   Users,
   UserCog,
   Settings, 
+  ChevronLeft, 
+  ChevronRight,
   Shield,
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
@@ -93,7 +95,7 @@ export function Sidebar({ collapsed: propCollapsed, setCollapsed, activePage, on
   return (
     <div 
       className={`
-        fixed top-0 left-0 h-screen z-[100]
+        fixed top-0 left-0 h-screen z-40
         bg-gradient-to-b from-zinc-900 to-black border-r border-[#B38B3F]/20
         flex flex-col transition-all duration-300 ease-in-out
         shadow-xl shadow-black/20

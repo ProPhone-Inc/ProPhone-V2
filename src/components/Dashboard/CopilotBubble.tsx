@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React from 'react';
 import { Sparkles, Send, X } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useCopilot } from '../../hooks/useCopilot'; 
@@ -34,7 +34,7 @@ export function CopilotBubble() {
   const [isTyping, setIsTyping] = React.useState(false);
   const [messages, setMessages] = React.useState<Message[]>([]);
   const [savedChats, setSavedChats] = React.useState<SavedChat[]>([]);
-  const messagesEndRef = React.useRef<HTMLDivElement | null>(null);
+  const messagesEndRef = React.useRef<HTMLDivElement>(null);
   const inputRef = React.useRef<HTMLInputElement>(null);
   const [shouldPlaySound, setShouldPlaySound] = React.useState(false);
   const notificationSound = React.useRef<HTMLAudioElement | null>(null);
@@ -59,18 +59,18 @@ export function CopilotBubble() {
   // Show welcome message when component mounts
   React.useEffect(() => {
     if (welcomeMessageRef.current) return;
-    
+
     // Initialize audio immediately
     initializeAudio();
-    
+
     // Set welcome message after 5 seconds
     welcomeMessageTimeout.current = window.setTimeout(() => {
       welcomeMessageRef.current = true;
-      
+
       // Check if CoPilot needs setup
       const needsSetup = !provider || !apiKey;
       setNeedsSetup(needsSetup);
-
+      
       // Only set welcome message if no messages exist
       if (messages.length === 0) {
         const welcomeMessage: Message = {
@@ -79,18 +79,18 @@ export function CopilotBubble() {
           content: needsSetup ? getWelcomeMessage() : "Hi there! 👋 I'm Dawson, your ProPhone CoPilot. I'm ready to help with calls, automation workflows, templates, designs, and more. How can I assist you today?",
           timestamp: new Date()
         };
-
+        
         setMessages([welcomeMessage]);
         setShowWelcomeMessage(true);
       }
     }, 5000);
-    
+
     return () => {
       if (welcomeMessageTimeout.current) {
         clearTimeout(welcomeMessageTimeout.current);
       }
     }
-  }, [provider, apiKey, messages]);
+  }, [provider, apiKey]);
 
   const getProviderSetupInstructions = (provider: string) => {
     const instructions = {
@@ -479,11 +479,11 @@ For example, type "use OpenAI" or "choose Anthropic".`,
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-[200]">
+    <div className="fixed bottom-6 right-6 z-50">
       {isOpen && (
-        <div className="absolute bottom-[calc(100%+1rem)] right-0 w-96 z-[201]">
+        <div className="absolute bottom-full right-0 mb-4">
           {/* Main Chat Window */}
-          <div className="bg-black border border-[#B38B3F]/30 rounded-2xl shadow-2xl transform-gpu animate-fade-up">
+          <div className="w-96 bg-black border border-[#B38B3F]/30 rounded-2xl shadow-2xl transform-gpu animate-fade-up">
             <div className="flex items-center justify-between p-4 border-b border-[#B38B3F]/20">
             <div>
               <h3 className="text-lg font-bold bg-gradient-to-r from-[#B38B3F] via-[#FFD700] to-[#B38B3F] text-transparent bg-clip-text">
