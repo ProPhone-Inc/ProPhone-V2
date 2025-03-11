@@ -3,7 +3,7 @@ name: Deploy via SSH on push to Stage
 on:
   push:
     branches:
-      - Stage  # Replace explicitly if using another branch name
+      - Main  # Replace explicitly if using another branch name
 
 jobs:
   deploy:
