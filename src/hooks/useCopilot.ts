@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { api } from '../api/client';
+import { encryptData, decryptData } from '../utils/encryption';
 
 interface CopilotSettings {
   provider: 'openai' | 'anthropic' | 'google' | null;
@@ -30,6 +30,7 @@ interface CopilotStore extends CopilotSettings {
   removeConfiguration: (id: string) => void;
   setActiveConfiguration: (id: string) => void;
   clearSettings: () => void;
+  getDecryptedKey: () => string | null;
 }
 
 export const useCopilot = create<CopilotStore>()(
@@ -41,104 +42,126 @@ export const useCopilot = create<CopilotStore>()(
       configurations: [],
       lastUpdated: null,
 
-      updateSettings: async (settings) => {
+      updateSettings: (settings) => {
         // If updating API key, encrypt it first
-        try {
-          const { data } = await api.post('/copilot/settings', settings);
-          set({
-            ...data,
-            lastUpdated: Date.now()
-          });
-        } catch (error) {
-          console.error('Failed to update settings:', error);
-          throw error;
+        const updates: Partial<CopilotSettings> = {
+          ...settings,
+          lastUpdated: Date.now()
+        };
+
+        if (settings.apiKey) {
+          updates.apiKey = encryptData(settings.apiKey);
         }
+
+        set((state) => ({
+          ...state,
+          ...updates
+        }));
       },
 
-      addConfiguration: async (config) => {
+      addConfiguration: (config) => {
         const id = Math.random().toString(36).substr(2, 9);
-        try {
-          const { data } = await api.post('/copilot/configurations', {
-            ...config,
-            id,
-            isActive: false
-          });
+        const encryptedKey = encryptData(config.apiKey);
         
-          set((state) => ({
-            configurations: [...state.configurations, data],
-            ...(state.configurations.length === 0 ? {
-              provider: data.provider,
-              apiKey: data.apiKey
-            } : {})
-          }));
-        } catch (error) {
-          console.error('Failed to add configuration:', error);
-          throw error;
-        }
+        set((state) => ({
+          configurations: [
+            ...state.configurations,
+            {
+              ...config,
+              id,
+              apiKey: encryptedKey,
+              isActive: state.configurations.length === 0 // Make active if first config
+            }
+          ],
+          // If this is the first config, also set it as the main provider/key
+          ...(state.configurations.length === 0 ? {
+            provider: config.provider,
+            apiKey: encryptedKey
+          } : {})
+        }));
       },
 
-      updateConfiguration: async (id, updates) => {
-        try {
-          const { data } = await api.put(`/copilot/configurations/${id}`, updates);
-          set(state => ({
-            configurations: state.configurations.map(config => 
-              config.id === id ? data : config
-            )
-          }));
-        } catch (error) {
-          console.error('Failed to update configuration:', error);
-          throw error;
-        }
+      updateConfiguration: (id, updates) => {
+        set((state) => ({
+          configurations: state.configurations.map(config => 
+            config.id === id 
+              ? { 
+                  ...config, 
+                  ...updates,
+                  // If updating API key, encrypt it
+                  ...(updates.apiKey ? { apiKey: encryptData(updates.apiKey) } : {})
+                }
+              : config
+          )
+        }));
       },
 
-      removeConfiguration: async (id) => {
-        try {
-          await api.delete(`/copilot/configurations/${id}`);
-          set(state => ({
-            configurations: state.configurations.filter(c => c.id !== id)
-          }));
-        } catch (error) {
-          console.error('Failed to remove configuration:', error);
-          throw error;
-        }
+      removeConfiguration: (id) => {
+        set((state) => {
+          const newConfigs = state.configurations.filter(c => c.id !== id);
+          const wasActive = state.configurations.find(c => c.id === id)?.isActive;
+          
+          // If removing active config, make the most recently used one active
+          if (wasActive && newConfigs.length > 0) {
+            const nextActive = [...newConfigs].sort((a, b) => 
+              (b.lastUsed || 0) - (a.lastUsed || 0)
+            )[0];
+            nextActive.isActive = true;
+            
+            return {
+              configurations: newConfigs,
+              provider: nextActive.provider,
+              apiKey: nextActive.apiKey
+            };
+          }
+          
+          return { configurations: newConfigs };
+        });
       },
 
-      setActiveConfiguration: async (id) => {
-        try {
-          const { data } = await api.post(`/copilot/configurations/${id}/activate`);
-          set(state => ({
+      setActiveConfiguration: (id) => {
+        set((state) => {
+          const config = state.configurations.find(c => c.id === id);
+          if (!config) return state;
+
+          return {
             configurations: state.configurations.map(c => ({
               ...c,
-              isActive: c.id === id
+              isActive: c.id === id,
+              ...(c.id === id ? { lastUsed: Date.now() } : {})
             })),
-            provider: data.provider,
-            apiKey: data.apiKey
-          }));
-        } catch (error) {
-          console.error('Failed to set active configuration:', error);
-          throw error;
-        }
+            provider: config.provider, // Keep for backward compatibility
+            apiKey: config.apiKey,
+          };
+        });
       },
 
-      clearSettings: async () => {
+      clearSettings: () => set({
+        provider: null,
+        apiKey: null,
+        configurations: [],
+        lastUpdated: null
+      }),
+      
+      getDecryptedKey: () => {
+        const state = get();
+        if (!state.apiKey) return null;
         try {
-          await api.delete('/copilot/settings');
-          set({
-            provider: null,
-            apiKey: null,
-            configurations: [],
-            lastUpdated: null
-          });
+          return decryptData(state.apiKey);
         } catch (error) {
-          console.error('Failed to clear settings:', error);
-          throw error;
+          console.error('Failed to decrypt API key:', error);
+          return null;
         }
       }
     }),
     {
       name: 'copilot-settings',
+      // Only persist these fields
       partialize: (state) => ({
+        provider: state.provider,
+        apiKey: state.apiKey,
         messages: state.messages,
+        configurations: state.configurations,
         lastUpdated: state.lastUpdated
       })
     }

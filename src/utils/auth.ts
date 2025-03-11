@@ -1,12 +1,9 @@
+import axios from "axios";
+
 export async function handleGoogleAuth(): Promise<{ id: string; name: string; email: string }> {
   const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
   if (!googleClientId) {
-    console.warn('Google client ID not configured, using mock auth');
-    return {
-      id: Math.random().toString(36).substr(2, 9),
-      name: 'Test User',
-      email: 'test@example.com'
-    };
+    throw new Error('Google client ID not configured');
   }
 
   const redirectUri = window.location.origin;
@@ -29,31 +26,6 @@ export async function handleGoogleAuth(): Promise<{ id: string; name: string; em
   return new Promise((resolve, reject) => {
     let popup: Window | null;
     
-    const handleMessage = (event: MessageEvent) => {
-      if (event.origin !== window.location.origin) return;
-      
-      // Only handle plain objects, not Symbols
-      if (typeof event.data === 'object' && event.data !== null) {
-        const { type, userData, error } = event.data;
-        
-        if (type === 'GOOGLE_AUTH_SUCCESS' && userData) {
-          cleanup();
-          resolve(userData);
-        } else if (type === 'GOOGLE_AUTH_ERROR') {
-          cleanup();
-          reject(new Error(error || 'Authentication failed'));
-        }
-      }
-    };
-    
-    const cleanup = () => {
-      clearInterval(checkClosed);
-      window.removeEventListener('message', handleMessage);
-      if (popup && !popup.closed) popup.close();
-    };
-
-    window.addEventListener('message', handleMessage);
-
     try {
       popup = window.open(
         url,
@@ -73,14 +45,35 @@ export async function handleGoogleAuth(): Promise<{ id: string; name: string; em
 
     const checkClosed = setInterval(() => {
       if (popup?.closed) {
-        cleanup();
+        clearInterval(checkClosed);
+        window.removeEventListener('message', handleAuth);
         resolve(null);
       }
     }, 1000);
 
+    function handleAuth(event: MessageEvent) {
+      if (event.origin !== window.location.origin) return;
+
+      if (event.data.type === 'GOOGLE_AUTH_SUCCESS') {
+        clearInterval(checkClosed);
+        window.removeEventListener('message', handleAuth);
+        if (popup) popup.close();
+        resolve(event.data.userData);
+      } else if (event.data.type === 'GOOGLE_AUTH_ERROR') {
+        clearInterval(checkClosed);
+        window.removeEventListener('message', handleAuth);
+        if (popup) popup.close();
+        reject(new Error(event.data.error || 'Authentication failed'));
+      }
+    }
+
+    window.addEventListener('message', handleAuth);
+
     // Set timeout to prevent hanging
     setTimeout(() => {
-      cleanup();
+      clearInterval(checkClosed);
+      window.removeEventListener('message', handleAuth);
+      if (popup && !popup.closed) popup.close();
       resolve(null);
     }, 120000); // 2 minutes timeout
   });
@@ -124,25 +117,40 @@ export async function handleFacebookAuth(): Promise<{ id: string; name: string; 
 
 export async function sendMagicCode(email: string): Promise<void> {
   // For demo purposes, we'll simulate an API call
-  await new Promise(resolve => setTimeout(resolve, 1000));
+  try {
+    const response = await axios.post(`/api/auth/sendemail`, {
+      email: email,
+    });
+
+    await new Promise(resolve => setTimeout(resolve, 1000));
   console.log('Magic code for testing: 123456');
+  } catch (error) {
+    console.error("Failed to send Magic Code", error);
+  }
+ 
 }
 
 export async function verifyMagicCode(email: string, code: string): Promise<{ id: string; name: string; email: string }> {
-  const validCode = "123456";
-  
+  // const validCode = "123456";
+  const response = await axios.post(`/api/auth/verify-code`, {
+    email: email,
+    code: code,
+  });
   if (!/^\d{6}$/.test(code)) {
     throw new Error('Please enter a valid 6-digit code');
   }
   
-  if (code !== validCode) {
-    throw new Error('Invalid verification code. For testing, use code: 123456');
+  if (response.data == 2) {
+    throw new Error('Invalid verification code');
+  }else if (response.data.token  ) {
+    
+    return {
+      id: response.data.token,
+      name: '',
+      email: ''
+    };
   }
 
   // Return mock user data
-  return {
-    id: Math.random().toString(36).substr(2, 9),
-    name: email.split('@')[0],
-    email: email
-  };
+  
 }
