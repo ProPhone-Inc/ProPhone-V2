@@ -1,4 +1,4 @@
-name: Deploy via SSH on push to Stage
+name: Deploy via SSH on push to Main
 
 on:
   push:
