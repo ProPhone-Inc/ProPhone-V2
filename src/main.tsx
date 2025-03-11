@@ -2,9 +2,9 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { AuthProvider } from './hooks/useAuth';
-import App from './App.tsx';
+import App from './App';
 import './styles/index.css';
-import { initFacebookSDK } from './utils/facebook.ts';
+import { initFacebookSDK } from './utils/facebook';
 
 // Initialize Facebook SDK with the configured app ID
 initFacebookSDK(import.meta.env.VITE_FACEBOOK_APP_ID);

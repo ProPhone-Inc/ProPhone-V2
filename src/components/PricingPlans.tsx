@@ -149,6 +149,7 @@ export function PricingPlans({ onSelect, selectedPlan }: PricingPlansProps) {
             onSelect={() => {
               // First select the plan
               onSelect(plan.id);
+              
               // Show success modal and launch fireworks
               setTimeout(() => {
                 setShowSuccess(true);
