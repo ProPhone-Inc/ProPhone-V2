@@ -3,7 +3,7 @@ name: Deploy via SSH on push to Main
 on:
   push:
     branches:
-      - Main  # Replace explicitly if using another branch name
+      - main  # Replace explicitly if using another branch name
 
 jobs:
   deploy:
