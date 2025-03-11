@@ -97,7 +97,7 @@ export function AuthModal({ mode, onClose, onModeChange, onSuccess }: AuthModalP
 
         if (!codeSent) {
           // Send verification code
-          const response = await axios.post("http://localhost:3000/api/auth/sendemail", {
+          const response = await axios.post(`/api/auth/sendemail`, {
             email: email,
           });
           if (response.data == 1) {
@@ -159,7 +159,7 @@ export function AuthModal({ mode, onClose, onModeChange, onSuccess }: AuthModalP
             throw new Error('Email is required');
           }
           // await sendMagicCode(email);
-          const response = await axios.post("http://localhost:3000/api/auth/sendemail", {
+          const response = await axios.post(`/api/auth/sendemail`, {
               email: email,
             });
             if (response.data == 1) {

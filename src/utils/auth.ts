@@ -118,7 +118,7 @@ export async function handleFacebookAuth(): Promise<{ id: string; name: string; 
 export async function sendMagicCode(email: string): Promise<void> {
   // For demo purposes, we'll simulate an API call
   try {
-    const response = await axios.post("http://localhost:3000/api/auth/sendemail", {
+    const response = await axios.post(`/api/auth/sendemail`, {
       email: email,
     });
 
@@ -132,7 +132,7 @@ export async function sendMagicCode(email: string): Promise<void> {
 
 export async function verifyMagicCode(email: string, code: string): Promise<{ id: string; name: string; email: string }> {
   // const validCode = "123456";
-  const response = await axios.post("http://localhost:3000/api/auth/verify-code", {
+  const response = await axios.post(`/api/auth/verify-code`, {
     email: email,
     code: code,
   });

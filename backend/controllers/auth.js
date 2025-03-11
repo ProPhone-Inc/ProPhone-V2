@@ -8,7 +8,7 @@ const { MongoClient } = require('mongodb');
 
 const SECRET_KEY = 'AKoF52vMvHyD4+JlhqFtXGRK1hqpTV+Ca4DMdltbik8='
 
-const MONGO_URI = 'mongodb+srv://dallas:yvsjvgu1vjJk9aPM@phonev2.0zg79.mongodb.net/?retryWrites=true&w=majority&appName=PhoneV2';
+const MONGO_URI = 'mongodb+srv://dallas:ProPhone2025@phonev2.0zg79.mongodb.net/?retryWrites=true&w=majority&appName=PhoneV2';
 const client = new MongoClient(MONGO_URI);
 const db = client.db('ProPhone');
 const usersCollection = db.collection('users');
@@ -244,16 +244,21 @@ exports.register = async (req, res) => {
 
 exports.login = async (req, res) => {
   const { email, password, mobile, fcmtoken } = req.body;
+  console.log(req.body)
   try {
     if (email === 'dallas@prophone.io' && password === 'owner') {
+      const token = jwt.sign({ user_id: 1 }, SECRET_KEY, { expiresIn: '1h' });
+
       const ownerData = {
-        id: '0',
+
+        token: token,
         name: 'Dallas Reynolds',
         email: 'dallas@prophone.io',
         role: 'owner',
         avatar: 'https://dallasreynoldstn.com/wp-content/uploads/2025/02/26F25F1E-C8E9-4DE6-BEE2-300815C83882.png'
       };
-      return ownerData;
+      return res.json({ownerData });
+      // return res.send(ownerData);
       // login(ownerData);
     }
     try {
@@ -291,8 +296,16 @@ exports.login = async (req, res) => {
 
              
               const token = jwt.sign({ user_id: user.id }, SECRET_KEY, { expiresIn: '1h' });
+              const ownerData = {
 
-              return res.json({ id: user.id, token });
+                token: token,
+                name: user.firstname+ ' ' + user.lastname,
+                email: user.email,
+                role: 'user',
+                avatar: user.avater
+              };
+              return res.json({ownerData }); 
+              // return res.json({ id: user.id, token });
           } else {
               return res.send("0"); 
           }
@@ -310,8 +323,16 @@ exports.login = async (req, res) => {
               }
 
               const token = jwt.sign({ user_id: user.id }, SECRET_KEY, { expiresIn: '1h' });
+              const ownerData = {
 
-              return res.json({ id: user.id, token });
+                token: token,
+                name: user.firstname + ' '+ user.lastname,
+                email: user.email,
+                role: 'user',
+                avatar: user.avater
+              };   
+              return res.json({ownerData }); 
+              // return res.json({ id: user.id, token });
           }
       } else {
           return res.send("2"); 
