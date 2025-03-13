@@ -1,5 +1,6 @@
 import React, { useState, Suspense } from 'react';
 import { useAuth } from '../../hooks/useAuth';
+import { useCopilot } from '../../hooks/useCopilot';
 import { X } from 'lucide-react';
 import { Sidebar } from './Sidebar';
 import Header from './Header';
@@ -10,10 +11,12 @@ import { CampaignOverview } from './CampaignOverview';
 import { StatusTracking } from './StatusTracking';
 import { TopContacts } from './TopContacts';
 import { UpcomingTasks } from './UpcomingTasks';
-import { CopilotBubble } from './CopilotBubble';
+import CopilotBubble from './CopilotBubble';
 import { ErrorBoundary } from '../ErrorBoundary';
 import { PhoneSystem } from '../Phone/PhoneSystem';
 import { TeamPanelModal } from './TeamPanel/components/TeamPanelModal';
+import { CopilotPage } from './CopilotPage';
+import { CRMDashboard } from '../CRM/CRMDashboard';
 import { AdminPanel } from './AdminPanel';
 
 const ComponentLoader = () => (
@@ -59,13 +62,17 @@ function AdminModal({ isOpen, onClose }: AdminModalProps) {
 
 export function Dashboard() {
   const { user, logout } = useAuth();
+  const { provider, apiKey } = useCopilot();
   const [collapsed, setCollapsed] = useState(true); // Default to collapsed
   const [activePage, setActivePage] = useState('dashboard');
   const [showAdminModal, setShowAdminModal] = useState(false);
   const [showTeamPanel, setShowTeamPanel] = useState(false);
+  const [showCopilot, setShowCopilot] = useState(false);
+  const [copilotExpanded, setCopilotExpanded] = useState(false);
   const [selectedMessage, setSelectedMessage] = useState<string | null>(null);
   const [selectedChat, setSelectedChat] = useState<string | null>(null);
   const [selectedLine, setSelectedLine] = useState<string | null>(null);
+  const [totalUnreadCount, setTotalUnreadCount] = useState(0);
   
   const [messages, setMessages] = useState<Array<{
     id: string;
@@ -174,18 +181,30 @@ export function Dashboard() {
   ]);
   
   const handleSidebarClick = (page: string) => {
-    // Prevent access to team panel for regular members
-    if (page === 'team' && !canAccessTeamPanel(user)) {
+    // Handle copilot
+    if (page === 'copilot') {
+      setCopilotExpanded(!copilotExpanded);
       return;
     }
     
-    if (page === 'admin' && (user?.role === 'owner' || user?.role === 'super_admin')) {
-      setShowAdminModal(true);
-    } else if (page === 'team') {
-      setShowTeamPanel(true);
-    } else {
-      setActivePage(page);
+    // Handle admin panel access
+    if (page === 'admin') {
+      if (user?.role === 'owner' || user?.role === 'super_admin') {
+        setShowAdminModal(true);
+      }
+      return;
     }
+    
+    // Handle team panel access
+    if (page === 'team') {
+      if (canAccessTeamPanel(user)) {
+        setShowTeamPanel(true);
+      }
+      return;
+    }
+    
+    // Handle regular page navigation
+    setActivePage(page);
   };
 
   // Handle navigation with message selection
@@ -195,10 +214,13 @@ export function Dashboard() {
       setSelectedChat(chatId || null);
       setActivePage('phone');
       
-      // Mark message as read
-      setMessages(prev => prev.map(msg => 
-        msg.id === messageId ? { ...msg, read: true } : msg
-      ));
+      // Mark message as read and update unread count
+      setMessages(prev => {
+        const updatedMessages = prev.map(msg => 
+          msg.id === messageId ? { ...msg, read: true } : msg
+        );
+        return updatedMessages;
+      });
     } else {
       setSelectedMessage(null);
       setActivePage(page);
@@ -211,7 +233,7 @@ export function Dashboard() {
         {/* Admin Modal */}
         {(user?.role === 'owner' || user?.role === 'super_admin') && showAdminModal && (
           <AdminModal 
-            isOpen={showAdminModal} 
+            isOpen={showAdminModal}
             onClose={() => setShowAdminModal(false)} 
           />
         )}
@@ -237,6 +259,7 @@ export function Dashboard() {
             user={user} 
             onLogout={logout} 
             collapsed={collapsed}
+            activePage={activePage}
             messages={messages}
             onPageChange={handlePageChange}
           />
@@ -261,6 +284,48 @@ export function Dashboard() {
                       </div>
                     </div>
                   </div>
+                )}
+                {copilotExpanded && (
+                  <ErrorBoundary>
+                    <Suspense fallback={<ComponentLoader />}>
+                      <CopilotPage 
+                        isOpen={copilotExpanded} 
+                        onClose={() => setCopilotExpanded(false)} 
+                        isSetupMode={!provider || !apiKey}
+                      />
+                    </Suspense>
+                  </ErrorBoundary>
+                )}
+                {activePage === 'crm' && (
+                  <ErrorBoundary>
+                    <Suspense fallback={<ComponentLoader />}>
+                      <CRMDashboard
+                        activeView="kanban"
+                        onViewChange={(view) => console.log('View changed:', view)}
+                      />
+                    </Suspense>
+                  </ErrorBoundary>
+                )}
+                {activePage === 'phone' && (
+                  <ErrorBoundary>
+                    <Suspense fallback={<ComponentLoader />}>
+                      <PhoneSystem 
+                        selectedMessage={selectedMessage}
+                        selectedChat={selectedChat}
+                        onMessageSelect={setSelectedMessage}
+                      />
+                    </Suspense>
+                  </ErrorBoundary>
+                )}
+                {activePage === 'crm' && (
+                  <ErrorBoundary>
+                    <Suspense fallback={<ComponentLoader />}>
+                      <CRMDashboard
+                        activeView="kanban"
+                        onViewChange={(view) => console.log('View changed:', view)}
+                      />
+                    </Suspense>
+                  </ErrorBoundary>
                 )}
                 {activePage === 'phone' && (
                   <ErrorBoundary>

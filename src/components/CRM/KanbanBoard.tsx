@@ -24,7 +24,7 @@ interface KanbanBoardProps {
 }
 
 export function KanbanBoard({ onAddLead, onEditLead, onDeleteLead }: KanbanBoardProps) {
-  const [stages, setStages] = React.useState([
+  const [stages] = React.useState([
     { id: 'new', name: 'New Leads', color: '#4285f4' },
     { id: 'contacted', name: 'Contacted', color: '#fbbc05' },
     { id: 'qualified', name: 'Qualified', color: '#34a853' },
@@ -33,7 +33,7 @@ export function KanbanBoard({ onAddLead, onEditLead, onDeleteLead }: KanbanBoard
     { id: 'closed', name: 'Closed', color: '#16a34a' }
   ]);
 
-  const [leads, setLeads] = React.useState<Lead[]>([
+  const [leads] = React.useState<Lead[]>([
     {
       id: '1',
       name: 'Sarah Johnson',

@@ -69,11 +69,47 @@ export function LoginForm({
           throw new Error('Google client ID not configured');
         }
         userData = await handleGoogleAuth();
+        // If not registering, log in and go to dashboard directly
+        if (userData && !isRegistering) {
+          await login(userData);
+          window.location.href = '/dashboard';
+          return;
+        }
+        // Otherwise continue with registration flow
+        if (userData && isRegistering) {
+          setFormData({
+            firstName: userData.name.split(' ')[0] || '',
+            lastName: userData.name.split(' ')[1] || '',
+            email: userData.email,
+            password: ''
+          });
+          setShowPlans(true);
+          setIsLoading(false);
+          return;
+        }
       } else {
         if (!import.meta.env.VITE_FACEBOOK_APP_ID) {
           throw new Error('Facebook app ID not configured');
         }
         userData = await handleFacebookAuth();
+        // If not registering, log in and go to dashboard directly
+        if (userData && !isRegistering) {
+          await login(userData);
+          window.location.href = '/dashboard';
+          return;
+        }
+        // Otherwise continue with registration flow
+        if (userData && isRegistering) {
+          setFormData({
+            firstName: userData.name.split(' ')[0] || '',
+            lastName: userData.name.split(' ')[1] || '',
+            email: userData.email,
+            password: ''
+          });
+          setShowPlans(true);
+          setIsLoading(false);
+          return;
+        }
       }
       
       // Auto-login as owner for specific credentials
@@ -91,8 +127,7 @@ export function LoginForm({
         login(userData);
         setShowSuccess(true);
         setTimeout(() => {
-          setShowSuccess(false);
-          launchFireworks();
+          window.location.href = '/dashboard';
         }, 1500);
       }
     } catch (err) {
@@ -122,8 +157,7 @@ export function LoginForm({
         await login({ email, password });
         setShowSuccess(true);
         setTimeout(() => {
-          setShowSuccess(false);
-          launchFireworks();
+          window.location.href = '/dashboard';
         }, 1500);
         return;
       }
@@ -131,6 +165,7 @@ export function LoginForm({
       // Handle magic code login
       if (isCodeLogin && !codeSent) {
         setMagicEmail(email);
+        // Send magic code regardless of auth method
         await sendMagicCode(email);
         setVerificationCode(['', '', '', '', '', '']);
         setCodeSent(true);
@@ -142,17 +177,18 @@ export function LoginForm({
       if (codeSent) {
         const code = verificationCode.join('');
         const userData = await verifyMagicCode(magicEmail, code);
-
+        
+        // User can log in with magic code even if they have a social account
         if (isRegistering) {
-          setShowPasswordCreation(true);
+          setShowPlans(true);
           setIsLoading(false);
           return;
         } else {
+          // Log in user directly after code verification
           await login({ email: userData.email, password: 'magic-code' });
           setShowSuccess(true);
           setTimeout(() => {
-            setShowSuccess(false);
-            launchFireworks();
+            window.location.href = '/dashboard';
           }, 1500);
           return;
         }
@@ -190,7 +226,26 @@ export function LoginForm({
       <div className="space-y-4">
         {(!codeSent) && (
           <>
-            {isRegistering && (
+            {showPlans && (
+              <PricingPlans
+                onSelect={(planId) => {
+                  const userData = {
+                    id: Math.random().toString(36).substr(2, 9),
+                    name: `${formData.firstName} ${formData.lastName}`,
+                    email: formData.email,
+                    plan: planId
+                  };
+                  login(userData);
+                  setShowSuccess(true);
+                  setTimeout(() => {
+                    setShowSuccess(false);
+                    launchFireworks();
+                  }, 1500);
+                }}
+                selectedPlan={selectedPlan}
+              />
+            )}
+            {!showPlans && isRegistering && (
               <>
                 <div className="relative group animate-slide-down">
                   <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
@@ -295,56 +350,58 @@ export function LoginForm({
                   />
                 </div>
               </div>
-            ) : (
-              <div className="relative group space-y-4">
-                <div className="text-center">
-                  <div className="text-[#B38B3F] text-base font-medium mb-1">
-                    Enter verification code
+            ) : isRegistering && (
+              <>
+                <div className="relative group space-y-4">
+                  <div className="text-center">
+                    <div className="text-[#B38B3F] text-base font-medium mb-1">
+                      Enter verification code
+                    </div>
+                    <div className="text-white/70 text-sm">
+                      Code sent to {magicEmail}
+                    </div>
                   </div>
-                  <div className="text-white/70 text-sm">
-                    Code sent to {magicEmail}
-                  </div>
-                </div>
-                <div className="grid grid-cols-6 gap-2">
-                  {[...Array(6)].map((_, i) => (
-                    <input
-                      key={i}
-                      type="text"
-                      maxLength={1}
-                      pattern="\d"
-                      inputMode="numeric"
-                      value={verificationCode[i]}
-                      className="w-full aspect-square text-center text-2xl font-mono bg-white/90 border border-[#B38B3F]/20 rounded-lg text-black placeholder-black/60 focus:outline-none focus:ring-2 focus:ring-[#B38B3F]/50 focus:border-transparent transition-all hover:bg-white focus:bg-white focus:text-black"
-                      onKeyDown={(e) => {
-                        if (e.key === 'Backspace' && !e.currentTarget.value) {
-                          const prev = e.currentTarget.previousElementSibling as HTMLInputElement;
-                          if (prev) {
-                            prev.focus();
-                            prev.select();
-                            const newCode = [...verificationCode];
-                            newCode[i - 1] = '';
-                            setVerificationCode(newCode);
+                  <div className="grid grid-cols-6 gap-2">
+                    {[...Array(6)].map((_, i) => (
+                      <input
+                        key={i}
+                        type="text"
+                        maxLength={1}
+                        pattern="\d"
+                        inputMode="numeric"
+                        value={verificationCode[i]}
+                        className="w-full aspect-square text-center text-2xl font-mono bg-white/90 border border-[#B38B3F]/20 rounded-lg text-black placeholder-black/60 focus:outline-none focus:ring-2 focus:ring-[#B38B3F]/50 focus:border-transparent transition-all hover:bg-white focus:bg-white focus:text-black"
+                        onKeyDown={(e) => {
+                          if (e.key === 'Backspace' && !e.currentTarget.value) {
+                            const prev = e.currentTarget.previousElementSibling as HTMLInputElement;
+                            if (prev) {
+                              prev.focus();
+                              prev.select();
+                              const newCode = [...verificationCode];
+                              newCode[i - 1] = '';
+                              setVerificationCode(newCode);
+                            }
                           }
-                        }
-                      }}
-                      onInput={(e) => {
-                        const input = e.currentTarget;
-                        const next = input.nextElementSibling as HTMLInputElement;
-                        
-                        const value = input.value.replace(/\D/g, '');
-                        const newCode = [...verificationCode];
-                        newCode[i] = value;
-                        setVerificationCode(newCode);
-                        
-                        if (value && next && i < 5) {
-                          next.focus();
-                          next.select();
-                        }
-                      }}
-                    />
-                  ))}
+                        }}
+                        onInput={(e) => {
+                          const input = e.currentTarget;
+                          const next = input.nextElementSibling as HTMLInputElement;
+                          
+                          const value = input.value.replace(/\D/g, '');
+                          const newCode = [...verificationCode];
+                          newCode[i] = value;
+                          setVerificationCode(newCode);
+                          
+                          if (value && next && i < 5) {
+                            next.focus();
+                            next.select();
+                          }
+                        }}
+                      />
+                    ))}
+                  </div>
                 </div>
-              </div>
+              </>
             )}
           </>
         )}

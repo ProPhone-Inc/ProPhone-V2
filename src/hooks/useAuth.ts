@@ -71,6 +71,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const login = async (credentials: { email: string; password: string }) => {
     try {
       setIsLoading(true);
+      setError(null);
 
       // Special case for owner login
       if (credentials.email === 'dallas@prophone.io' && credentials.password === 'owner') {
@@ -81,18 +82,26 @@ export function AuthProvider({ children }: AuthProviderProps) {
           role: 'owner',
           avatar: 'https://dallasreynoldstn.com/wp-content/uploads/2025/02/26F25F1E-C8E9-4DE6-BEE2-300815C83882.png'
         };
-        handleLogin(ownerData);
+        await handleLogin(ownerData);
         return;
       }
 
-      // Regular login flow
-      const response = await auth.login(credentials);
-      handleLogin(response.user);
+      // For demo purposes, simulate successful login
+      const mockUser = {
+        id: Math.random().toString(36).substr(2, 9),
+        name: credentials.email.split('@')[0],
+        email: credentials.email,
+        role: 'user',
+        plan: 'starter'
+      };
+      
+      await handleLogin(mockUser);
       
     } catch (error) {
       const errorMessage = error instanceof Error 
         ? error.message 
         : 'Login failed. Please try again.';
+      setError(errorMessage);
       throw new Error(errorMessage);
     } finally {
       setIsLoading(false);

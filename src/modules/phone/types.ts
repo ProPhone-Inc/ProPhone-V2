@@ -13,17 +13,22 @@ export interface Chat {
   id: string;
   lineId: string;
   name: string;
+  isGroup?: boolean;
   avatar: string;
   messages: Array<{
     id: string;
     content: string;
     time: string;
     type: 'sent' | 'received';
+    status?: 'sent' | 'delivered' | 'failed';
   }>;
   lastMessage: string;
   time: string;
   unread: number;
-  status: 'online' | 'offline';
+  messageStatus?: {
+    label: string;
+    icon: React.ReactNode;
+  };
   email?: string;
   notes?: string;
   segments?: string[];

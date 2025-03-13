@@ -22,13 +22,13 @@ function AdminPanel() {
   
   // Redirect if not authorized
   React.useEffect(() => {
-    if (currentUser?.role !== 'owner' && currentUser?.role !== 'super_admin' && currentUser?.role !== 'executive') {
+    if (currentUser?.role !== 'owner' && currentUser?.role !== 'super_admin') {
       window.location.href = '/';
     }
   }, [currentUser]);
 
   // Don't render anything if not authorized
-  if (currentUser?.role !== 'owner' && currentUser?.role !== 'super_admin' && currentUser?.role !== 'executive') {
+  if (currentUser?.role !== 'owner' && currentUser?.role !== 'super_admin') {
     return null;
   }
 

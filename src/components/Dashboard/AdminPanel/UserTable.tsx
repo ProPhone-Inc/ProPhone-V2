@@ -1,6 +1,6 @@
 import React from 'react';
 import { MoreHorizontal, PenSquare, Trash2, Ban, UserCheck, LogIn, ShieldBan } from 'lucide-react';
-import { useAuth } from '../../../hooks/useAuth';
+import { useAuth } from '../../../hooks/useAuth.ts';
 import { isUserInactive } from '../../../utils/user';
 
 interface UserTableProps {
@@ -56,20 +56,31 @@ export function UserTable({ users, onEdit, onDelete, onSuspend, onBan, onReactiv
 
   const getRoleBadge = (role: string) => {
     switch (role) {
-      case 'owner':
-      case 'super_admin':
+      case 'owner': 
         return (
           <div className="relative">
-            <span className="px-2 py-1 rounded-full bg-gradient-to-r from-[#B38B3F]/20 via-[#FFD700]/20 to-[#B38B3F]/20 text-[#FFD700] text-xs font-medium animate-pulse">
-              Team Admin
+            <span className="px-2 py-1 rounded-full bg-gradient-to-r from-[#FFD700]/20 via-[#FFD700]/40 to-[#FFD700]/20 text-[#FFD700] text-xs font-medium animate-pulse">
+              Platform Owner
             </span>
             <div className="absolute inset-0 bg-gradient-to-r from-[#B38B3F]/0 via-[#FFD700]/10 to-[#B38B3F]/0 blur-sm animate-pulse" />
           </div>
         );
-      case 'manager':
-        return <span className="px-2 py-1 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-medium">Team Manager</span>;
+      case 'super_admin':
+        return (
+          <div className="relative">
+            <span className="px-2 py-1 rounded-full bg-gradient-to-r from-[#B38B3F]/20 via-[#FFD700]/20 to-[#B38B3F]/20 text-[#FFD700] text-xs font-medium">
+              Super Admin
+            </span>
+          </div>
+        );
+      case 'executive':
+        return <span className="px-2 py-1 rounded-full bg-purple-500/20 text-purple-400 text-xs font-medium">Executive</span>;
+      case 'user':
+        return <span className="px-2 py-1 rounded-full bg-blue-500/20 text-blue-400 text-xs font-medium">User</span>;
+      case 'sub_user':
+        return <span className="px-2 py-1 rounded-full bg-gray-500/20 text-gray-400 text-xs font-medium">Sub User</span>;
       default:
-        return <span className="px-2 py-1 rounded-full bg-blue-500/20 text-blue-400 text-xs font-medium">Member</span>;
+        return <span className="px-2 py-1 rounded-full bg-zinc-500/20 text-zinc-400 text-xs font-medium">{role}</span>;
     }
   };
 
@@ -94,6 +105,7 @@ export function UserTable({ users, onEdit, onDelete, onSuspend, onBan, onReactiv
             <th className="text-left py-4 px-4 text-white/70 font-medium">User</th>
             <th className="text-left py-4 px-4 text-white/70 font-medium">Role</th>
             <th className="text-left py-4 px-4 text-white/70 font-medium">Status</th>
+            <th className="text-left py-4 px-4 text-white/70 font-medium">Plan</th>
             <th className="text-left py-4 px-4 text-white/70 font-medium">Join Date</th>
             <th className="text-left py-4 px-4 text-white/70 font-medium">Last Login</th>
             <th className="text-right py-4 px-4 text-white/70 font-medium">Actions</th>
@@ -122,6 +134,29 @@ export function UserTable({ users, onEdit, onDelete, onSuspend, onBan, onReactiv
               </td>
               <td className="py-4 px-4">
                 {getStatusBadge(user.status)}
+              </td>
+              <td className="py-4 px-4">
+                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                  user.plan === 'enterprise' 
+                    ? 'bg-purple-500/20 text-purple-400'
+                    : user.plan === 'pro'
+                    ? 'bg-blue-500/20 text-blue-400'
+                    : user.plan === 'team'
+                    ? 'bg-gray-500/20 text-gray-400'
+                    : user.plan === 'god_mode'
+                    ? 'bg-[#FFD700]/20 text-[#FFD700]'
+                    : 'bg-gray-500/20 text-gray-400'
+                }`}>
+                  {user.plan === 'god_mode'
+                    ? 'God Mode'
+                    : user.plan === 'enterprise' 
+                    ? 'Business Elite'
+                    : user.plan === 'pro'
+                    ? 'Business Pro' 
+                    : user.plan === 'team'
+                    ? 'Team'
+                    : 'Business Starter'}
+                </span>
               </td>
               <td className="py-4 px-4 text-white/70">{user.joinDate}</td>
               <td className="py-4 px-4 text-white/70">{new Date(user.lastLogin).toLocaleDateString()}</td>

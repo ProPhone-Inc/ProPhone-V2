@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Bell, Mail, AlertTriangle, Settings, Search, Filter, Star, TrendingUp, Zap, Sparkles, LayoutTemplate, Globe, GitMerge, UserCheck, Store, Send } from 'lucide-react';
+import { X, Bell, Mail, AlertTriangle, Settings, Search, Filter, Star, TrendingUp, Zap, Sparkles, LayoutTemplate, Globe, GitMerge, UserCheck, Store, Send, Clock, Ban, Trash2 } from 'lucide-react';
 import { EmailTemplatesModal } from './EmailTemplatesModal';
 import { NotificationComposer } from './NotificationComposer';
 
@@ -27,52 +27,18 @@ export function NotificationsModal({ onClose, onOpenEmailTemplates }: Notificati
   const [selectedLog, setSelectedLog] = React.useState<NotificationLog | null>(null);
   const [isResending, setIsResending] = React.useState(false);
 
-  // Mock notification logs - in a real app, these would come from your database
-  const notificationLogs: NotificationLog[] = [
-    {
-      id: '1',
-      type: 'suspension',
-      recipient: 'user@example.com',
-      subject: 'Your Account Has Been Suspended',
-      status: 'sent',
-      timestamp: '2025-03-15T14:30:00Z'
-    },
-    {
-      id: '2',
-      type: 'ban',
-      recipient: 'banned@example.com',
-      subject: 'Account Permanently Banned',
-      status: 'sent',
-      timestamp: '2025-03-15T12:15:00Z'
-    },
-    {
-      id: '3',
-      type: 'reactivation',
-      recipient: 'reactivated@example.com',
-      subject: 'Account Reactivated Successfully',
-      status: 'failed',
-      timestamp: '2025-03-14T18:45:00Z'
-    },
-    {
-      id: '4',
-      type: 'system',
-      recipient: 'admin@prophone.io',
-      subject: 'System Alert: High CPU Usage',
-      status: 'sent',
-      timestamp: '2025-03-14T16:20:00Z'
-    }
-  ];
+  const [notificationLogs, setNotificationLogs] = React.useState<NotificationLog[]>([]);
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
       case 'suspension':
-        return <Clock className="w-5 h-5 text-amber-400" />;
+        return <Ban className="w-5 h-5 text-amber-400" />;
       case 'ban':
-        return <Ban className="w-5 h-5 text-red-400" />;
+        return <Trash2 className="w-5 h-5 text-red-400" />;
       case 'reactivation':
         return <UserCheck className="w-5 h-5 text-emerald-400" />;
       case 'deletion':
-        return <Trash2 className="w-5 h-5 text-red-400" />;
+        return <Trash2 className="w-5 h-5 text-red-400" />; 
       default:
         return <AlertTriangle className="w-5 h-5 text-[#FFD700]" />;
     }

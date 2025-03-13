@@ -111,19 +111,21 @@ export function AudienceList({ onCreateSegment, onEditSegment, onDeleteSegment }
                     <p className="text-white/60">{segment.description}</p>
                   </div>
                 </div>
-                <div className="flex items-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button 
-                    onClick={() => onEditSegment?.(segment)}
-                    className="p-2 hover:bg-white/10 rounded-lg transition-colors"
-                  >
-                    <PenSquare className="w-4 h-4 text-white/60 hover:text-white" />
-                  </button>
-                  <button 
-                    onClick={() => onDeleteSegment?.(segment)}
-                    className="p-2 hover:bg-red-500/20 rounded-lg transition-colors"
-                  >
-                    <Trash2 className="w-4 h-4 text-red-400/70 hover:text-red-400" />
-                  </button>
+                <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="flex items-center space-x-2">
+                    <button 
+                      onClick={() => onEditSegment?.(segment)}
+                      className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                    >
+                      <PenSquare className="w-4 h-4 text-white/60 hover:text-white" />
+                    </button>
+                    <button 
+                      onClick={() => onDeleteSegment?.(segment)}
+                      className="p-2 hover:bg-red-500/20 rounded-lg transition-colors"
+                    >
+                      <Trash2 className="w-4 h-4 text-red-400/70 hover:text-red-400" />
+                    </button>
+                  </div>
                 </div>
               </div>
 

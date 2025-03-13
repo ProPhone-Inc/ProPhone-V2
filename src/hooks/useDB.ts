@@ -76,25 +76,28 @@ export function useDB() {
 
   const getTeamMembers = async () => {
     try {
-      // For demo purposes, return mock data
+      // Return mock data with owner as only admin
       return [
         {
           id: '1',
-          name: 'Sarah Johnson',
-          email: 'sarah@example.com',
-          role: 'member'
+          name: 'Dallas Reynolds',
+          email: 'dallas@prophone.io',
+          role: 'owner',
+          permissions: ['phone', 'crm', 'docupro', 'proflow']
         },
         {
           id: '2',
           name: 'Mike Chen',
           email: 'mike@example.com',
-          role: 'member'
+          role: 'member',
+          permissions: ['phone', 'crm', 'docupro', 'proflow']
         },
         {
           id: '3',
           name: 'Emma Wilson',
           email: 'emma@example.com',
-          role: 'member'
+          role: 'member',
+          permissions: ['phone', 'crm', 'docupro', 'proflow']
         }
       ];
     } catch (error) {

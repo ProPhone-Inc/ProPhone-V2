@@ -1,5 +1,6 @@
 import React from 'react';
 import { X, UserCog } from 'lucide-react';
+import { useClickOutside } from '../../../../hooks/useClickOutside';
 import { TeamPanel } from '../TeamPanel';
 import { api } from '../../../../api/client';
 
@@ -9,38 +10,25 @@ interface TeamPanelModalProps {
 }
 
 export function TeamPanelModal({ isOpen, onClose }: TeamPanelModalProps) {
-  const [teamName, setTeamName] = React.useState(() => {
-    return localStorage.getItem('teamName') || 'My Team';
+  const modalRef = React.useRef<HTMLDivElement>(null);
+  
+  useClickOutside(modalRef, () => {
+    onClose();
   });
-  const [totalMembers, setTotalMembers] = React.useState(0);
-
-  React.useEffect(() => {
-    const loadTeamMembers = async () => {
-      try {
-        const { data } = await api.get('/team/members');
-        setTotalMembers(data.length);
-      } catch (error) {
-        console.error('Failed to load team members:', error);
-        setTotalMembers(0);
-      }
-    };
-    loadTeamMembers();
-  }, []);
 
   if (!isOpen) return null;
 
-  const handleClose = () => {
-    onClose();
-  };
-
   return (
     <div className="modal-overlay">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-md" onClick={handleClose} />
-      <div className="modal-container">
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-md" onClick={onClose} />
+      <div 
+        ref={modalRef}
+        className="modal-container"
+      >
         <div className="flex items-center justify-between p-6 border-b border-[#B38B3F]/20">
           <h2 className="text-xl font-bold text-white">Team Management</h2>
           <button
-            onClick={handleClose}
+            onClick={onClose}
             className="text-white/70 hover:text-white p-2 rounded-full hover:bg-white/10 transition-colors"
           >
             <X className="w-5 h-5" />
@@ -48,7 +36,7 @@ export function TeamPanelModal({ isOpen, onClose }: TeamPanelModalProps) {
         </div>
 
         <div className="p-6 max-h-[calc(100vh-12rem)] overflow-y-auto">
-          <TeamPanel onClose={handleClose} />
+          <TeamPanel onClose={onClose} />
         </div>
       </div>
     </div>
