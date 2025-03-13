@@ -13,6 +13,7 @@ export interface Chat {
   id: string;
   lineId: string;
   name: string;
+  number?: string | null;
   isGroup?: boolean;
   avatar: string;
   messages: Array<{

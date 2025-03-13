@@ -88,7 +88,10 @@ const phoneLines = [
 export function PhoneSystem({ selectedMessage, selectedChat, onMessageSelect }: PhoneSystemProps) {
   const [activeTab, setActiveTab] = React.useState<'crm' | 'audience'>('crm');
   const { sendNotification } = useNotifications();
-  const [selectedLine, setSelectedLine] = React.useState<string | null>(null);
+  const [selectedLine, setSelectedLine] = React.useState<string | null>(() => {
+    // Auto-select first line if available
+    return phoneLines.length > 0 ? phoneLines[0].id : null;
+  });
   const [messageInput, setMessageInput] = React.useState('');
   const [currentChat, setCurrentChat] = React.useState<string | null>(null);
   const [showProviderModal, setShowProviderModal] = React.useState(false);
@@ -98,6 +101,13 @@ export function PhoneSystem({ selectedMessage, selectedChat, onMessageSelect }: 
   const [isCreatingMessage, setIsCreatingMessage] = React.useState(false);
   const [newMessageNumber, setNewMessageNumber] = React.useState('');
   const [isDraft, setIsDraft] = React.useState(false);
+
+  // Effect to handle initial line selection when phone lines change
+  React.useEffect(() => {
+    if (!selectedLine && localPhoneLines.length > 0) {
+      setSelectedLine(localPhoneLines[0].id);
+    }
+  }, [selectedLine, localPhoneLines]);
 
   const handleReorderLines = React.useCallback((startIndex: number, endIndex: number) => {
     setLocalPhoneLines(prev => {
@@ -115,6 +125,7 @@ export function PhoneSystem({ selectedMessage, selectedChat, onMessageSelect }: 
       id: '1',
       lineId: '1',
       name: 'Sarah Johnson',
+      number: '(555) 123-4567',
       avatar: 'SJ',
       messages: [{
         id: '1',
@@ -142,6 +153,7 @@ export function PhoneSystem({ selectedMessage, selectedChat, onMessageSelect }: 
       id: '2',
       lineId: '1',
       name: 'Kevin Brown',
+      number: '(555) 987-6543',
       avatar: 'KB',
       messages: [{
         id: '4',
@@ -169,6 +181,7 @@ export function PhoneSystem({ selectedMessage, selectedChat, onMessageSelect }: 
       id: '3',
       lineId: '2',
       name: 'Emma Wilson',
+      number: '(555) 456-7890',
       avatar: 'EW',
       messages: [{
         id: '7',
@@ -482,6 +495,7 @@ export function PhoneSystem({ selectedMessage, selectedChat, onMessageSelect }: 
       id: newChatId,
       lineId: selectedLine,
       name: numbers.length > 1 ? `Group (${numbers.length})` : numbers[0],
+      number: numbers.length > 1 ? null : numbers[0],
       isGroup: numbers.length > 1,
       avatar: numbers.length > 1 ? 'G' : 'NC',
       messages: [],

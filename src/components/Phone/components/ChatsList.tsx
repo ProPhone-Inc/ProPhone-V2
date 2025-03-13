@@ -1,6 +1,5 @@
 import React from 'react';
-import { Filter, MessageSquare, Phone, CheckCircle, Search, Home, Sun, Flame, ThumbsDown, Ban, Megaphone, Repeat, Calendar, BarChart2, DollarSign, X, Bell } from 'lucide-react';
-import { useClickOutside } from '../../../hooks/useClickOutside';
+import { PenSquare, Phone, CheckCircle, Home, Sun, Flame, Megaphone, Calendar, BarChart2, DollarSign, Bell, Filter } from 'lucide-react';
 import type { Chat } from '../../../modules/phone/types';
 
 interface ChatsListProps {
@@ -16,8 +15,8 @@ interface ChatsListProps {
 }
 
 type FilterState = {
-  readStatus: 'all' | 'unread' | 'read' | 'not-responded';
-  status: 'all' | 'new' | 'hot' | 'warm' | 'follow-up' | 'prospecting' | 'appointment-set' | 'needs-analysis' | 'make-offer' | 'conversion';
+  readStatus: 'all' | 'unread' | 'read';
+  status: string;
 };
 
 export function ChatsList({
@@ -31,13 +30,20 @@ export function ChatsList({
   onNewMessage,
   chatStatuses
 }: ChatsListProps) {
-  const [showFilterDropdown, setShowFilterDropdown] = React.useState(false);
+  const [chatPreviews, setChatPreviews] = React.useState<Record<string, { message: string; time: string }>>({});
   const [filters, setFilters] = React.useState<FilterState>({
     readStatus: 'all',
     status: 'all'
   });
+  const [selectedFilters, setSelectedFilters] = React.useState<{
+    readStatus: string | null;
+    statuses: string[];
+  }>({
+    readStatus: null,
+    statuses: []
+  });
+  const [showFilterDropdown, setShowFilterDropdown] = React.useState(false);
   const filterRef = React.useRef<HTMLDivElement>(null);
-  const [chatPreviews, setChatPreviews] = React.useState<Record<string, { message: string; time: string }>>({});
 
   const statusIcons = {
     new: <Home className="w-4 h-4 text-emerald-400" />,
@@ -78,12 +84,23 @@ export function ChatsList({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Filter conversations based on current filters
-  const filteredConversations = React.useMemo(() => {
+  const statusOptions = [
+    { value: 'all', label: 'All Status', icon: <Filter className="w-4 h-4 text-white/60" /> },
+    { value: 'new', label: 'New', icon: <Home className="w-4 h-4 text-emerald-400" /> },
+    { value: 'hot', label: 'Hot', icon: <Flame className="w-4 h-4 text-red-400" /> },
+    { value: 'warm', label: 'Warm', icon: <Sun className="w-4 h-4 text-amber-400" /> },
+    { value: 'follow-up', label: 'Follow Up', icon: <Bell className="w-4 h-4 text-purple-400" /> },
+    { value: 'prospecting', label: 'Prospecting', icon: <Megaphone className="w-4 h-4 text-blue-400" /> },
+    { value: 'appointment-set', label: 'Appointment Set', icon: <Calendar className="w-4 h-4 text-indigo-400" /> },
+    { value: 'needs-analysis', label: 'Needs Analysis', icon: <BarChart2 className="w-4 h-4 text-cyan-400" /> },
+    { value: 'make-offer', label: 'Make Offer', icon: <DollarSign className="w-4 h-4 text-green-400" /> },
+    { value: 'conversion', label: 'Conversion', icon: <CheckCircle className="w-4 h-4 text-emerald-400" /> }
+  ];
+
+  const filteredConversations = React.useMemo(() => { 
     if (!selectedLine) return [];
     
     return conversations.filter(chat => {
-      // Filter by line ID
       if (chat.lineId !== selectedLine) {
         return false;
       }
@@ -95,14 +112,11 @@ export function ChatsList({
       if (filters.readStatus === 'read' && chat.unread > 0) {
         return false;
       }
-      if (filters.readStatus === 'not-responded' && chat.messages[chat.messages.length - 1]?.type !== 'received') {
-        return false;
-      }
       
       // Apply status filter
       if (filters.status !== 'all') {
-        const chatStatus = chatStatuses[chat.id]?.label.toLowerCase().replace(/\s+/g, '-');
-        if (chatStatus !== filters.status) {
+        const chatStatus = chatStatuses[chat.id]?.label.toLowerCase();
+        if (chatStatus !== filters.status.toLowerCase()) {
           return false;
         }
       }
@@ -122,20 +136,127 @@ export function ChatsList({
           <div className="flex items-center space-x-2">
             <div className="relative" ref={filterRef}>
               <button
-                disabled={!selectedLine}
                 onClick={() => setShowFilterDropdown(!showFilterDropdown)}
                 className={`p-2 rounded-lg transition-colors ${
-                  !selectedLine
-                    ? 'opacity-50 cursor-not-allowed text-white/40'
-                    : showFilterDropdown || filters.readStatus !== 'all' || filters.status !== 'all'
-                      ? 'bg-[#FFD700]/20 text-[#FFD700]'
-                      : 'hover:bg-white/10 text-[#FFD700]'
+                  selectedFilters.readStatus || selectedFilters.statuses.length > 0
+                    ? 'bg-[#FFD700]/20 text-[#FFD700]'
+                    : 'hover:bg-white/10 text-[#FFD700]'
                 }`}
-                title={selectedLine ? 'Filter Messages' : 'Select a line to filter messages'}
               >
                 <Filter className="w-5 h-5" />
               </button>
+              {showFilterDropdown && (
+                <div className="absolute right-0 top-full mt-2 w-56 bg-zinc-900 border border-[#B38B3F]/20 rounded-lg shadow-xl z-[100]">
+                  <div className="p-2 border-b border-[#B38B3F]/20">
+                    <div className="text-xs font-medium text-white/60 mb-2">Message Status</div>
+                    <button
+                      onClick={() => {
+                        setFilters(prev => ({ ...prev, readStatus: 'all' }));
+                        setSelectedFilters(prev => ({ ...prev, readStatus: null }));
+                      }}
+                      className={`w-full px-4 py-2 text-left hover:bg-white/10 rounded-lg transition-colors ${
+                        filters.readStatus === 'all' ? 'text-[#FFD700]' : 'text-white'
+                      }`}
+                    >
+                      All Messages
+                    </button>
+                    <button
+                      onClick={() => {
+                        setFilters(prev => ({ ...prev, readStatus: 'unread' }));
+                        setSelectedFilters(prev => ({ ...prev, readStatus: 'unread' }));
+                      }}
+                      className={`w-full px-4 py-2 text-left hover:bg-white/10 rounded-lg transition-colors ${
+                        filters.readStatus === 'unread' ? 'text-[#FFD700]' : 'text-white'
+                      }`}
+                    >
+                      Unread
+                    </button>
+                    <button
+                      onClick={() => {
+                        setFilters(prev => ({ ...prev, readStatus: 'read' }));
+                        setSelectedFilters(prev => ({ ...prev, readStatus: 'read' }));
+                      }}
+                      className={`w-full px-4 py-2 text-left hover:bg-white/10 rounded-lg transition-colors ${
+                        filters.readStatus === 'read' ? 'text-[#FFD700]' : 'text-white'
+                      }`}
+                    >
+                      Read
+                    </button>
+                  </div>
+                  <div className="p-2">
+                    <div className="text-xs font-medium text-white/60 mb-2">Contact Status</div>
+                    {statusOptions.map(option => (
+                      <button
+                        key={option.value}
+                        onClick={() => {
+                          setFilters(prev => ({ ...prev, status: option.value }));
+                          if (option.value === 'all') {
+                            setSelectedFilters(prev => ({ ...prev, statuses: [] }));
+                          } else {
+                            setSelectedFilters(prev => ({
+                              ...prev,
+                              statuses: [...prev.statuses, option.value]
+                            }));
+                          }
+                        }}
+                        className={`w-full px-4 py-2 text-left hover:bg-white/10 rounded-lg transition-colors flex items-center space-x-3 ${
+                          selectedFilters.statuses.includes(option.value) || 
+                          (option.value === 'all' && selectedFilters.statuses.length === 0)
+                            ? 'text-[#FFD700]'
+                            : 'text-white'
+                        }`}
+                      >
+                        {option.icon}
+                        <span>{option.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
+            {/* Selected Filters Display */}
+            {(selectedFilters.readStatus || selectedFilters.statuses.length > 0) && (
+              <div className="absolute left-0 right-0 -bottom-12 flex flex-wrap gap-2 px-4 py-2 bg-zinc-900/95 border-b border-[#B38B3F]/20">
+                {selectedFilters.readStatus && (
+                  <div className="px-2 py-1 rounded-full bg-[#FFD700]/20 text-[#FFD700] text-xs font-medium flex items-center">
+                    <span>{selectedFilters.readStatus.charAt(0).toUpperCase() + selectedFilters.readStatus.slice(1)}</span>
+                    <button
+                      onClick={() => {
+                        setFilters(prev => ({ ...prev, readStatus: 'all' }));
+                        setSelectedFilters(prev => ({ ...prev, readStatus: null }));
+                      }}
+                      className="ml-1 hover:text-white"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                )}
+                {selectedFilters.statuses.map(status => {
+                  const option = statusOptions.find(opt => opt.value === status);
+                  if (!option) return null;
+                  return (
+                    <div key={status} className="px-2 py-1 rounded-full bg-[#FFD700]/20 text-[#FFD700] text-xs font-medium flex items-center">
+                      {option.icon}
+                      <span className="ml-1">{option.label}</span>
+                      <button
+                        onClick={() => {
+                          setSelectedFilters(prev => ({
+                            ...prev,
+                            statuses: prev.statuses.filter(s => s !== status)
+                          }));
+                          if (selectedFilters.statuses.length === 1) {
+                            setFilters(prev => ({ ...prev, status: 'all' }));
+                          }
+                        }}
+                        className="ml-1 hover:text-white"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
             <button 
               onClick={() => {
                 if (selectedLine) {
@@ -151,18 +272,18 @@ export function ChatsList({
               }`}
               title={selectedLine ? 'Draft Message' : 'Select a line to create draft'}
             >
-              <MessageSquare className="w-5 h-5" />
+              <PenSquare className="w-5 h-5" />
             </button>
             <button
               disabled={!selectedLine}
-              className={`p-2 rounded-lg transition-colors ${
+              className={`p-2 rounded-lg transition-colors cursor-default ${
                 selectedLine
                   ? 'hover:bg-white/10 text-[#FFD700]'
-                  : 'opacity-50 cursor-not-allowed text-white/40'
+                  : 'text-white/20'
               }`}
               title={selectedLine ? 'Make Call' : 'Select a line to make calls'}
             >
-              <Phone className="w-5 h-5 text-[#FFD700]" />
+              <Phone className="w-5 h-5" />
             </button>
           </div>
         </div>
@@ -184,11 +305,11 @@ export function ChatsList({
               <div className="relative flex-shrink-0">
                 <div className="w-10 h-10 rounded-full bg-[#B38B3F]/20 flex items-center justify-center text-[#FFD700]">
                   {chat.id === 'draft' ? (
-                    <MessageSquare className="w-5 h-5" />
+                    <PenSquare className="w-5 h-5" />
                   ) : chat.isGroup ? (
                     <Users className="w-5 h-5" />
                   ) : /^\(\d{3}\) \d{3}-\d{4}$/.test(chat.name) ? (
-                    <MessageSquare className="w-5 h-5" />
+                    <PenSquare className="w-5 h-5" />
                   ) : (
                     chat.name.split(' ').map(word => word[0]).join('').toUpperCase().slice(0, 2)
                   )}

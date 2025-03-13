@@ -35,13 +35,14 @@ export function ChatArea({
   const [showStatusDropdown, setShowStatusDropdown] = React.useState(false);
   const [cursorPosition, setCursorPosition] = React.useState(0);
   const [error, setError] = React.useState('');
+  const [activeFilters, setActiveFilters] = React.useState<{
+    readStatus: { value: string; label: string } | null;
+    statuses: Array<{ value: string; label: string; icon: React.ReactNode; color: string }>;
+  }>({
+    readStatus: null,
+    statuses: []
+  });
   
-  React.useEffect(() => {
-    if (inputRef.current) {
-      inputRef.current.setSelectionRange(cursorPosition, cursorPosition);
-    }
-  }, [cursorPosition, newMessageNumber]);
-
   React.useEffect(() => {
     // Clear error when creating message state changes
     if (!isCreatingMessage) {
@@ -50,15 +51,15 @@ export function ChatArea({
   }, [isCreatingMessage]);
 
   const statusOptions = [
-    { value: 'new', label: 'New', icon: (selected: boolean) => <Home className={`w-4 h-4 ${selected ? 'text-emerald-400' : 'text-white/60'}`} /> },
-    { value: 'hot', label: 'Hot', icon: (selected: boolean) => <Flame className={`w-4 h-4 ${selected ? 'text-red-400' : 'text-white/60'}`} /> },
-    { value: 'warm', label: 'Warm', icon: (selected: boolean) => <Sun className={`w-4 h-4 ${selected ? 'text-amber-400' : 'text-white/60'}`} /> },
-    { value: 'follow-up', label: 'Follow Up', icon: (selected: boolean) => <Bell className={`w-4 h-4 ${selected ? 'text-purple-400' : 'text-white/60'}`} /> },
-    { value: 'prospecting', label: 'Prospecting', icon: (selected: boolean) => <Megaphone className={`w-4 h-4 ${selected ? 'text-blue-400' : 'text-white/60'}`} /> },
-    { value: 'appointment-set', label: 'Appointment Set', icon: (selected: boolean) => <Calendar className={`w-4 h-4 ${selected ? 'text-indigo-400' : 'text-white/60'}`} /> },
-    { value: 'needs-analysis', label: 'Needs Analysis', icon: (selected: boolean) => <BarChart2 className={`w-4 h-4 ${selected ? 'text-cyan-400' : 'text-white/60'}`} /> },
-    { value: 'make-offer', label: 'Make Offer', icon: (selected: boolean) => <DollarSign className={`w-4 h-4 ${selected ? 'text-green-400' : 'text-white/60'}`} /> },
-    { value: 'conversion', label: 'Conversion', icon: (selected: boolean) => <CheckCircle className={`w-4 h-4 ${selected ? 'text-emerald-400' : 'text-white/60'}`} /> }
+    { value: 'new', label: 'New', icon: <Home className="w-4 h-4 text-emerald-400" />, color: 'text-emerald-400 bg-emerald-400/20' },
+    { value: 'hot', label: 'Hot', icon: <Flame className="w-4 h-4 text-red-400" />, color: 'text-red-400 bg-red-400/20' },
+    { value: 'warm', label: 'Warm', icon: <Sun className="w-4 h-4 text-amber-400" />, color: 'text-amber-400 bg-amber-400/20' },
+    { value: 'follow-up', label: 'Follow Up', icon: <Bell className="w-4 h-4 text-purple-400" />, color: 'text-purple-400 bg-purple-400/20' },
+    { value: 'prospecting', label: 'Prospecting', icon: <Megaphone className="w-4 h-4 text-blue-400" />, color: 'text-blue-400 bg-blue-400/20' },
+    { value: 'appointment-set', label: 'Appointment Set', icon: <Calendar className="w-4 h-4 text-indigo-400" />, color: 'text-indigo-400 bg-indigo-400/20' },
+    { value: 'needs-analysis', label: 'Needs Analysis', icon: <BarChart2 className="w-4 h-4 text-cyan-400" />, color: 'text-cyan-400 bg-cyan-400/20' },
+    { value: 'make-offer', label: 'Make Offer', icon: <DollarSign className="w-4 h-4 text-green-400" />, color: 'text-green-400 bg-green-400/20' },
+    { value: 'conversion', label: 'Conversion', icon: <CheckCircle className="w-4 h-4 text-emerald-400" />, color: 'text-emerald-400 bg-emerald-400/20' }
   ];
 
   useClickOutside(statusRef, () => setShowStatusDropdown(false));
@@ -66,7 +67,6 @@ export function ChatArea({
   const formatPhoneNumber = (value: string) => {
     // Strip all non-digits
     const numbers = value.replace(/\D/g, '');
-    
     // Format based on length
     if (numbers.length <= 3) {
       return `(${numbers}`;
@@ -89,50 +89,40 @@ export function ChatArea({
 
   const handlePhoneNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const input = e.target;
-    const previousValue = newMessageNumber;
-    const isBackspace = input.value.length < previousValue.length;
-    const hasComma = input.value.includes(',');
+    const content = input.value;
+    const isBackspace = content.length < newMessageNumber.length;
     
     setError('');
     
-    // Handle group message creation
-    if (hasComma) {
-      // Remove formatting and split by comma
-      const numbers = input.value.split(',').map(num => num.trim().replace(/\D/g, ''));
-      const formattedNumbers = numbers.map(num => formatPhoneNumber(num));
-      onNewMessageChange(formattedNumbers.join(', '));
-      return;
-    }
-    
-    // If backspacing with empty input or just "("
-    if (isBackspace && (input.value === '' || previousValue === '(')) {
+    // Handle empty input
+    if (content === '') {
       setIsCreatingMessage(false);
+      onNewMessageChange('');
       return;
     }
     
     // Handle backspacing
     if (isBackspace) {
-      // Remove the last non-formatting character before the cursor
-      let strippedNumber = previousValue.replace(/\D/g, '');
-      strippedNumber = strippedNumber.slice(0, -1);
-      const formattedNumber = strippedNumber ? formatPhoneNumber(strippedNumber) : '';
+      const strippedNumber = content.replace(/\D/g, '');
+      const formattedNumber = strippedNumber ? formatPhoneNumber(strippedNumber) : ''; 
       onNewMessageChange(formattedNumber);
-      
-      // Calculate new cursor position after backspace
-      const newPosition = Math.max(
-        formattedNumber.length > 0 ? formattedNumber.length : 1,
-        input.selectionStart || 0
-      );
-      setCursorPosition(newPosition);
       return;
     }
     
     // Handle regular input
-    const formattedNumber = formatPhoneNumber(input.value);
+    const formattedNumber = formatPhoneNumber(content);
     onNewMessageChange(formattedNumber);
-    
-    // Set cursor position after the last entered digit
-    setCursorPosition(formattedNumber.length);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && newMessageNumber.trim()) {
+      e.preventDefault();
+      if (isValidPhoneNumber(newMessageNumber)) {
+        onStartChat();
+      } else {
+        setError('Please enter a complete phone number');
+      }
+    }
   };
 
   if (!selectedChat && !isCreatingMessage) {
@@ -154,35 +144,17 @@ export function ChatArea({
       <div className="px-4 py-3 border-b border-[#B38B3F]/20 flex items-center justify-between">
         {isCreatingMessage ? (
           <div className="flex-1 flex items-center space-x-3">
-            <div className="flex-1">
+            <div className="flex-1 relative">
               <input
                 ref={inputRef}
-                type="tel"
+                type="text"
                 value={newMessageNumber}
                 onChange={handlePhoneNumberChange}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && newMessageNumber.trim()) {
-                    e.preventDefault();
-                    if (newMessageNumber.includes(',')) {
-                      // Validate all numbers in group
-                      const numbers = newMessageNumber.split(',').map(n => n.trim());
-                      const allValid = numbers.every(n => isValidPhoneNumber(n));
-                      if (allValid) {
-                        onStartChat();
-                      } else {
-                        setError('Please enter complete phone numbers for all recipients');
-                      }
-                    } else if (isValidPhoneNumber(newMessageNumber)) {
-                      onStartChat();
-                    } else {
-                      setError('Please enter a complete phone number');
-                    }
-                  }
-                }}
-                placeholder="Enter phone number(s) separated by commas..."
-                className={`w-full px-4 py-2 bg-zinc-800/50 border rounded-lg text-white placeholder-[#FFD700]/60 ${
+                onKeyDown={handleKeyDown}
+                className={`w-full px-4 py-2 bg-zinc-800 border rounded-lg text-white placeholder-white/40 focus:outline-none ${
                   error ? 'border-red-500 focus:border-red-500' : 'border-[#B38B3F]/20'
                 } focus:border-[#FFD700]/40 focus:ring-1 focus:ring-[#FFD700]/20 transition-all duration-200`}
+                placeholder="Enter phone number"
                 autoFocus
               />
               {error && (
@@ -209,21 +181,33 @@ export function ChatArea({
         ) : (
           <>
             <div className="flex items-center space-x-3 flex-shrink-0 min-w-0">
-              <div className="w-10 h-10 rounded-full bg-[#B38B3F]/20 flex items-center justify-center text-[#FFD700] flex-shrink-0">
-                {selectedChat.avatar}
+              <div className="relative">
+                <div className="w-10 h-10 rounded-full bg-[#B38B3F]/20 flex items-center justify-center text-[#FFD700] flex-shrink-0">
+                  {selectedChat.id === 'draft' ? (
+                    <MessageSquare className="w-5 h-5" />
+                  ) : /^\(\d{3}\) \d{3}-\d{4}$/.test(selectedChat.name) ? (
+                    <MessageSquare className="w-5 h-5" />
+                  ) : (
+                    selectedChat.name.split(' ').map(word => word[0]).join('').toUpperCase().slice(0, 2)
+                  )}
+                </div>
               </div>
               <div className="min-w-0">
                 <div className="font-medium text-white whitespace-nowrap overflow-hidden text-ellipsis">
                   {selectedChat.name}
                 </div>
-                <div className="text-sm text-white/60">Online</div>
+                {selectedChat.number && !/^\(\d{3}\) \d{3}-\d{4}$/.test(selectedChat.name) && (
+                  <div className="text-sm text-white/60">{selectedChat.number}</div>
+                )}
               </div>
             </div>
             <div className="flex items-center space-x-2 flex-shrink-0 ml-4">
               <div className="relative" ref={statusRef}>
                 <button 
                   onClick={() => setShowStatusDropdown(!showStatusDropdown)}
-                  className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 rounded-lg transition-colors flex items-center space-x-2 text-sm"
+                  className={`px-3 py-1.5 rounded-lg transition-colors flex items-center space-x-2 text-sm ${
+                    currentStatus ? statusOptions.find(opt => opt.label === currentStatus.label)?.color : 'bg-zinc-800'
+                  }`}
                 >
                   {currentStatus.icon}
                   <span className="text-white">{currentStatus.label}</span>
@@ -238,15 +222,15 @@ export function ChatArea({
                           onClick={() => {
                             onStatusChange(selectedChat.id, { 
                               label: option.label, 
-                              icon: option.icon(true)
+                              icon: option.icon
                             });
                             setShowStatusDropdown(false);
                           }}
-                          className={`w-full px-4 py-2 flex items-center space-x-3 hover:bg-white/5 transition-colors ${
-                            currentStatus.label === option.label ? 'bg-[#B38B3F]/20' : ''
+                          className={`w-full px-4 py-2 flex items-center space-x-3 transition-colors ${
+                            currentStatus.label === option.label ? option.color : 'hover:bg-white/5'
                           }`}
                         >
-                          {option.icon(currentStatus.label === option.label)}
+                          {option.icon}
                           <span className="text-white">{option.label}</span>
                         </button>
                       ))}
@@ -262,6 +246,47 @@ export function ChatArea({
               </button>
             </div>
           </>
+        )}
+        
+        {/* Active Filters */}
+        {(activeFilters.readStatus || activeFilters.statuses.length > 0) && (
+          <div className="mt-2 flex items-center flex-wrap gap-2 px-2">
+            {activeFilters.readStatus && (
+              <div className="px-2 py-1 rounded-full bg-[#FFD700]/20 text-[#FFD700] text-xs font-medium flex items-center space-x-1">
+                <span>{activeFilters.readStatus.label}</span>
+                <button
+                  onClick={() => {
+                    setActiveFilters(prev => ({ ...prev, readStatus: null }));
+                    setFilters(prev => ({ ...prev, readStatus: 'all' }));
+                  }}
+                  className="ml-1 hover:text-white transition-colors"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </div>
+            )}
+            {activeFilters.statuses.map((status) => (
+              <div 
+                key={status.value}
+                className={`px-2 py-1 rounded-full text-xs font-medium flex items-center space-x-1 ${status.color}`}
+              >
+                {status.icon}
+                <span>{status.label}</span>
+                <button
+                  onClick={() => {
+                    setActiveFilters(prev => ({
+                      ...prev,
+                      statuses: prev.statuses.filter(s => s.value !== status.value)
+                    }));
+                    setFilters(prev => ({ ...prev, status: 'all' }));
+                  }}
+                  className="ml-1 hover:text-white transition-colors"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </div>
+            ))}
+          </div>
         )}
       </div>
 
