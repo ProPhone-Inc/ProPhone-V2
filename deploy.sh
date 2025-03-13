@@ -3,11 +3,6 @@
 # Exit on any error
 set -e
 
-# Load environment variables
-source .env
-
-cd /var/www/production
-
 echo "🚀 Starting deployment..."
 
 # Pull latest changes
