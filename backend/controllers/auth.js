@@ -155,6 +155,69 @@ exports.forgetpassword = async (req, res) => {
   
 };
 
+
+exports.facebooklogin = async (req, res) => {
+  const { data, plan } = req.body; 
+  if (!data) {
+    return res.status(400).json({ message: "Invalid request format" });
+  }
+
+  const { email,fbid ,firstName} = data;
+
+  
+
+  const existingUser = await usersCollection.findOne({ email });
+
+  if (existingUser) {
+    const token = jwt.sign({ user_id: existingUser._id, email: existingUser.email }, SECRET_KEY, { expiresIn: '1h' });
+  
+    const ownerData = {
+      token: token,
+      id: token,
+      name: existingUser.firstname ,
+      email: existingUser.email,
+      role: 'user',
+      
+    };
+  
+    return res.json({ ownerData });
+  }
+  
+  // New user creation
+  const newUser = {
+    email,
+    firstname: firstName, // Fixed spelling of 'firstname'
+    
+    plan,
+    fbid,
+    createdAt: new Date(),
+  };
+  
+  const result = await usersCollection.insertOne(newUser);
+  
+  const token = jwt.sign({ user_id: result.insertedId, email: email }, SECRET_KEY, { expiresIn: '1h' });
+  
+  const ownerData = {
+    token: token,
+    id: token,
+    name: firstName + ' ',
+    email: email,
+    role: 'user',
+    
+  };
+  
+  return res.json({ ownerData });
+  
+  
+
+ 
+    
+  
+  
+};
+
+
+
 exports.googlelogin = async (req, res) => {
   const { data, plan } = req.body; 
   if (!data) {

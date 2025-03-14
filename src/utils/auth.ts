@@ -133,7 +133,7 @@ export async function handleFacebookAuth(): Promise<{ id: string; name: string; 
             };
     
             // Send data to backend
-            const apiResponse = await axios.post(`/api/auth/register-user`, {
+            const apiResponse = await axios.post(`/api/auth/facebook-login`, {
               data: user,
               plan: "",
             });
