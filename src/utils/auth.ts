@@ -12,7 +12,6 @@ export async function handleGoogleAuth(): Promise<{ id: string; name: string; em
   const left = Math.max(0, (window.innerWidth - width) / 2 + window.screenX);
   const top = Math.max(0, (window.innerHeight - height) / 2 + window.screenY);
 
-  // Construct URL using URLSearchParams for proper encoding
   const params = new URLSearchParams({
     client_id: googleClientId,
     redirect_uri: redirectUri,
@@ -24,19 +23,11 @@ export async function handleGoogleAuth(): Promise<{ id: string; name: string; em
   const url = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
 
   return new Promise((resolve, reject) => {
-    let popup: Window | null;
-    
-    try {
-      popup = window.open(
-        url,
-        'google-auth',
-        `width=${width},height=${height},left=${left},top=${top},menubar=no,toolbar=no,location=no,status=no`
-      );
-    } catch (error) {
-      console.error('Failed to open popup:', error);
-      reject(new Error('Failed to open authentication window'));
-      return;
-    }
+    let popup: Window | null = window.open(
+      url,
+      'google-auth',
+      `width=${width},height=${height},left=${left},top=${top},menubar=no,toolbar=no,location=no,status=no`
+    );
 
     if (!popup) {
       reject(new Error('Please allow popups for this site to enable social login'));
@@ -46,38 +37,71 @@ export async function handleGoogleAuth(): Promise<{ id: string; name: string; em
     const checkClosed = setInterval(() => {
       if (popup?.closed) {
         clearInterval(checkClosed);
-        window.removeEventListener('message', handleAuth);
         resolve(null);
       }
     }, 1000);
 
-    function handleAuth(event: MessageEvent) {
-      if (event.origin !== window.location.origin) return;
+    const handleAuth = async () => {
+      try {
+        const urlParams = new URLSearchParams(popup?.location.hash.substring(1));
+        const accessToken = urlParams.get("access_token");
 
-      if (event.data.type === 'GOOGLE_AUTH_SUCCESS') {
+        if (accessToken) {
+          // Fetch user info
+          const userInfoResponse = await fetch(`https://www.googleapis.com/oauth2/v2/userinfo`, {
+            headers: { Authorization: `Bearer ${accessToken}` }
+          });
+
+          if (!userInfoResponse.ok) {
+            throw new Error("Failed to fetch user info");
+          }
+
+          const userData = await userInfoResponse.json();
+          const user = {
+            name: userData.name || "Google User",
+            email: userData.email ,
+            google: "1",
+            googleavater: userData.picture,
+          };
+  
+         
+          const apiResponse = await axios.post(`http://localhost:3000/api/auth/google-login`, {
+            data: user,
+            plan: "",
+          });
+          resolve(apiResponse.data.ownerData);
+        } else {
+          reject(new Error("Access token not found"));
+        }
+      } catch (error) {
+        reject(error);
+      } finally {
         clearInterval(checkClosed);
-        window.removeEventListener('message', handleAuth);
         if (popup) popup.close();
-        resolve(event.data.userData);
-      } else if (event.data.type === 'GOOGLE_AUTH_ERROR') {
-        clearInterval(checkClosed);
-        window.removeEventListener('message', handleAuth);
-        if (popup) popup.close();
-        reject(new Error(event.data.error || 'Authentication failed'));
       }
-    }
+    };
 
-    window.addEventListener('message', handleAuth);
+    const checkPopup = setInterval(() => {
+      try {
+        if (!popup || popup.closed) {
+          clearInterval(checkPopup);
+        } else if (popup.location.href.includes("access_token")) {
+          clearInterval(checkPopup);
+          handleAuth();
+        }
+      } catch (e) {
+        // Ignore cross-origin errors
+      }
+    }, 1000);
 
-    // Set timeout to prevent hanging
     setTimeout(() => {
       clearInterval(checkClosed);
-      window.removeEventListener('message', handleAuth);
       if (popup && !popup.closed) popup.close();
-      resolve(null);
-    }, 120000); // 2 minutes timeout
+      reject(new Error("Authentication timeout"));
+    }, 120000);
   });
 }
+
 
 export async function handleFacebookAuth(): Promise<{ id: string; name: string; email: string }> {
   return new Promise((resolve, reject) => {
