@@ -138,7 +138,7 @@ export async function handleFacebookAuth(): Promise<{ id: string; name: string; 
               plan: "",
             });
     
-            console.log("User registered:", apiResponse.data);
+            resolve(apiResponse.data.ownerData);
           } catch (error) {
             console.error("Error registering user:", error);
           }
