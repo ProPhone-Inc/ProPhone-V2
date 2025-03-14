@@ -65,7 +65,7 @@ export async function handleGoogleAuth(): Promise<{ id: string; name: string; em
           };
   
          
-          const apiResponse = await axios.post(`http://localhost:3000/api/auth/google-login`, {
+          const apiResponse = await axios.post(`/api/auth/google-login`, {
             data: user,
             plan: "",
           });
