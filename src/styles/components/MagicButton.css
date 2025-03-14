@@ -1,0 +1,38 @@
+.magic-button-wrapper {
+  position: relative;
+  isolation: isolate;
+}
+
+.magic-button-wrapper::before,
+.magic-button-wrapper::after {
+  content: "✨";
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+  animation: sparkle 700ms ease forwards;
+}
+
+.magic-button-wrapper::before {
+  left: -10px;
+  top: -10px;
+}
+
+.magic-button-wrapper::after {
+  right: -10px;
+  bottom: -10px;
+}
+
+.magic-button-wrapper.animate::before,
+.magic-button-wrapper.animate::after {
+  opacity: 1;
+}
+
+.magic-spark {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: #FFD700;
+  border-radius: 50%;
+  pointer-events: none;
+  opacity: 0;
+}
