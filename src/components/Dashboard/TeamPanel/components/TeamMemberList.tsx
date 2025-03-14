@@ -1,53 +1,30 @@
 import React from 'react';
-import { PenSquare, Trash2, Shield, Ban, LogIn, UserCheck } from 'lucide-react';
-import { useAuth } from '../../../../hooks/useAuth';
+import { PenSquare, Trash2, Shield } from 'lucide-react';
 
 interface TeamMemberListProps {
   members: any[];
   canManageTeam: boolean;
   onEdit: (member: any) => void;
   onDelete: (member: any) => void;
-  onSuspend: (member: any) => void;
-  onLogin: (member: any) => void;
 }
 
-export function TeamMemberList({ members, canManageTeam, onEdit, onDelete, onSuspend, onLogin }: TeamMemberListProps) {
-  const { user: currentUser } = useAuth();
-  
-  // Check if user has permission to edit
-  const canEditMember = React.useCallback((targetMember: any) => {
-    if (!currentUser) return false;
-    
-    // Team admin can edit everyone except themselves
-    if (currentUser.role === 'owner' || currentUser.role === 'admin') {
-      return targetMember.id !== currentUser.id;
-    }
-    
-    // Team manager can edit regular members but not admin or other managers
-    if (currentUser.role === 'manager') {
-      return targetMember.role === 'member' && targetMember.role !== 'admin' && targetMember.role !== 'manager';
-    }
-    
-    return false;
-  }, [currentUser]);
-
+export function TeamMemberList({ members, canManageTeam, onEdit, onDelete }: TeamMemberListProps) {
   const getRoleBadge = (role: string) => {
     switch (role) {
-      case 'admin':
+      case 'owner':
+      case 'super_admin':
         return (
           <div className="relative">
             <span className="px-2 py-1 rounded-full bg-gradient-to-r from-[#B38B3F]/20 via-[#FFD700]/20 to-[#B38B3F]/20 text-[#FFD700] text-xs font-medium animate-pulse">
-              Admin
+              Team Admin
             </span>
             <div className="absolute inset-0 bg-gradient-to-r from-[#B38B3F]/0 via-[#FFD700]/10 to-[#B38B3F]/0 blur-sm animate-pulse" />
           </div>
         );
       case 'manager':
-        return <span className="px-2 py-1 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-medium">Manager</span>;
-      case 'member':
-        return <span className="px-2 py-1 rounded-full bg-blue-500/20 text-blue-400 text-xs font-medium">Member</span>;
+        return <span className="px-2 py-1 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-medium">Team Manager</span>;
       default:
-        return <span className="px-2 py-1 rounded-full bg-gray-500/20 text-gray-400 text-xs font-medium">{role}</span>;
+        return <span className="px-2 py-1 rounded-full bg-blue-500/20 text-blue-400 text-xs font-medium">Member</span>;
     }
   };
 
@@ -120,38 +97,20 @@ export function TeamMemberList({ members, canManageTeam, onEdit, onDelete, onSus
                 {member.role !== 'owner' && member.role !== 'super_admin' && (
                   <div className="flex items-center justify-end space-x-2">
                     <button
-                      disabled={!canEditMember(member)}
-                      onClick={() => canEditMember(member) && onEdit(member)}
-                      className={`p-2 ${canEditMember(member) ? 'hover:bg-white/10' : 'opacity-50 cursor-not-allowed'} rounded-lg transition-colors group`}
+                      disabled={!canManageTeam}
+                      onClick={() => onEdit(member)}
+                      className={`p-2 ${canManageTeam ? 'hover:bg-white/10' : 'opacity-50 cursor-not-allowed'} rounded-lg transition-colors group`}
                       title="Edit Member"
                     >
                       <PenSquare className="w-4 h-4 text-white/70 group-hover:text-white" />
                     </button>
                     <button
-                      disabled={!canEditMember(member)}
-                      onClick={() => canEditMember(member) && onDelete(member)}
-                      className={`p-2 ${canEditMember(member) ? 'hover:bg-red-500/20' : 'opacity-50 cursor-not-allowed'} rounded-lg transition-colors group`}
+                      disabled={!canManageTeam}
+                      onClick={() => onDelete(member)}
+                      className={`p-2 ${canManageTeam ? 'hover:bg-red-500/20' : 'opacity-50 cursor-not-allowed'} rounded-lg transition-colors group`}
                       title="Delete Member"
                     >
                       <Trash2 className="w-4 h-4 text-red-400/70 group-hover:text-red-400" />
-                    </button>
-                    {member.status !== 'suspended' && (
-                      <button
-                        disabled={!canEditMember(member)}
-                        onClick={() => canEditMember(member) && onSuspend(member)}
-                        className={`p-2 ${canEditMember(member) ? 'hover:bg-amber-500/20' : 'opacity-50 cursor-not-allowed'} rounded-lg transition-colors group`}
-                        title="Suspend Member"
-                      >
-                        <Ban className="w-4 h-4 text-amber-400/70 group-hover:text-amber-400" />
-                      </button>
-                    )}
-                    <button
-                      disabled={!canEditMember(member)}
-                      onClick={() => canEditMember(member) && onLogin(member)}
-                      className={`p-2 ${canEditMember(member) ? 'hover:bg-[#B38B3F]/20' : 'opacity-50 cursor-not-allowed'} rounded-lg transition-colors group`}
-                      title="Login as Member"
-                    >
-                      <LogIn className={`w-4 h-4 ${canEditMember(member) ? 'text-[#B38B3F] group-hover:text-[#FFD700]' : 'text-[#B38B3F]/40'}`} />
                     </button>
                   </div>
                 )}

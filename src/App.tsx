@@ -1,35 +1,57 @@
-import React, { Suspense, lazy } from 'react';
-import { useAuth } from './hooks/useAuth';
-import { ErrorBoundary } from './components/ErrorBoundary';
+import React from 'react';
 import { AuthContainer } from './components/AuthContainer';
-
-const Dashboard = lazy(() => 
-  import('./components/Dashboard/Dashboard').then(module => ({ default: module.Dashboard }))
-);
-
-const LoadingSpinner = () => (
-  <div className="fixed inset-0 flex items-center justify-center bg-black/80 backdrop-blur-sm">
-    <div className="w-8 h-8 border-3 border-t-transparent border-[#B38B3F] rounded-full animate-spin" />
-  </div>
-);
+import { PricingPlansLayout } from './components/PricingPlansLayout';
+import { Dashboard } from './components/Dashboard/Dashboard';
+import { useAuth } from './hooks/useAuth';
 
 function App() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const [showPricing, setShowPricing] = React.useState(false);
+  const [selectedPlan, setSelectedPlan] = React.useState<string | null>(null);
+  const [verifiedEmail, setVerifiedEmail] = React.useState('');
+  const [userData, setUserData] = React.useState<{
+    firstName: string;
+    lastName: string;
+    email: string;
+  } | null>(null);
+  const { isAuthenticated, user, logout } = useAuth();
 
-  if (isLoading) {
-    return <LoadingSpinner />;
+  // Listen for logout events
+  React.useEffect(() => {
+    const handleLogout = () => {
+      logout();
+      window.location.href = '/';
+    };
+
+    window.addEventListener('logout', handleLogout);
+    return () => window.removeEventListener('logout', handleLogout);
+  }, [logout]);
+
+  if (isAuthenticated && user) {
+    return <Dashboard />;
   }
-  
+
+  if (showPricing) {
+    return (
+      <PricingPlansLayout
+        selectedPlan={selectedPlan}
+        onSelect={(plan) => {
+          setSelectedPlan(plan); 
+        }}
+        onBack={() => setShowPricing(false)}
+        verifiedEmail={verifiedEmail}
+        userData={userData}
+      />
+    );
+  }
+
   return (
-    <ErrorBoundary>
-      {isAuthenticated ? (
-        <Suspense fallback={<LoadingSpinner />}>
-          <Dashboard />
-        </Suspense>
-      ) : (
-        <AuthContainer />
-      )}
-    </ErrorBoundary>
+    <AuthContainer 
+      onVerified={(email, data) => {
+        setVerifiedEmail(email);
+        setUserData(data);
+        setShowPricing(true);
+      }}
+    />
   );
 }
 

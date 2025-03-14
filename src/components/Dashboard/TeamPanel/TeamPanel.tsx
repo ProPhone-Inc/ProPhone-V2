@@ -10,28 +10,24 @@ import { DeleteTeamMemberModal } from './components/DeleteTeamMemberModal';
 import { SuspendUserModal } from '../AdminPanel/SuspendUserModal';
 import { ReactivateUserModal } from '../AdminPanel/ReactivateUserModal';
 
-interface TeamPanelProps {
-  onClose: () => void;
-}
-
-export function TeamPanel({ onClose }: TeamPanelProps) {
-  const { user, login } = useAuth();
+export function TeamPanel() {
+  const { user } = useAuth();
   const [teamName, setTeamName] = useState('My Team');
   const [hasSetTeamName, setHasSetTeamName] = useState(() => {
-    const savedTeamName = localStorage.getItem(`teamName_${user?.id}`);
+    // Check if team name has been set in localStorage
+    const savedTeamName = localStorage.getItem('teamName');
     if (savedTeamName) {
       setTeamName(savedTeamName);
       return true;
     }
     return false;
   });
-  
   const [isEditingName, setIsEditingName] = useState(false);
-  
-  // Team roles
-  const isAdmin = user?.role === 'admin' || user?.role === 'owner' || user?.role === 'super_admin';
+  const isOwner = user?.role === 'owner';
+  const isSuperAdmin = user?.role === 'super_admin';
+  const isAdmin = isOwner || isSuperAdmin;
   const isManager = user?.role === 'manager';
-  const canManageTeam = isAdmin || isManager;
+  const canManageTeam = isOwner || isSuperAdmin || isManager;
   
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -53,32 +49,44 @@ export function TeamPanel({ onClose }: TeamPanelProps) {
   const [teamMembers, setTeamMembers] = useState([
     {
       id: '1',
-      name: user?.name || 'Team Owner',
-      email: user?.email || 'owner@example.com',
-      role: 'admin',
+      name: 'Dallas Reynolds',
+      email: 'dallas@prophone.io',
+      role: 'owner',
       status: 'active',
       permissions: ['phone', 'crm', 'docupro', 'proflow'],
-      joinDate: '2025-01-01',
-      avatar: user?.avatar
+      joinDate: '2025-02-15',
+      avatar: 'https://dallasreynoldstn.com/wp-content/uploads/2025/02/26F25F1E-C8E9-4DE6-BEE2-300815C83882.png'
     },
     {
       id: '2',
-      name: 'Mike Chen',
-      email: 'mike@example.com',
-      role: 'member',
-      status: 'active', 
+      name: 'Sarah Johnson',
+      email: 'sarah@example.com',
+      role: 'manager',
+      status: 'active',
       permissions: ['phone', 'crm', 'docupro', 'proflow'],
-      joinDate: '2025-03-01'
+      joinDate: '2025-03-10',
+      avatar: 'https://randomuser.me/api/portraits/women/44.jpg'
     },
     {
       id: '3',
-      name: 'Emma Wilson',
-      email: 'emma@example.com',
+      name: 'Mike Chen',
+      email: 'mike@example.com',
       role: 'member',
       status: 'active',
       permissions: ['phone', 'crm', 'docupro', 'proflow'],
-      joinDate: '2025-03-15'
-    }
+      joinDate: '2025-03-01',
+      avatar: 'https://randomuser.me/api/portraits/men/22.jpg'
+    },
+    {
+      id: '4',
+      name: 'Emma Wilson',
+      email: 'emma@example.com',
+      role: 'member',
+      status: 'inactive',
+      permissions: ['phone', 'crm', 'docupro', 'proflow'],
+      joinDate: '2025-03-15',
+      avatar: 'https://randomuser.me/api/portraits/women/28.jpg'
+    },
   ]);
 
   const handleAddMember = (newMember) => {
@@ -95,7 +103,7 @@ export function TeamPanel({ onClose }: TeamPanelProps) {
   };
 
   const handleEditMember = (updatedMember) => {
-    if (!canManageTeam || updatedMember.role === 'admin') return;
+    if (!canManageTeam || updatedMember.role === 'owner' || updatedMember.role === 'super_admin') return;
     
     setTeamMembers(teamMembers.map(member => 
       member.id === updatedMember.id ? updatedMember : member
@@ -105,42 +113,11 @@ export function TeamPanel({ onClose }: TeamPanelProps) {
   };
 
   const handleDeleteMember = () => {
-    if (!canManageTeam || selectedMember?.role === 'admin') return;
+    if (!canManageTeam || selectedMember?.role === 'owner' || selectedMember?.role === 'super_admin') return;
     
     setTeamMembers(teamMembers.filter(member => member.id !== selectedMember.id));
     setShowDeleteModal(false);
     setSelectedMember(null);
-  };
-
-  const handleUserLogin = (member: any) => {
-    if (member.role === 'admin') {
-      console.log('Cannot login as team admin');
-      return; // Prevent logging in as admin
-    }
-    
-    // Check if current user has permission to login as this member
-    if (currentUser?.role === 'manager' && member.role === 'manager') {
-      console.log('Managers cannot login as other managers');
-      return;
-    }
-    
-    // Create a session object with reference to the admin user
-    const sessionUser = {
-      id: member.id,
-      name: member.name,
-      email: member.email,
-      avatar: member.avatar,
-      role: 'user', // Always set role to user when logging in as member
-      originalUser: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        avatar: user.avatar
-      }
-    };
-    
-    login(sessionUser);
   };
 
   const confirmSuspendUser = (reason: string) => {
@@ -183,10 +160,10 @@ export function TeamPanel({ onClose }: TeamPanelProps) {
     <div className="space-y-6">
       {!hasSetTeamName && isAdmin && (
         <TeamNamePromptModal
-          onClose={onClose}
+          onClose={() => setHasSetTeamName(true)}
           onSubmit={(name) => {
             setTeamName(name);
-            localStorage.setItem(`teamName_${user?.id}`, name);
+            localStorage.setItem('teamName', name);
             setHasSetTeamName(true);
           }}
         />
@@ -295,14 +272,16 @@ export function TeamPanel({ onClose }: TeamPanelProps) {
         <TeamMemberList
           members={filteredMembers}
           canManageTeam={canManageTeam}
-          onEdit={handleEditMember}
-          onDelete={handleDeleteMember}
-          onSuspend={(member) => {
-            if (member.role === 'owner') return;
+          onEdit={(member) => {
+            if (!canManageTeam || member.role === 'owner' || member.role === 'super_admin') return;
             setSelectedMember(member);
-            setShowSuspendModal(true);
+            setShowEditModal(true);
           }}
-          onLogin={handleUserLogin}
+          onDelete={(member) => {
+            if (!canManageTeam || member.role === 'owner' || member.role === 'super_admin') return;
+            setSelectedMember(member);
+            setShowDeleteModal(true);
+          }}
         />
       </div>
 

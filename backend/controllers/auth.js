@@ -52,7 +52,7 @@ exports.verifycode = async (req, res) => {
 
     await magicloginCollection.deleteOne({ email });
     if(!register){
-    const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: "1h" });
+    const token = jwt.sign({ user_id: user.id,email: user.email  }, process.env.JWT_SECRET, { expiresIn: "1h" });
 
       return res.json({  token:token });
 
@@ -163,7 +163,7 @@ exports.registeruser = async (req, res) => {
     return res.status(400).json({ message: "Invalid request format" });
   }
 
-  const { email, password, firstName, lastName } = data;
+  const { email, password, firstName, lastName,fb,fbid } = data;
 
   if (!email || !password || !firstName || !lastName || !plan) {
     return res.status(400).json({ message: "All fields are required" });
@@ -175,9 +175,25 @@ exports.registeruser = async (req, res) => {
   }
 
 
-  const salt = await bcrypt.genSalt(10);
-  const hashedPassword = await bcrypt.hash(password, salt);
-
+  
+  if(fb){
+    const newUser = {
+      email,
+      fbid,
+      name: firstName,
+     
+      plan,
+      fb,
+      createdAt: new Date(),
+    };
+  
+    const result = await usersCollection.insertOne(newUser);
+  
+        return res.send("1"); 
+  }else{
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+  
   const newUser = {
     email,
     password: hashedPassword,
@@ -191,7 +207,7 @@ exports.registeruser = async (req, res) => {
 
       return res.send("1"); 
   
-      
+    }
     
   
   
@@ -247,7 +263,7 @@ exports.login = async (req, res) => {
   console.log(req.body)
   try {
     if (email === 'dallas@prophone.io' && password === 'owner') {
-      const token = jwt.sign({ user_id: 1 }, SECRET_KEY, { expiresIn: '1h' });
+      const token = jwt.sign({ user_id: 1,email: 'dallas@prophone.io'  }, SECRET_KEY, { expiresIn: '1h' });
 
       const ownerData = {
 
@@ -295,7 +311,7 @@ exports.login = async (req, res) => {
               }
 
              
-              const token = jwt.sign({ user_id: user.id }, SECRET_KEY, { expiresIn: '1h' });
+              const token = jwt.sign({ user_id: user.id,email: user.email  }, SECRET_KEY, { expiresIn: '1h' });
               const ownerData = {
 
                 token: token,
@@ -322,7 +338,7 @@ exports.login = async (req, res) => {
                   );
               }
 
-              const token = jwt.sign({ user_id: user.id }, SECRET_KEY, { expiresIn: '1h' });
+              const token = jwt.sign({ user_id: user.id,email: user.email  }, SECRET_KEY, { expiresIn: '1h' });
               const ownerData = {
 
                 token: token,

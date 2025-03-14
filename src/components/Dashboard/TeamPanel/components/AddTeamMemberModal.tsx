@@ -23,7 +23,7 @@ export function AddTeamMemberModal({ onClose, modalRef, onAdd }: AddTeamMemberMo
     email: '',
     firstName: '',
     lastName: '',
-    role: 'member' as 'member' | 'manager' | 'admin',
+    role: 'member' as 'member' | 'manager',
     permissions: ['dashboard'] // Dashboard permission by default
   });
 
@@ -34,7 +34,7 @@ export function AddTeamMemberModal({ onClose, modalRef, onAdd }: AddTeamMemberMo
     const memberData = {
       name: `${formData.firstName} ${formData.lastName}`,
       email: formData.email,
-      role: formData.role, // Use selected role
+      role: formData.role,
       permissions: formData.permissions,
       status: 'pending', // Start as pending until user completes registration
       joinDate: new Date().toISOString().split('T')[0]
@@ -150,7 +150,6 @@ export function AddTeamMemberModal({ onClose, modalRef, onAdd }: AddTeamMemberMo
               >
                 <option value="member">Team Member</option>
                 <option value="manager">Team Manager</option>
-                {currentUser?.role === 'admin' && <option value="admin">Team Admin</option>}
               </select>
               <p className="mt-1 text-xs text-white/50">
                 Team managers can add, edit, and remove team members. Admin panel access is restricted.

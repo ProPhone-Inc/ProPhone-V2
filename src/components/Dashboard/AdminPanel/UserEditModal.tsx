@@ -1,25 +1,23 @@
-import React from 'react';
-import { X, User, Mail, Shield } from 'lucide-react';
+import React, { useState } from 'react';
+import { X } from 'lucide-react';
 import { useAuth } from '../../../hooks/useAuth';
 
 interface UserEditModalProps {
-  member: any;
+  user: any;
   onClose: () => void;
-  onSave: (member: any) => void;
+  onSave: (user: any) => void;
 }
 
-export function UserEditModal({ member, onClose, onSave }: UserEditModalProps) {
-  const [formData, setFormData] = React.useState({
-    ...member
-  });
-  const [error, setError] = React.useState<string | null>(null);
+export function UserEditModal({ user, onClose, onSave }: UserEditModalProps) {
+  const [editedUser, setEditedUser] = useState({ ...user });
+  const [error, setError] = useState<string | null>(null);
   const { user: currentUser } = useAuth();
 
   const canAssignGodMode = currentUser?.role === 'owner';
   const isExecutiveOrSuperAdmin = currentUser?.role === 'executive' || currentUser?.role === 'super_admin';
-  const isEditingOwner = member.role === 'owner';
-  const isEditingSuperAdmin = member.role === 'super_admin';
-  const isEditingExecutive = member.role === 'executive';
+  const isEditingOwner = user.role === 'owner';
+  const isEditingSuperAdmin = user.role === 'super_admin';
+  const isEditingExecutive = user.role === 'executive';
 
   // Prevent editing if:
   // 1. Editing owner account and not the owner
@@ -57,26 +55,27 @@ export function UserEditModal({ member, onClose, onSave }: UserEditModalProps) {
     );
   }
 
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    setEditedUser({
+      ...editedUser,
+      [e.target.name]: e.target.value
+    });
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validate role changes
-    if (formData.role === 'owner' || (!canAssignGodMode && (formData.role === 'super_admin' || formData.role === 'executive'))) {
-      setError(formData.role === 'owner' 
+    // Prevent modifying owner role
+    if (editedUser.role === 'owner' || (!canAssignGodMode && (editedUser.role === 'super_admin' || editedUser.role === 'executive'))) {
+      setError(editedUser.role === 'owner' 
         ? 'Cannot modify owner account' 
         : 'Only the platform owner can assign super admin or executive roles');
       return;
     }
     
-    // Set plan based on role
-    let plan = formData.plan;
-    if (formData.role === 'owner' || formData.role === 'super_admin' || formData.role === 'executive') {
-      plan = 'god_mode';
-    }
-    
     const updatedUser = {
-      ...formData,
-      plan
+      ...editedUser,
+      plan: isExecutiveOrSuperAdmin ? editedUser.plan : (canAssignGodMode && (editedUser.role === 'super_admin' || editedUser.role === 'executive') ? 'god_mode' : editedUser.plan)
     };
     
     onSave(updatedUser);
@@ -98,98 +97,86 @@ export function UserEditModal({ member, onClose, onSave }: UserEditModalProps) {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-white/70 text-sm font-medium mb-2">Name</label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <User className="h-5 w-5 text-white/40" />
-              </div>
-              <input
-                type="text"
-                name="name"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="w-full pl-10 pr-4 py-2 bg-zinc-800 border border-[#B38B3F]/20 rounded-lg text-white"
-                required
-              />
-            </div>
+            <input
+              type="text"
+              name="name"
+              value={editedUser.name}
+              onChange={handleChange}
+              className="w-full px-3 py-2 bg-zinc-800 border border-[#B38B3F]/20 rounded-lg text-white"
+              required
+            />
           </div>
 
           <div>
             <label className="block text-white/70 text-sm font-medium mb-2">Email</label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Mail className="h-5 w-5 text-white/40" />
-              </div>
-              <input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="w-full pl-10 pr-4 py-2 bg-zinc-800 border border-[#B38B3F]/20 rounded-lg text-white"
-                required
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-white/70 text-sm font-medium mb-2">Role</label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Shield className="h-5 w-5 text-white/40" />
-              </div>
-              <select
-                name="role"
-                value={formData.role}
-                onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                className="w-full pl-10 pr-4 py-2 bg-zinc-800 border border-[#B38B3F]/20 rounded-lg text-white"
-              >
-                <option value="sub_user">Sub User</option>
-                <option value="user">User</option>
-                {canAssignGodMode && (
-                  <>
-                    <option value="executive">Executive</option>
-                    <option value="super_admin">Super Admin</option>
-                  </>
-                )}
-              </select>
-            </div>
+            <input
+              type="email"
+              name="email"
+              value={editedUser.email}
+              onChange={handleChange}
+              className="w-full px-3 py-2 bg-zinc-800 border border-[#B38B3F]/20 rounded-lg text-white"
+              required
+            />
           </div>
 
           <div>
             <label className="block text-white/70 text-sm font-medium mb-2">Plan</label>
             <select
               name="plan"
-              value={formData.plan}
-              disabled={formData.role === 'owner' || formData.role === 'super_admin' || formData.role === 'executive'}
-              onChange={(e) => setFormData({ ...formData, plan: e.target.value })}
+              value={editedUser.plan}
+              disabled={editedUser.role === 'super_admin' || editedUser.role === 'executive'}
+              onChange={handleChange}
               className="w-full px-3 py-2 bg-zinc-800 border border-[#B38B3F]/20 rounded-lg text-white"
             >
               <option value="starter">Business Starter</option>
               <option value="pro">Business Pro</option>
               <option value="enterprise">Business Elite</option>
-              {(formData.role === 'owner' || formData.role === 'super_admin' || formData.role === 'executive') && (
-                <option value="god_mode">God Mode</option>
-              )}
             </select>
-            {(formData.role === 'owner' || formData.role === 'super_admin' || formData.role === 'executive') && (
-              <p className="text-xs text-[#FFD700] mt-1">
-                {formData.role === 'owner' ? 'Platform Owner' : formData.role === 'super_admin' ? 'Super Admin' : 'Executive'} accounts automatically get God Mode access
-              </p>
-            )}
           </div>
 
           <div>
             <label className="block text-white/70 text-sm font-medium mb-2">Status</label>
             <select
               name="status"
-              value={formData.status}
-              onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+              value={editedUser.status}
+              onChange={handleChange}
               className="w-full px-3 py-2 bg-zinc-800 border border-[#B38B3F]/20 rounded-lg text-white"
             >
               <option value="active">Active</option>
               <option value="suspended">Suspended</option>
               <option value="inactive">Inactive</option>
             </select>
+            {editedUser.status === 'suspended' && (
+              <p className="text-xs text-amber-400/70 mt-1">
+                Suspended users cannot access their account until reactivated
+              </p>
+            )}
           </div>
+
+          <div>
+            <label className="block text-white/70 text-sm font-medium mb-2">Role</label>
+            <select
+              name="role"
+              value={editedUser.role}
+              disabled={user.role === 'owner'}
+              onChange={handleChange}
+              className="w-full px-3 py-2 bg-zinc-800 border border-[#B38B3F]/20 rounded-lg text-white"
+            >
+              <option value="user">User</option>
+              <option value="executive">Executive</option>
+              <option value="super_admin">Super Admin</option>
+            </select>
+            {user.role === 'owner' && (
+              <p className="text-xs text-red-400 mt-1">Owner account role cannot be modified</p>
+            )}
+          </div>
+
+          {editedUser.role === 'super_admin' && (
+            <p className="text-xs text-[#FFD700] mt-1">Super Admins automatically get God Mode access</p>
+          )}
+          {editedUser.role === 'executive' && (
+            <p className="text-xs text-[#FFD700] mt-1">Executives automatically get God Mode access</p>
+          )}
 
           {error && (
             <div className="text-red-400 text-sm mb-4">
