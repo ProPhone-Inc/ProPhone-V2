@@ -193,7 +193,7 @@ export function LoginForm({
      
       if ((isCodeLogin || isRegistering) && !codeSent) {
         setMagicEmail(email);
-        const response = await axios.post(`http://localhost:3000/api/auth/register`, {
+        const response = await axios.post(`/api/auth/register`, {
           email,
           password,
           firstName,
