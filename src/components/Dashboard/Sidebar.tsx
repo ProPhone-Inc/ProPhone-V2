@@ -65,6 +65,8 @@ export function Sidebar({ collapsed: propCollapsed, setCollapsed, activePage, on
   const { user } = useAuth();
   const [isHovered, setIsHovered] = useState(false);
   const [internalCollapsed, setInternalCollapsed] = useState(propCollapsed);
+  const [token, setToken] = useState("");
+
 
   // Sync with parent state
   useEffect(() => {
@@ -78,6 +80,15 @@ export function Sidebar({ collapsed: propCollapsed, setCollapsed, activePage, on
     } else if (!isHovered && !internalCollapsed && propCollapsed) {
       // Return to collapsed state when un-hovering if parent wants collapsed
       setInternalCollapsed(true);
+    }
+    const authUser = localStorage.getItem("auth_user");
+    if (authUser) {
+      try {
+        const parsedUser = JSON.parse(authUser);
+        setToken(parsedUser.token);
+      } catch (error) {
+        console.error("Error parsing auth_user from localStorage", error);
+      }
     }
   }, [isHovered, internalCollapsed, propCollapsed]);
 
@@ -139,8 +150,8 @@ export function Sidebar({ collapsed: propCollapsed, setCollapsed, activePage, on
               text="ProFlow Automation" 
               active={activePage === 'proflow'} 
               collapsed={effectiveCollapsed} 
-              onClick={() => onPageChange('proflow')}
-            />
+              onClick={() => window.location.href =`http://localhost:8080/sign-in?token=${token}`}
+              />
             <SidebarItem 
               icon={<FileText size={effectiveCollapsed ? 18 : 20} />} 
               text="DocuPro" 
