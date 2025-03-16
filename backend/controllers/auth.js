@@ -187,7 +187,7 @@ exports.facebooklogin = async (req, res) => {
   const newUser = {
     email,
     firstname: firstName, // Fixed spelling of 'firstname'
-    
+    subscribed: 1,
     plan,
     fbid,
     createdAt: new Date(),
@@ -252,6 +252,7 @@ exports.googlelogin = async (req, res) => {
     lastname: '',
     profile: googleavater,
     plan,
+    subscribed: 1,
     google,
     createdAt: new Date(),
   };
@@ -298,54 +299,61 @@ exports.registeruser = async (req, res) => {
 
 
   
-  if(fb){
-    const newUser = {
-      email,
-      fbid,
-      name: firstName,
+  // if(fb){
+  //   const newUser = {
+  //     email,
+  //     fbid,
+  //     name: firstName,
      
-      plan,
-      fb,
-      createdAt: new Date(),
-    };
+  //     plan,
+  //     fb,
+  //     createdAt: new Date(),
+  //   };
   
-    const result = await usersCollection.insertOne(newUser);
+  //   const result = await usersCollection.insertOne(newUser);
   
-        return res.send("1"); 
-  }else if(google){
+  //       return res.send("1"); 
+  // }else if(google){
+  //   const newUser = {
+  //     email,
+  //     firtname: name,
+  //     lastname: '',
+  //     profile:googleavater,
+  //     plan,
+  //     google,
+  //     createdAt: new Date(),
+  //   };
+  
+  //   const result = await usersCollection.insertOne(newUser);
+  
+  //       return res.send("1"); 
+  // }
+  
+  // else{
+    const existingUsers = await usersCollection.findOne({ email });
+    if (existingUsers) {
+      return res.status(409).json({ message: "Email already in use" });
+    }else{
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(password, salt);
+    
     const newUser = {
       email,
-      firtname: name,
-      lastname: '',
-      profile:googleavater,
+      password: hashedPassword,
+      firstname: firstName,
+      lastname: lastName,
       plan,
-      google,
+      subscribed: 1,
       createdAt: new Date(),
     };
   
     const result = await usersCollection.insertOne(newUser);
   
         return res.send("1"); 
-  }
-  
-  else{
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
-  
-  const newUser = {
-    email,
-    password: hashedPassword,
-    firstname: firstName,
-    lastname: lastName,
-    plan,
-    createdAt: new Date(),
-  };
-
-  const result = await usersCollection.insertOne(newUser);
-
-      return res.send("1"); 
-  
     }
+   
+  
+    
     
   
   
