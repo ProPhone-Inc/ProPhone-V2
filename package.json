@@ -8,7 +8,7 @@
     "server:dev": "NODE_ENV=development tsx watch src/server/index.ts",
     "server:build": "rimraf dist/server && tsc -p tsconfig.server.json",
     "server:start": "NODE_ENV=production node dist/server/index.js",
-    "build": "rimraf dist && tsc -p tsconfig.server.json || true && NODE_ENV=production vite build",
+    "build": "rimraf dist && tsc -p tsconfig.server.json && NODE_ENV=production vite build",
     "start": "NODE_ENV=production pm2 start ecosystem.config.js --no-daemon",
     "lint": "eslint .",
     "preview": "vite preview"
@@ -16,9 +16,9 @@
   "dependencies": {
     "@googleapis/calendar": "^9.7.0",
     "@react-oauth/google": "^0.12.1",
+    "xlsx": "^0.18.5",
     "@stripe/react-stripe-js": "^2.4.0",
     "@stripe/stripe-js": "^2.4.0",
-    "@types/socket.io": "^3.0.1",
     "axios": "^1.6.2",
     "bcryptjs": "^2.4.3",
     "compression": "^1.7.4",
@@ -35,9 +35,7 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "recharts": "^2.12.2",
-    "socket.io": "^4.8.1",
     "socket.io-client": "^4.7.4",
-    "xlsx": "^0.18.5",
     "zustand": "^4.5.2"
   },
   "devDependencies": {
@@ -45,10 +43,8 @@
     "@types/bcryptjs": "^2.4.6",
     "@types/compression": "^1.7.5",
     "@types/cors": "^2.8.17",
-    "@types/express": "^5.0.1",
     "@types/jsonwebtoken": "^9.0.5",
     "@types/morgan": "^1.9.9",
-    "@types/node": "^22.13.10",
     "@types/react": "^18.3.5",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.1",
@@ -62,8 +58,8 @@
     "rimraf": "^5.0.5",
     "tailwindcss": "^3.4.1",
     "tsx": "^4.7.1",
-    "typescript": "^5.8.2",
+    "typescript": "^5.5.3",
     "typescript-eslint": "^8.3.0",
-    "vite": "^6.2.2"
+    "vite": "^5.4.2"
   }
 }

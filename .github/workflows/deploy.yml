@@ -3,7 +3,7 @@ name: Deploy via SSH on push to Main
 on:
   push:
     branches:
-      - main  # Adjust if using another branch name
+      - main  # Replace explicitly if using another branch name
 
 jobs:
   deploy:
@@ -15,6 +15,6 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-      - name: Trigger deploy.sh on server
+      - name: Deploy explicitly via SSH (Custom Port)
         run: |
           ssh -o StrictHostKeyChecking=no -p 37980 ${{ secrets.SSH_USERNAME }}@${{ secrets.SERVER_IP }} 'bash /var/www/main/deploy.sh'
