@@ -149,15 +149,16 @@ export function PricingPlans({ onSelect, selectedPlan }: PricingPlansProps) {
             onSelect={() => {
               // First select the plan
               onSelect(plan.id);
+              
               // Show success modal and launch fireworks
               setTimeout(() => {
                 setShowSuccess(true);
                 launchFireworks();
                 
-                // Redirect after animation
+                // Show dashboard after animation
                 setTimeout(() => {
                   setShowSuccess(false);
-                  window.location.href = '/'; // Redirect to login
+                  window.location.href = '/dashboard';
                 }, 3000);
               }, 500);
             }}

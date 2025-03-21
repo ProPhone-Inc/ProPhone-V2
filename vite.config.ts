@@ -1,9 +1,15 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
-// Configure Vite for production server deployment
 export default defineConfig(({ command }) => ({
   plugins: [react()],
+  server: {
+    host: '0.0.0.0',
+    port: 4173,
+    hmr: {
+      clientPort: 4173
+    }
+  },
   build: {
     target: 'esnext',
     minify: 'esbuild',

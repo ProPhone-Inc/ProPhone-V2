@@ -1,77 +1,108 @@
 import { useState, useEffect } from 'react';
-import { db, ensureConnection } from '../db';
+import { api } from '../api/client';
 import { useAuth } from './useAuth';
 
 export function useDB() {
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
-  const [isConnected, setIsConnected] = useState(false);
 
   useEffect(() => {
-    const initDB = async () => {
-      try {
-        await ensureConnection();
-        setIsConnected(true);
-        setIsLoading(false);
-      } catch (err) {
-        setError(err instanceof Error ? err : new Error('Failed to initialize database'));
-        setIsLoading(false);
-      }
-    };
-
-    initDB();
+    setIsLoading(false);
   }, []);
 
   const getUserData = async () => {
     if (!user?.email) return null;
-    return await db.getUserByEmail(user.email);
+    const { data } = await api.get('/user/profile');
+    return data;
   };
 
   const getCampaigns = async () => {
     if (!user?.id) return [];
-    return await db.getCampaignsByUser(user.id);
+    const { data } = await api.get('/campaigns');
+    return data;
   };
 
   const getContacts = async () => {
     if (!user?.id) return [];
-    return await db.getContactsByUser(user.id);
+    const { data } = await api.get('/contacts');
+    return data;
   };
 
   const getChatHistory = async (limit?: number) => {
     if (!user?.id) return [];
-    return await db.getChatHistory(user.id, limit);
+    const { data } = await api.get(`/chat/history${limit ? `?limit=${limit}` : ''}`);
+    return data;
   };
 
   const getUnreadChats = async () => {
     if (!user?.id) return 0;
-    return await db.getUnreadSessionCount(user.id);
+    const { data } = await api.get('/chat/unread/count');
+    return data.count;
+  };
+
+  const getUnreadMessages = async () => {
+    if (!user?.id) return 0;
+    try {
+      const response = await fetch('/api/messages/unread/count');
+      if (!response.ok) {
+        throw new Error('Failed to get unread count');
+      }
+      
+      const data = await response.json();
+      
+      return data.count;
+    } catch (error) {
+      console.error('Failed to get unread messages count:', error);
+      return 0;
+    }
   };
 
   const getAutomations = async () => {
     if (!user?.id) return [];
-    return await db.getActiveAutomations(user.id);
+    const { data } = await api.get('/automations/active');
+    return data;
   };
 
   const getAnalytics = async (type: string) => {
     if (!user?.id) return [];
-    return await db.getAnalyticsByType(user.id, type);
+    const { data } = await api.get(`/analytics/${type}`);
+    return data;
   };
 
   const getTeamMembers = async () => {
-    // For now, return from the users table
-    // In a real app, this would filter by team ID or organization
-    const users = await db.users.toArray();
-    return users.map(user => ({
-      id: user.id || '',
-      name: user.name,
-      email: user.email,
-      role: user.role
-    }));
+    try {
+      // Return mock data with owner as only admin
+      return [
+        {
+          id: '1',
+          name: 'Dallas Reynolds',
+          email: 'dallas@prophone.io',
+          role: 'owner',
+          permissions: ['phone', 'crm', 'docupro', 'proflow']
+        },
+        {
+          id: '2',
+          name: 'Mike Chen',
+          email: 'mike@example.com',
+          role: 'member',
+          permissions: ['phone', 'crm', 'docupro', 'proflow']
+        },
+        {
+          id: '3',
+          name: 'Emma Wilson',
+          email: 'emma@example.com',
+          role: 'member',
+          permissions: ['phone', 'crm', 'docupro', 'proflow']
+        }
+      ];
+    } catch (error) {
+      console.error('Failed to fetch team members:', error);
+      return [];
+    }
   };
 
   return {
-    db,
     isLoading,
     error,
     getUserData,
@@ -80,6 +111,7 @@ export function useDB() {
     getChatHistory,
     getUnreadChats,
     getAutomations,
+    getUnreadMessages,
     getAnalytics,
     getTeamMembers
   };

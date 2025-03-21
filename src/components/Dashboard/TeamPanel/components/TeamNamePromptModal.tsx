@@ -13,6 +13,8 @@ export function TeamNamePromptModal({ onSubmit, onClose }: TeamNamePromptModalPr
     e.preventDefault();
     if (teamName.trim()) {
       onSubmit(teamName.trim());
+    } else {
+      onClose();
     }
   };
 

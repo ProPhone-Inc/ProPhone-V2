@@ -4,8 +4,6 @@ import { useAuth } from '../hooks/useAuth';
 import { handleGoogleAuth, handleFacebookAuth, sendMagicCode, verifyMagicCode } from '../utils/auth';
 import { SuccessModal } from './SuccessModal';
 import { PricingPlansLayout } from './PricingPlansLayout';
-import axios from 'axios';
-import { registerVersion } from 'firebase/app';
 
 interface LoginFormProps {
   isCodeLogin: boolean;
@@ -38,8 +36,6 @@ export function LoginForm({
 }: LoginFormProps) {
   const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState('');
-  const [confirmpass, setConfirmpassword] = React.useState('');
-  
   const [showSuccess, setShowSuccess] = React.useState(false);
   const [showPlans, setShowPlans] = React.useState(false);
   const [selectedPlan, setSelectedPlan] = React.useState<string | null>(null);
@@ -61,27 +57,7 @@ export function LoginForm({
       [e.target.name]: e.target.value
     }));
   };
-  // const sendMagicEmail = async (emails) => {
-  // // const sendMagicEmail(email)   =>{
-  //   // For demo purposes, we'll simulate an API call
-  //   try {
-  //     const response = await axios.post(`/api/auth/sendemail", {
-  //       email: emails,
-  //     });
-  //     if (response.data == 1) {
-        
-  //     } else if (response.data == 2) {
-  //       setError('Incorrect Password');
-  //       // setProcessing(false)
-  
-  //     }
-  //     await new Promise(resolve => setTimeout(resolve, 1000));
-  //   console.log('Magic code for testing: 123456');
-  //   } catch (error) {
-  //     console.error("Failed to send Magic Code", error);
-  //   }
-   
-  // }
+
   const handleSocialAuth = async (provider: 'google' | 'facebook') => {
     setIsLoading(true);
     setError('');
@@ -93,11 +69,47 @@ export function LoginForm({
           throw new Error('Google client ID not configured');
         }
         userData = await handleGoogleAuth();
+        // If not registering, log in and go to dashboard directly
+        if (userData && !isRegistering) {
+          await login(userData);
+          window.location.href = '/dashboard';
+          return;
+        }
+        // Otherwise continue with registration flow
+        if (userData && isRegistering) {
+          setFormData({
+            firstName: userData.name.split(' ')[0] || '',
+            lastName: userData.name.split(' ')[1] || '',
+            email: userData.email,
+            password: ''
+          });
+          setShowPlans(true);
+          setIsLoading(false);
+          return;
+        }
       } else {
         if (!import.meta.env.VITE_FACEBOOK_APP_ID) {
           throw new Error('Facebook app ID not configured');
         }
         userData = await handleFacebookAuth();
+        // If not registering, log in and go to dashboard directly
+        if (userData && !isRegistering) {
+          await login(userData);
+          window.location.href = '/dashboard';
+          return;
+        }
+        // Otherwise continue with registration flow
+        if (userData && isRegistering) {
+          setFormData({
+            firstName: userData.name.split(' ')[0] || '',
+            lastName: userData.name.split(' ')[1] || '',
+            email: userData.email,
+            password: ''
+          });
+          setShowPlans(true);
+          setIsLoading(false);
+          return;
+        }
       }
       
       // Auto-login as owner for specific credentials
@@ -115,8 +127,7 @@ export function LoginForm({
         login(userData);
         setShowSuccess(true);
         setTimeout(() => {
-          setShowSuccess(false);
-          launchFireworks();
+          window.location.href = '/dashboard';
         }, 1500);
       }
     } catch (err) {
@@ -133,187 +144,63 @@ export function LoginForm({
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    // alert("handlesubmit")
     e.preventDefault();
     setIsLoading(true);
     const currentFormData = { ...formData };
     setError('');
-    const { email, password, firstName, lastName } = currentFormData;
 
     try {
-      if (!isRegistering){
-        try {
-          const response = await axios.post(`/api/auth/login`, {
-            email,
-            password,
-            firstName,
-            lastName,
-          });
-          // if (response.data.token ) {
-          //   sessionStorage.setItem("token", response.data.token);
-          //   login(response.data.token);
-          //   setShowSuccess(true);
-          //   setTimeout(() => {
-          //     setShowSuccess(false);
-          //     launchFireworks();
-          //   }, 1500);
-          // }
-          
-            if (response.data.ownerData ) {
-            sessionStorage.setItem("token", response.data.ownerData.token);
-            login(response.data.ownerData);
-            setShowSuccess(true);
-            setTimeout(() => {
-              setShowSuccess(false);
-              launchFireworks();
-            }, 1500);
-          }else if (response.data == 2) {
-            setError('Incorrect Password');
-            // setProcessing(false)
-    
-          } else if (response.data.reason) {
-            setError('Account  Suspended');
-            // setReason(response.data.reason)
-            // setProcessing(false)
-          } 
-          else {
-            setError('Incorrect Credentials');
-    
-          }
-          
-            return;
-         
-        } catch (error: any) {
-          console.error('Login Error:', error);
-          setError(error.response?.data?.message || 'Something went wrong');
-        } finally {
-          setIsLoading(false);
-        } 
-      }
-     
-      if ((isCodeLogin || isRegistering) && !codeSent) {
-        setMagicEmail(email);
-        const response = await axios.post(`/api/auth/register`, {
-          email,
-          password,
-          firstName,
-          lastName,
-        });
-
-        if (response.data == 1) {
-         
-          setVerificationCode(['', '', '', '', '', '']);
-            setFormData(currentFormData); // Preserve form data
-            setCodeSent(true);
-            setIsLoading(false);
-        } else if (response.data == 2) {
-          setError('Email  Already Exists');
-          // setProcessing(false)
-  
-        }
-       
+      const { email, password } = currentFormData;
+      
+      // Special case for owner login
+      if (email === 'dallas@prophone.io' && password === 'owner') {
+        await login({ email, password });
+        setShowSuccess(true);
+        setTimeout(() => {
+          window.location.href = '/dashboard';
+        }, 1500);
         return;
       }
-      if (confirmpass) {
+
+      // Handle magic code login
+      if (isCodeLogin && !codeSent) {
+        setMagicEmail(email);
+        // Send magic code regardless of auth method
+        await sendMagicCode(email);
+        setVerificationCode(['', '', '', '', '', '']);
+        setCodeSent(true);
+        setIsLoading(false);
+        return;
+      }
+      
+      // Handle code verification
+      if (codeSent) {
+        const code = verificationCode.join('');
+        const userData = await verifyMagicCode(magicEmail, code);
         
-        if (password == confirmpass){
-          e.preventDefault();
-          onVerified(magicEmail, {
-            firstName: formData.firstName,
-            lastName: formData.lastName,
-            email: magicEmail,
-            password: formData.password
-          });
-          const userData = {
-            firstName: formData.firstName,
-            lastName: formData.lastName,
-            email: magicEmail,
-            password: formData.password, // Be careful storing passwords in localStorage
-          };
-          
-          localStorage.setItem("userData", JSON.stringify(userData));
+        // User can log in with magic code even if they have a social account
+        if (isRegistering) {
+          setShowPlans(true);
+          setIsLoading(false);
+          return;
+        } else {
+          // Log in user directly after code verification
+          await login({ email: userData.email, password: 'magic-code' });
           setShowSuccess(true);
           setTimeout(() => {
-            setShowSuccess(false);
-            setIsRegistering(false);
-            setFormData(initialFormState);
-            setCodeSent(false);
-            setShowPasswordCreation(false);
-          }, 1000);
-        }else{
-          setError('Password Do not match');
+            window.location.href = '/dashboard';
+          }, 1500);
           return;
         }
-        
       }
-      if ((isCodeLogin || isRegistering) && codeSent) {
-        const code = verificationCode.join('');
-        const userData = await axios.post(`/api/auth/verify-code`, {
-          email: email,
-          code: code,
-          register: 1,
-        });
-        if(userData.data == 1){
-          if (isRegistering) {
-            setShowPasswordCreation(true);
-            setIsLoading(false);
-            return;
-          } else {
-            login(userData);
-            setShowSuccess(true);
-            setTimeout(() => {
-              setShowSuccess(false);
-              launchFireworks();
-            }, 1500);
-        }
-       
-        }else if(userData.data == 2){
-          setError("Invalid Code")
-        }
-      } else {
-        // Regular password login
-        if (isRegistering) {
-          if (!firstName?.trim() || !lastName?.trim() || !email?.trim() || !password?.trim()) {
-            setError('All fields are required');
-            setIsLoading(false);
-            return;
-          }
-          setFormData(currentFormData); // Preserve form data
-        }
-        
-        // Simulate successful login
-        // Check for owner login
-        // if (email === 'dallas@prophone.io' && password === 'owner') {
-        //   const ownerData = {
-        //     id: '0',
-        //     name: 'Dallas Reynolds',
-        //     email: 'dallas@prophone.io',
-        //     role: 'owner',
-        //     avatar: 'https://dallasreynoldstn.com/wp-content/uploads/2025/02/26F25F1E-C8E9-4DE6-BEE2-300815C83882.png'
-        //   };
-        //   login(ownerData);
-        //   setShowSuccess(true);
-        //   setTimeout(() => {
-        //     setShowSuccess(false);
-        //     launchFireworks();
-        //   }, 1500);
-        //   return;
-        // }
-        
-        // await new Promise(resolve => setTimeout(resolve, 1500));
-        // const mockUserData = {
-        //   id: Math.random().toString(36).substr(2, 9),
-        //   name: isRegistering ? `${firstName.trim()} ${lastName.trim()}` : email.split('@')[0],
-        //   email: email.trim(),
-        // };
-        
-        // login(mockUserData);
-        // setShowSuccess(true);
-        // setTimeout(() => {
-        //   setShowSuccess(false);
-        //   launchFireworks();
-        // }, 1500);
-      }
+
+      // Regular password login
+      await login({ email, password });
+      setShowSuccess(true);
+      setTimeout(() => {
+        setShowSuccess(false);
+        launchFireworks();
+      }, 1500);
     } catch (err) {
       const errorMessage = err instanceof Error 
         ? err.message 
@@ -321,7 +208,6 @@ export function LoginForm({
           ? String(err.message)
           : 'Authentication failed';
       setError(errorMessage);
-      console.error('Login error:', err);
     } finally {
       setIsLoading(false);
     }
@@ -340,7 +226,26 @@ export function LoginForm({
       <div className="space-y-4">
         {(!codeSent) && (
           <>
-            {isRegistering && (
+            {showPlans && (
+              <PricingPlans
+                onSelect={(planId) => {
+                  const userData = {
+                    id: Math.random().toString(36).substr(2, 9),
+                    name: `${formData.firstName} ${formData.lastName}`,
+                    email: formData.email,
+                    plan: planId
+                  };
+                  login(userData);
+                  setShowSuccess(true);
+                  setTimeout(() => {
+                    setShowSuccess(false);
+                    launchFireworks();
+                  }, 1500);
+                }}
+                selectedPlan={selectedPlan}
+              />
+            )}
+            {!showPlans && isRegistering && (
               <>
                 <div className="relative group animate-slide-down">
                   <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
@@ -438,66 +343,65 @@ export function LoginForm({
                   </div>
                   <input
                     name="confirmPassword"
-                    value={confirmpass}
-                    onChange={(e) => setConfirmpassword(e.target.value)}
                     type="password"
                     placeholder="Confirm password"
                     className="w-full pl-12 pr-4 py-3 bg-white/90 border border-[#B38B3F]/20 rounded-xl text-black placeholder-black/60 focus:outline-none focus:ring-2 focus:ring-[#B38B3F]/50 focus:border-transparent transition-all hover:bg-white focus:bg-white focus:text-black"
                     required
                   />
                 </div>
-                      e.preventDefault();
               </div>
-            ) : (
-              <div className="relative group space-y-4">
-                <div className="text-center">
-                  <div className="text-[#B38B3F] text-base font-medium mb-1">
-                    Enter verification code
+            ) : isRegistering && (
+              <>
+                <div className="relative group space-y-4">
+                  <div className="text-center">
+                    <div className="text-[#B38B3F] text-base font-medium mb-1">
+                      Enter verification code
+                    </div>
+                    <div className="text-white/70 text-sm">
+                      Code sent to {magicEmail}
+                    </div>
                   </div>
-                  <div className="text-white/70 text-sm">
-                    Code sent to {magicEmail}
-                  </div>
-                </div>
-                <div className="grid grid-cols-6 gap-2">
-                  {[...Array(6)].map((_, i) => (
-                    <input
-                      key={i}
-                      type="text"
-                      maxLength={1}
-                      pattern="\d"
-                      inputMode="numeric"
-                      value={verificationCode[i]}
-                      className="w-full aspect-square text-center text-2xl font-mono bg-white/90 border border-[#B38B3F]/20 rounded-lg text-black placeholder-black/60 focus:outline-none focus:ring-2 focus:ring-[#B38B3F]/50 focus:border-transparent transition-all hover:bg-white focus:bg-white focus:text-black"
-                      onKeyDown={(e) => {
-                        if (e.key === 'Backspace' && !e.currentTarget.value) {
-                          const prev = e.currentTarget.previousElementSibling as HTMLInputElement;
-                          if (prev) {
-                            prev.focus();
-                            prev.select();
-                            const newCode = [...verificationCode];
-                            newCode[i - 1] = '';
-                            setVerificationCode(newCode);
+                  <div className="grid grid-cols-6 gap-2">
+                    {[...Array(6)].map((_, i) => (
+                      <input
+                        key={i}
+                        type="text"
+                        maxLength={1}
+                        pattern="\d"
+                        inputMode="numeric"
+                        value={verificationCode[i]}
+                        className="w-full aspect-square text-center text-2xl font-mono bg-white/90 border border-[#B38B3F]/20 rounded-lg text-black placeholder-black/60 focus:outline-none focus:ring-2 focus:ring-[#B38B3F]/50 focus:border-transparent transition-all hover:bg-white focus:bg-white focus:text-black"
+                        onKeyDown={(e) => {
+                          if (e.key === 'Backspace' && !e.currentTarget.value) {
+                            const prev = e.currentTarget.previousElementSibling as HTMLInputElement;
+                            if (prev) {
+                              prev.focus();
+                              prev.select();
+                              const newCode = [...verificationCode];
+                              newCode[i - 1] = '';
+                              setVerificationCode(newCode);
+                            }
                           }
-                        }
-                      }}
-                      onInput={(e) => {
-                        const input = e.currentTarget;
-                        const next = input.nextElementSibling as HTMLInputElement;
-                        
-                        const value = input.value.replace(/\D/g, '');
-                        const newCode = [...verificationCode];
-                        newCode[i] = value;
-                        setVerificationCode(newCode);
-                        
-                        if (value && next && i < 5) {
-                          next.focus();
-                          next.select();
-                        }
-                      }}
-                    />
-                  ))}
+                        }}
+                        onInput={(e) => {
+                          const input = e.currentTarget;
+                          const next = input.nextElementSibling as HTMLInputElement;
+                          
+                          const value = input.value.replace(/\D/g, '');
+                          const newCode = [...verificationCode];
+                          newCode[i] = value;
+                          setVerificationCode(newCode);
+                          
+                          if (value && next && i < 5) {
+                            next.focus();
+                            next.select();
+                          }
+                        }}
+                      />
+                    ))}
+                  </div>
                 </div>
-              </div>
+              </>
             )}
           </>
         )}
@@ -567,11 +471,6 @@ export function LoginForm({
           <div className="w-6 h-6 border-3 border-black border-t-transparent rounded-full animate-spin" />
         ) : (
           <div className="flex items-center justify-center space-x-2" onClick={(e) => {
-            // if (showPasswordCreation && formData.password) {
-              
-            // }
-          }}>
-            {/* onClick={(e) => {
             if (showPasswordCreation && formData.password) {
               e.preventDefault();
               onVerified(magicEmail, {
@@ -587,9 +486,9 @@ export function LoginForm({
                 setFormData(initialFormState);
                 setCodeSent(false);
                 setShowPasswordCreation(false);
-              }, 1000);
+              }, 2000);
             }
-          }} */}
+          }}>
             <span>
               {isCodeLogin 
                 ? (codeSent ? 'Verify Code' : 'Send Magic Code')

@@ -52,7 +52,7 @@ exports.verifycode = async (req, res) => {
 
     await magicloginCollection.deleteOne({ email });
     if(!register){
-    const token = jwt.sign({ user_id: user._id,email: user.email  }, process.env.JWT_SECRET, { expiresIn: "1h" });
+    const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: "1h" });
 
       return res.json({  token:token });
 
@@ -156,129 +156,6 @@ exports.forgetpassword = async (req, res) => {
 };
 
 
-exports.facebooklogin = async (req, res) => {
-  const { data, plan } = req.body; 
-  if (!data) {
-    return res.status(400).json({ message: "Invalid request format" });
-  }
-
-  const { email,fbid ,firstName} = data;
-
-  
-
-  const existingUser = await usersCollection.findOne({ email });
-
-  if (existingUser) {
-    const token = jwt.sign({ user_id: existingUser._id, email: existingUser.email }, SECRET_KEY, { expiresIn: '1h' });
-  
-    const ownerData = {
-      token: token,
-      id: token,
-      name: existingUser.firstname ,
-      email: existingUser.email,
-      role: 'user',
-      
-    };
-  
-    return res.json({ ownerData });
-  }
-  
-  // New user creation
-  const newUser = {
-    email,
-    firstname: firstName, // Fixed spelling of 'firstname'
-    subscribed: 1,
-    plan,
-    fbid,
-    createdAt: new Date(),
-  };
-  
-  const result = await usersCollection.insertOne(newUser);
-  
-  const token = jwt.sign({ user_id: result.insertedId, email: email }, SECRET_KEY, { expiresIn: '1h' });
-  
-  const ownerData = {
-    token: token,
-    id: token,
-    name: firstName + ' ',
-    email: email,
-    role: 'user',
-    
-  };
-  
-  return res.json({ ownerData });
-  
-  
-
- 
-    
-  
-  
-};
-
-
-
-exports.googlelogin = async (req, res) => {
-  const { data, plan } = req.body; 
-  if (!data) {
-    return res.status(400).json({ message: "Invalid request format" });
-  }
-
-  const { email,google,name ,googleavater} = data;
-
-  
-
-  const existingUser = await usersCollection.findOne({ email });
-
-  if (existingUser) {
-    const token = jwt.sign({ user_id: existingUser._id, email: existingUser.email }, SECRET_KEY, { expiresIn: '1h' });
-  
-    const ownerData = {
-      token: token,
-      id: token,
-      name: existingUser.firstname ,
-      email: existingUser.email,
-      role: 'user',
-      avatar: existingUser.profile
-    };
-  
-    return res.json({ ownerData });
-  }
-  
-  // New user creation
-  const newUser = {
-    email,
-    firstname: name, // Fixed spelling of 'firstname'
-    lastname: '',
-    profile: googleavater,
-    plan,
-    subscribed: 1,
-    google,
-    createdAt: new Date(),
-  };
-  
-  const result = await usersCollection.insertOne(newUser);
-  
-  const token = jwt.sign({ user_id: result.insertedId, email: email }, SECRET_KEY, { expiresIn: '1h' });
-  
-  const ownerData = {
-    token: token,
-    id: token,
-    name: name + ' ',
-    email: email,
-    role: 'user',
-    avatar: googleavater
-  };
-  
-  return res.json({ ownerData });
-  
-  
-
- 
-    
-  
-  
-};
 
 exports.registeruser = async (req, res) => {
   const { data, plan } = req.body; 
@@ -286,7 +163,7 @@ exports.registeruser = async (req, res) => {
     return res.status(400).json({ message: "Invalid request format" });
   }
 
-  const { email, password, firstName, lastName,fb,fbid,google,name ,googleavater} = data;
+  const { email, password, firstName, lastName } = data;
 
   if (!email || !password || !firstName || !lastName || !plan) {
     return res.status(400).json({ message: "All fields are required" });
@@ -298,62 +175,23 @@ exports.registeruser = async (req, res) => {
   }
 
 
+  const salt = await bcrypt.genSalt(10);
+  const hashedPassword = await bcrypt.hash(password, salt);
+
+  const newUser = {
+    email,
+    password: hashedPassword,
+    firstname: firstName,
+    lastname: lastName,
+    plan,
+    createdAt: new Date(),
+  };
+
+  const result = await usersCollection.insertOne(newUser);
+
+      return res.send("1"); 
   
-  // if(fb){
-  //   const newUser = {
-  //     email,
-  //     fbid,
-  //     name: firstName,
-     
-  //     plan,
-  //     fb,
-  //     createdAt: new Date(),
-  //   };
-  
-  //   const result = await usersCollection.insertOne(newUser);
-  
-  //       return res.send("1"); 
-  // }else if(google){
-  //   const newUser = {
-  //     email,
-  //     firtname: name,
-  //     lastname: '',
-  //     profile:googleavater,
-  //     plan,
-  //     google,
-  //     createdAt: new Date(),
-  //   };
-  
-  //   const result = await usersCollection.insertOne(newUser);
-  
-  //       return res.send("1"); 
-  // }
-  
-  // else{
-    const existingUsers = await usersCollection.findOne({ email });
-    if (existingUsers) {
-      return res.status(409).json({ message: "Email already in use" });
-    }else{
-      const salt = await bcrypt.genSalt(10);
-      const hashedPassword = await bcrypt.hash(password, salt);
-    
-    const newUser = {
-      email,
-      password: hashedPassword,
-      firstname: firstName,
-      lastname: lastName,
-      plan,
-      subscribed: 1,
-      createdAt: new Date(),
-    };
-  
-    const result = await usersCollection.insertOne(newUser);
-  
-        return res.send("1"); 
-    }
-   
-  
-    
+      
     
   
   
@@ -409,7 +247,7 @@ exports.login = async (req, res) => {
   console.log(req.body)
   try {
     if (email === 'dallas@prophone.io' && password === 'owner') {
-      const token = jwt.sign({ user_id: 1,email: 'dallas@prophone.io'  }, SECRET_KEY, { expiresIn: '1h' });
+      const token = jwt.sign({ user_id: 1 }, SECRET_KEY, { expiresIn: '1h' });
 
       const ownerData = {
 
@@ -457,7 +295,7 @@ exports.login = async (req, res) => {
               }
 
              
-              const token = jwt.sign({ user_id: user._id,email: user.email  }, SECRET_KEY, { expiresIn: '1h' });
+              const token = jwt.sign({ user_id: user.id }, SECRET_KEY, { expiresIn: '1h' });
               const ownerData = {
 
                 token: token,
@@ -484,7 +322,7 @@ exports.login = async (req, res) => {
                   );
               }
 
-              const token = jwt.sign({ user_id: user._id,email: user.email  }, SECRET_KEY, { expiresIn: '1h' });
+              const token = jwt.sign({ user_id: user.id }, SECRET_KEY, { expiresIn: '1h' });
               const ownerData = {
 
                 token: token,

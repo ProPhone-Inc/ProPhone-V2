@@ -16,13 +16,13 @@
   "dependencies": {
     "@googleapis/calendar": "^9.7.0",
     "@react-oauth/google": "^0.12.1",
+    "xlsx": "^0.18.5",
     "@stripe/react-stripe-js": "^2.4.0",
     "@stripe/stripe-js": "^2.4.0",
     "axios": "^1.6.2",
     "bcryptjs": "^2.4.3",
     "compression": "^1.7.4",
     "cors": "^2.8.5",
-    "dexie": "^4.0.11",
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
     "helmet": "^7.1.0",
@@ -60,6 +60,6 @@
     "tsx": "^4.7.1",
     "typescript": "^5.5.3",
     "typescript-eslint": "^8.3.0",
-    "vite": "^5.4.14"
+    "vite": "^5.4.2"
   }
 }
