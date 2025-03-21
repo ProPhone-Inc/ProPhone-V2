@@ -129,7 +129,7 @@ process.on('SIGINT', async () => {
   }
 
   // Auth Routes
-  app.post('/api/auth/register', async (req: Request, res: Response) => {
+  app.post('/api/auth/register', async (req: Request, res: Response): Promise<void> => {
     try {
       const { email, password, name } = req.body;
 

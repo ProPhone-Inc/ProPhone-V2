@@ -2,9 +2,10 @@ module.exports = {
   apps: [
     {
       name: 'prophone-server',
-      script: 'dist/server/index.js',
+      script: 'src/server/index.ts',
       instances: 1,
       exec_mode: 'fork',
+      interpreter: 'node',
       wait_ready: true,
       autorestart: true,
       watch: false,
