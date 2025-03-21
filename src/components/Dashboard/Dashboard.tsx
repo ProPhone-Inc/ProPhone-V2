@@ -68,6 +68,7 @@ function AdminModal({ isOpen, onClose }: AdminModalProps) {
 export function Dashboard() {
   const { user, logout } = useAuth();
   const { provider, apiKey } = useCopilot();
+  const [token, setToken] = useState("");
   const { activeCall } = useCallState();
   const [collapsed, setCollapsed] = useState(true); // Default to collapsed
   const [activePage, setActivePage] = useState('dashboard');
@@ -84,6 +85,19 @@ export function Dashboard() {
   const handleMakeCall = (number: string) => {
     setActiveCall({ number });
   };
+
+  // Initialize token from auth user
+  React.useEffect(() => {
+    const authUser = localStorage.getItem("auth_user");
+    if (authUser) {
+      try {
+        const parsedUser = JSON.parse(authUser);
+        setToken(parsedUser.token);
+      } catch (error) {
+        console.error("Error parsing auth_user from localStorage", error);
+      }
+    }
+  }, []);
   
   const [messages, setMessages] = useState<Array<{
     id: string;
@@ -192,6 +206,15 @@ export function Dashboard() {
   ]);
   
   const handleSidebarClick = (page: string) => {
+    // Handle ProFlow navigation
+    if (page === 'proflow') {
+      window.location.href = `https://flow.prophone.io/sign-in/?token=${token}`;
+      return;
+    }
+    
+    // Always call onPageChange first
+    onPageChange(page);
+    
     // Handle copilot
     if (page === 'copilot') {
       setCopilotExpanded(!copilotExpanded);
