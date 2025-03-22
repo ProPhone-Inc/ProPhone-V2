@@ -29,7 +29,7 @@ const userSchema = new mongoose.Schema({
   },
   plan: {
     type: String,
-    enum: ['starter', 'pro', 'enterprise', 'god_mode'],
+    enum: ['starter', 'pro', 'elite', 'god_mode'],
     default: 'starter'
   },
   permissions: [{

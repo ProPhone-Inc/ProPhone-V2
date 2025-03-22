@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Bell, Menu, X, User, LogOut, Calendar, MessageSquare, Shield, HelpCircle, Phone, Mail, Grid, Users, FileText, GitMerge, Settings } from 'lucide-react';
+import { Bell, Menu, X, User, LogOut, Calendar, MessageSquare, Shield, HelpCircle, Phone, Mail, Grid, Users, FileText, GitMerge, Settings, Ban } from 'lucide-react';
 import { useClickOutside } from '../../hooks/useClickOutside';
 import { CalendarModal } from './Calendar';
 import { useAuth } from '../../hooks/useAuth'; 
@@ -56,6 +56,7 @@ function Header({ user, onLogout, collapsed, activePage, messages, onPageChange 
   const [showSettings, setShowSettings] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showAppDrawer, setShowAppDrawer] = useState(false);
+  const [showRemoveAdsModal, setShowRemoveAdsModal] = useState(false);
   const { unreadCount: unreadNotifications } = useSystemNotifications();
   const { sendNotification } = useNotifications();
   const { used: smsUsed, limit: smsLimit } = useSMSUsage();
@@ -115,7 +116,21 @@ function Header({ user, onLogout, collapsed, activePage, messages, onPageChange 
       <div className="flex-1" />
 
       <div className="flex items-center space-x-2">
-        {/* SMS Usage Counter */}
+        {/* Remove Ads Button - Only show for free plan, sub users, and executives */}
+        {(user?.plan === 'starter' || user?.role === 'sub_user' || user?.role === 'executive') && (
+          <button
+            onClick={() => setShowRemoveAdsModal(true)}
+            className="relative px-3 py-1.5 bg-gradient-to-r from-[#B38B3F]/20 to-[#FFD700]/10 text-[#FFD700] rounded-lg hover:bg-[#B38B3F]/30 transition-colors flex items-center space-x-2 border border-[#B38B3F]/20 overflow-hidden group"
+          >
+            <div className="absolute inset-0 bg-gradient-to-r from-[#FFD700]/0 via-[#FFD700]/20 to-[#FFD700]/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 ease-out" />
+            <div className="absolute inset-0 bg-[#FFD700]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            <div className="absolute -inset-1 bg-gradient-to-r from-[#FFD700]/0 via-[#FFD700]/10 to-[#FFD700]/0 opacity-0 group-hover:opacity-100 blur-lg transition-opacity duration-500" />
+            <Ban className="w-4 h-4" />
+            <span className="text-sm">Remove Ads</span>
+            <span className="text-xs opacity-75">$10/mo</span>
+          </button>
+        )}
+
         {activePage === 'phone' && (
         <div className="relative px-3 py-1.5 bg-zinc-800/50 border border-[#B38B3F]/20 rounded-lg flex items-center space-x-2">
           <MessageSquareText className="w-4 h-4 text-[#FFD700]" />
@@ -363,6 +378,69 @@ function Header({ user, onLogout, collapsed, activePage, messages, onPageChange 
           }}
           currentApp={activePage}
         />
+      )}
+
+      {/* Remove Ads Modal */}
+      {showRemoveAdsModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setShowRemoveAdsModal(false)} />
+          <div className="relative bg-zinc-900 border border-[#B38B3F]/30 rounded-xl shadow-2xl w-full max-w-md transform animate-fade-in">
+            <div className="p-6">
+              <button
+                onClick={() => setShowRemoveAdsModal(false)}
+                className="absolute right-4 top-4 text-white/70 hover:text-white transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              <div className="flex items-center space-x-3 mb-6">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#B38B3F]/20 to-[#FFD700]/10 flex items-center justify-center border border-[#B38B3F]/30">
+                  <Ban className="w-6 h-6 text-[#FFD700]" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-white">Remove Ads</h3>
+                  <p className="text-white/60">Enjoy an ad-free experience</p>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div className="bg-[#B38B3F]/10 border border-[#B38B3F]/20 rounded-lg p-4">
+                  <h4 className="text-[#FFD700] font-medium mb-2">Benefits</h4>
+                  <ul className="space-y-2 text-sm text-white/70">
+                    <li className="flex items-center">
+                      <span className="w-2 h-2 bg-[#FFD700] rounded-full mr-2" />
+                      Remove all advertisements across the platform
+                    </li>
+                    <li className="flex items-center">
+                      <span className="w-2 h-2 bg-[#FFD700] rounded-full mr-2" />
+                      Cleaner, distraction-free interface
+                    </li>
+                    <li className="flex items-center">
+                      <span className="w-2 h-2 bg-[#FFD700] rounded-full mr-2" />
+                      Faster loading times
+                    </li>
+                  </ul>
+                </div>
+
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-white mb-2">$10<span className="text-lg text-white/60">/month</span></div>
+                  <p className="text-white/60 text-sm">Cancel anytime</p>
+                </div>
+
+                <button
+                  onClick={() => {
+                    // Handle payment processing here
+                    setShowRemoveAdsModal(false);
+                  }}
+                  className="w-full py-3 bg-gradient-to-r from-[#B38B3F] via-[#FFD700] to-[#B38B3F] text-black font-medium rounded-lg hover:opacity-90 transition-opacity flex items-center justify-center space-x-2"
+                >
+                  <span>Upgrade Now</span>
+                  <Ban className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </header>
   );

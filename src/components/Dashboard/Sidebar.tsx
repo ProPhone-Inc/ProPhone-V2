@@ -77,7 +77,7 @@ const canAccessTeamPanel = (user: any) => {
   return user?.role === 'owner' ||
          user?.role === 'super_admin' ||
          user?.role === 'executive' ||
-         user?.plan === 'enterprise' ||
+         user?.plan === 'elite' ||
          user?.plan === 'god_mode';
 };
 
@@ -195,7 +195,7 @@ export function Sidebar({
   });
   
   // Determine which items to show based on active page
-  const sidebarItems = ['phone', 'call-logs', 'sms-automation', 'power-dialer'].includes(activePage) 
+  const sidebarItems = ['phone', 'call-logs', 'sms-campaign', 'power-dialer'].includes(activePage) 
     ? phoneSystemItems 
     : defaultItems;
 
@@ -277,16 +277,16 @@ export function Sidebar({
   const effectiveCollapsed = internalCollapsed && !isHovered;
 
   const handleSidebarClick = (page: string) => {
-    // Special handling for phone system pages
-    if (page === 'phone' && prevPage.current === 'phone') {
-      return; // Don't re-navigate if already on phone
+    // Keep phone system menu for phone-related pages
+    if (['phone', 'call-logs', 'sms-campaign', 'power-dialer'].includes(activePage) && 
+        ['phone', 'call-logs', 'sms-campaign', 'power-dialer'].includes(page)) {
+      onPageChange(page);
+      return;
     }
 
-    // Handle ProFlow navigation
-    if (page === 'proflow') {
-      if (token) {
-        window.location.href = `https://flow.prophone.io/sign-in/?token=${token}`;
-      }
+    // Handle ProFlow external navigation
+    if (page === 'proflow' && token) {
+      window.location.href = `https://flow.prophone.io/sign-in/?token=${token}`;
       return;
     }
     
@@ -303,6 +303,7 @@ export function Sidebar({
       if (setShowCallLogs) {
         setShowCallLogs(true);
       }
+      onPageChange('call-logs');
       return;
     }
     

@@ -17,21 +17,21 @@ interface ProviderModalProps {
 export function ProviderModal({ onClose, onSelect, selectedProvider }: ProviderModalProps) {
   const providers: Provider[] = [
     {
-      id: 'att',
-      name: 'AT&T',
-      logo: 'https://dallasreynoldstn.com/wp-content/uploads/2025/03/att.png',
+      id: 'twilio',
+      name: 'Twilio',
+      logo: 'https://www.twilio.com/assets/icons/twilio-icon.svg',
       lines: ['1', '2']
     },
     {
-      id: 'verizon',
-      name: 'Verizon',
-      logo: 'https://dallasreynoldstn.com/wp-content/uploads/2025/03/verizon.png',
+      id: 'telnyx',
+      name: 'Telnyx',
+      logo: 'https://cdn.telnyx.com/u/favicon.png',
       lines: ['3', '4']
     },
     {
-      id: 'tmobile',
-      name: 'T-Mobile',
-      logo: 'https://dallasreynoldstn.com/wp-content/uploads/2025/03/tmobile.png',
+      id: 'bandwidth',
+      name: 'Bandwidth',
+      logo: 'https://www.bandwidth.com/wp-content/themes/bandwidth/favicon/favicon-32x32.png',
       lines: ['5']
     }
   ];

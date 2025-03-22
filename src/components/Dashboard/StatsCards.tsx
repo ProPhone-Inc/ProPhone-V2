@@ -1,5 +1,5 @@
 import React from 'react';
-import { TrendingUp, TrendingDown, Users, Mail, BarChart2, DollarSign } from 'lucide-react';
+import { MessageSquareText, Phone, MessageSquare, PhoneOff } from 'lucide-react';
 
 interface StatCardProps { 
   title: string;
@@ -21,7 +21,15 @@ function StatCard({ title, value, change, icon }: StatCardProps) {
           <p className="text-white/50 font-medium">{title}</p>
           <h3 className="text-2xl font-bold mt-1 text-white">{value}</h3>
           <div className={`flex items-center mt-2 ${change.positive ? 'text-emerald-500' : 'text-rose-500'}`}>
-            {change.positive ? <TrendingUp className="w-4 h-4 mr-1" /> : <TrendingDown className="w-4 h-4 mr-1" />}
+            {change.positive ? (
+              <svg className="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+              </svg>
+            ) : (
+              <svg className="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 17h8m0 0v-8m0 8l-8-8-4 4-6-6" />
+              </svg>
+            )}
             <span className="text-sm font-medium">{change.value}</span>
           </div>
         </div>
@@ -36,40 +44,40 @@ function StatCard({ title, value, change, icon }: StatCardProps) {
 export function StatsCards() {
   const stats = [
     {
-      title: 'Total Contacts',
-      value: '12,845',
-      change: {
-        value: '12% this month',
-        positive: true,
-      },
-      icon: <Users className="w-6 h-6 text-[#FFD700]" />,
-    },
-    {
-      title: 'Campaign Performance',
-      value: '87.4%',
-      change: {
-        value: '3.2% this week',
-        positive: true,
-      },
-      icon: <BarChart2 className="w-6 h-6 text-[#FFD700]" />,
-    },
-    {
-      title: 'Emails Sent',
+      title: 'Total SMS Sent',
       value: '24,951',
       change: {
-        value: '8% this month',
+        value: '8.2% this month',
         positive: true,
       },
-      icon: <Mail className="w-6 h-6 text-[#FFD700]" />,
+      icon: <MessageSquareText className="w-6 h-6 text-[#FFD700]" />,
     },
     {
-      title: 'Revenue Generated',
-      value: '$32,548',
+      title: 'Total Calls',
+      value: '12,845',
+      change: {
+        value: '6.8% this month',
+        positive: true,
+      },
+      icon: <Phone className="w-6 h-6 text-[#FFD700]" />,
+    },
+    {
+      title: 'Unread Messages',
+      value: '1,245',
+      change: {
+        value: '3.2% this week',
+        positive: false,
+      },
+      icon: <MessageSquare className="w-6 h-6 text-[#FFD700]" />,
+    },
+    {
+      title: 'Missed Calls',
+      value: '89',
       change: {
         value: '5.3% this month',
         positive: false,
       },
-      icon: <DollarSign className="w-6 h-6 text-[#FFD700]" />,
+      icon: <PhoneOff className="w-6 h-6 text-[#FFD700]" />,
     },
   ];
 

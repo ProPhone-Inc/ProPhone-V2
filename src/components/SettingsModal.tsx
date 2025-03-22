@@ -1,9 +1,11 @@
 import React from 'react';
-import { X, User, CreditCard, Globe, ArrowRight, MessageSquare } from 'lucide-react';
+import { X, User, CreditCard, Globe, ArrowRight, MessageSquare, Phone, Calendar } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { ProfileSection } from './Dashboard/Settings/sections/ProfileSection';
 import { BillingSection } from './Dashboard/Settings/BillingSection';
+import { PhoneNumbersSection } from './Dashboard/Settings/sections/PhoneNumbersSection';
 import { IntegrationsSection } from './Dashboard/Settings/sections/IntegrationsSection';
+import { CalendarSection } from './Dashboard/Settings/sections/CalendarSection';
 import { SMSSettings } from './Dashboard/Settings/sections/SMSSettings';
 
 interface SettingsModalProps {
@@ -22,28 +24,42 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       id: 'profile',
       label: 'Profile Information',
       description: 'Manage your account details and preferences',
-      icon: <User className="w-5 h-5" />,
+      icon: <User className="w-6 h-6" />,
       component: <ProfileSection userData={user} />
     },
     {
       id: 'billing',
       label: 'Subscription & Billing',
       description: 'View and manage your subscription plan',
-      icon: <CreditCard className="w-5 h-5" />,
+      icon: <CreditCard className="w-6 h-6" />,
       component: <BillingSection userData={user} />
+    },
+    {
+      id: 'numbers',
+      label: 'Phone Numbers',
+      description: 'Manage your phone numbers',
+      icon: <Phone className="w-6 h-6" />,
+      component: <PhoneNumbersSection />
     },
     {
       id: 'integrations',
       label: 'Integrations',
       description: 'Connect and manage your external services',
-      icon: <Globe className="w-5 h-5" />,
+      icon: <Globe className="w-6 h-6" />,
       component: <IntegrationsSection />
+    },
+    {
+      id: 'calendar',
+      label: 'Calendar Settings',
+      description: 'Configure calendar preferences and sync',
+      icon: <Calendar className="w-6 h-6" />,
+      component: <CalendarSection />
     },
     {
       id: 'sms',
       label: 'SMS Settings',
       description: 'Manage SMS preferences and automation',
-      icon: <MessageSquare className="w-5 h-5" />,
+      icon: <MessageSquare className="w-6 h-6" />,
       component: <SMSSettings />
     }
   ];
@@ -87,8 +103,8 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                     <div className={`
                       w-10 h-10 rounded-lg flex items-center justify-center
                       ${activeSection === section.id
-                        ? 'bg-[#FFD700]/20'
-                        : 'bg-zinc-800'
+                        ? 'bg-[#FFD700]/20 border border-[#FFD700]/40'
+                        : 'bg-zinc-800 border border-[#B38B3F]/20'
                       }
                     `}>
                       {section.icon}

@@ -11,12 +11,10 @@ import { X } from 'lucide-react';
 import { Sidebar } from './Sidebar';
 import Header from './Header';
 import { StatsCards } from './StatsCards';
-import { RecentActivity } from './RecentActivity';
 import { MarketingCard } from './MarketingCard';
-import { CampaignOverview } from './CampaignOverview';
 import { StatusTracking } from './StatusTracking';
+import { SMSPerformanceCard } from './SMSPerformanceCard';
 import { TopContacts } from './TopContacts';
-import { UpcomingTasks } from './UpcomingTasks';
 import CopilotBubble from './CopilotBubble';
 import { ErrorBoundary } from '../ErrorBoundary';
 import { PhoneSystem } from '../Phone/PhoneSystem';
@@ -33,7 +31,7 @@ const canAccessTeamPanel = (user: any) => {
   return user?.role === 'owner' ||
          user?.role === 'super_admin' ||
          user?.role === 'executive' ||
-         user?.plan === 'enterprise' ||
+         user?.plan === 'elite' ||
          user?.plan === 'god_mode';
 };
 
@@ -350,15 +348,13 @@ export function Dashboard() {
                     <StatsCards />
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
                       <div className="lg:col-span-2 space-y-6">
-                        <CampaignOverview />
                         <StatusTracking />
-                        <RecentActivity />
+                        <SMSPerformanceCard />
                       </div>
                       
                       <div className="space-y-6">
                         <MarketingCard />
                         <TopContacts />
-                        <UpcomingTasks />
                       </div>
                     </div>
                   </div>

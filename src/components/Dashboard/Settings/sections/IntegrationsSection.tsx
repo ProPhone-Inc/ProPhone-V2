@@ -1,52 +1,79 @@
 import React from 'react';
-import { Webhook, Phone, Plus, AlertTriangle, Check, Network } from 'lucide-react';
+import { Phone, Plus, AlertTriangle, Check, Network } from 'lucide-react';
+import { usePhoneProvider } from '../../../../hooks/usePhoneProvider';
 
 export function IntegrationsSection() {
-  const [phoneProviders] = React.useState([
+  const { provider, initializeProvider } = usePhoneProvider();
+  const [selectedProvider, setSelectedProvider] = React.useState<string | null>(null);
+  const [isConfiguring, setIsConfiguring] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
+
+  const phoneProviders = [
     {
-      id: 'att',
-      name: 'AT&T',
-      logo: 'https://dallasreynoldstn.com/wp-content/uploads/2025/03/att.png',
+      id: 'twilio',
+      name: 'Twilio',
+      logo: 'https://www.twilio.com/assets/icons/twilio-icon.svg',
+      description: 'Global communications platform for SMS, voice, and video',
       status: 'active',
       lines: ['(555) 123-4567', '(555) 234-5678']
     },
     {
-      id: 'verizon',
-      name: 'Verizon',
-      logo: 'https://dallasreynoldstn.com/wp-content/uploads/2025/03/verizon.png',
+      id: 'telnyx',
+      name: 'Telnyx',
+      logo: 'https://cdn.telnyx.com/u/favicon.png',
+      description: 'Enterprise-grade communications platform',
       status: 'active',
       lines: ['(555) 345-6789']
     },
     {
-      id: 'tmobile',
-      name: 'T-Mobile',
-      logo: 'https://dallasreynoldstn.com/wp-content/uploads/2025/03/tmobile.png',
+      id: 'bandwidth',
+      name: 'Bandwidth',
+      logo: 'https://www.bandwidth.com/wp-content/themes/bandwidth/favicon/favicon-32x32.png',
+      description: 'Communications APIs and network platform',
       status: 'inactive',
       lines: []
     }
-  ]);
+  ];
 
-  const [webhooks] = React.useState([
-    {
-      id: 'stripe',
-      name: 'Stripe Payments',
-      endpoint: 'https://api.prophone.io/webhooks/stripe',
-      events: ['payment.succeeded', 'subscription.updated'],
-      status: 'active'
-    },
-    {
-      id: 'calls',
-      name: 'Call Events',
-      endpoint: 'https://api.prophone.io/webhooks/calls',
-      events: ['call.started', 'call.ended', 'voicemail.new'],
-      status: 'active'
+  const handleProviderSelect = async (providerId: string) => {
+    setSelectedProvider(providerId);
+    setIsConfiguring(true);
+    setError(null);
+
+    try {
+      // In a real app, this would prompt for API keys and configuration
+      const config = {
+        apiKey: 'test-api-key',
+        apiSecret: 'test-api-secret',
+        accountSid: 'test-account-sid'
+      };
+
+      await initializeProvider(providerId, config);
+      
+      // Show success state briefly
+      setTimeout(() => {
+        setIsConfiguring(false);
+        setSelectedProvider(null);
+      }, 1500);
+
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Failed to configure provider');
+      setIsConfiguring(false);
     }
-  ]);
+  };
 
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold text-white">Integrations</h2>
+        <div className="flex items-center space-x-3">
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#B38B3F]/20 to-[#FFD700]/10 flex items-center justify-center border border-[#B38B3F]/30">
+            <Network className="w-6 h-6 text-[#FFD700]" />
+          </div>
+          <div>
+            <h2 className="text-xl font-bold text-white">Integrations</h2>
+            <p className="text-white/60">Connect and manage your external services</p>
+          </div>
+        </div>
       </div>
 
       <div className="space-y-6">
@@ -96,62 +123,20 @@ export function IntegrationsSection() {
                       Inactive
                     </span>
                   )}
-                  <button className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors">
-                    Configure
+                  <button 
+                    onClick={() => handleProviderSelect(provider.id)}
+                    disabled={isConfiguring && selectedProvider === provider.id}
+                    className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors"
+                  >
+                    {isConfiguring && selectedProvider === provider.id ? (
+                      <div className="flex items-center space-x-2">
+                        <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                        <span>Configuring...</span>
+                      </div>
+                    ) : (
+                      'Configure'
+                    )}
                   </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Webhooks */}
-        <div className="bg-zinc-800/50 rounded-xl border border-[#B38B3F]/20 p-6">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#B38B3F]/10 to-[#FFD700]/5 flex items-center justify-center border border-[#B38B3F]/20">
-                <Webhook className="w-5 h-5 text-[#FFD700]" />
-              </div>
-              <div>
-                <h3 className="font-medium text-white">Webhooks</h3>
-                <p className="text-sm text-white/60">Manage webhook endpoints</p>
-              </div>
-            </div>
-            <button
-              className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors flex items-center space-x-2"
-            >
-              <Plus className="w-4 h-4" />
-              <span>Add Webhook</span>
-            </button>
-          </div>
-
-          <div className="space-y-4">
-            {webhooks.map(webhook => (
-              <div key={webhook.id} className="p-4 bg-zinc-900/50 rounded-lg border border-[#B38B3F]/20">
-                <div className="flex items-center justify-between mb-3">
-                  <div>
-                    <div className="font-medium text-white">{webhook.name}</div>
-                    <div className="text-sm font-mono text-white/60 mt-1">{webhook.endpoint}</div>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <span className="flex items-center text-emerald-400 text-sm">
-                      <Check className="w-4 h-4 mr-1" />
-                      Active
-                    </span>
-                    <button className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors">
-                      Configure
-                    </button>
-                  </div>
-                </div>
-                <div className="flex flex-wrap gap-2 mt-3">
-                  {webhook.events.map((event, index) => (
-                    <span
-                      key={index}
-                      className="px-2 py-1 rounded-full bg-[#B38B3F]/20 text-[#FFD700] text-xs"
-                    >
-                      {event}
-                    </span>
-                  ))}
                 </div>
               </div>
             ))}

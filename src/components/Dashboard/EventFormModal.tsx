@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Clock, Calendar as CalendarIcon, Users, AlignLeft, Video, MapPin, Bell, Repeat, Paperclip, Mail, Calendar, Briefcase as BriefcaseIcon, MapPin as MapPinIcon, CheckSquare as CheckSquareIcon, Tag, Flag } from 'lucide-react';
+import { X, Clock, Calendar as CalendarIcon, Users, AlignLeft, Video, MapPin, Bell, Repeat, Paperclip, Mail, Calendar, Briefcase as BriefcaseIcon, MapPin as MapPinIcon, CheckSquare as CheckSquareIcon, Tag, Flag, AlertTriangle, Plus } from 'lucide-react';
 import { useDB } from '../../hooks/useDB';
 import { sendTeamInvite } from '../../utils/email';
 
@@ -36,38 +36,9 @@ const eventTypes = [
 
 interface EventFormModalProps {
   selectedDate: Date | null;
-  eventForm: {
-    title: string;
-    type: 'event' | 'out-of-office' | 'working-location' | 'task';
-    startDate: string;
-    endDate: string;
-    time: string;
-    endTime: string;
-    isAllDay: boolean;
-    recurrence: string;
-    location: string;
-    videoConference: boolean;
-    notifications: string[];
-    description: string;
-    attendees: string;
-    attachments: string[];
-  };
-  setEventForm: React.Dispatch<React.SetStateAction<{
-    title: string;
-    type: 'event' | 'out-of-office' | 'working-location' | 'task';
-    startDate: string;
-    endDate: string;
-    time: string;
-    endTime: string;
-    isAllDay: boolean;
-    recurrence: string;
-    location: string;
-    videoConference: boolean;
-    notifications: string[];
-    description: string;
-    attendees: string;
-    attachments: string[];
-  }>>;
+  eventForm: any;
+  setEventForm: React.Dispatch<React.SetStateAction<any>>;
+  error?: string | null;
   onClose: () => void;
   onSubmit: (e: React.FormEvent) => void;
   isSubmitting: boolean;
@@ -86,14 +57,7 @@ const taskLabels = [
   { id: 'design', label: 'Design', color: '#9C27B0' }
 ];
 
-export function EventFormModal({
-  selectedDate,
-  eventForm,
-  setEventForm,
-  onClose,
-  onSubmit,
-  isSubmitting
-}: EventFormModalProps) {
+export function EventFormModal({ selectedDate, eventForm, setEventForm, error, onClose, onSubmit, isSubmitting }: EventFormModalProps) {
   const [viewMode] = React.useState<'calendar' | 'tasks'>(eventForm.type === 'task' ? 'tasks' : 'calendar');
   const { getTeamMembers } = useDB();
   const [teamMembers, setTeamMembers] = React.useState<Array<{
@@ -589,10 +553,18 @@ export function EventFormModal({
             </div>
           </div>}
 
+          {error && (
+            <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm flex items-center space-x-2">
+              <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+              <span>{error}</span>
+            </div>
+          )}
+
           <div className="flex space-x-3 pt-4">
             <button
               type="button"
               onClick={onClose}
+              disabled={isSubmitting}
               className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white rounded-lg transition-colors"
             >
               Cancel
@@ -600,15 +572,18 @@ export function EventFormModal({
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-6 py-2 bg-gradient-to-r from-[#FFD700] via-[#FFD700] to-[#FFD700] text-black font-medium rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50"
+              className="px-4 py-2 bg-gradient-to-r from-[#B38B3F] to-[#FFD700] text-black font-medium rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center space-x-2"
             >
               {isSubmitting ? (
-                <div className="flex items-center justify-center">
-                  <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin mr-2" />
-                  <span>Creating...</span>
-                </div>
+                <>
+                  <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                  <span>Creating Event...</span>
+                </>
               ) : (
-                `Create ${viewMode === 'tasks' ? 'Task' : 'Event'}`
+                <>
+                  <Plus className="w-4 h-4" />
+                  <span>Create Event</span>
+                </>
               )}
             </button>
           </div>

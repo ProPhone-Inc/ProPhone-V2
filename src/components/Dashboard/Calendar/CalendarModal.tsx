@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus, Users, Calendar, X, Filter, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, Users, Calendar, X, Filter, Clock, ChevronLeft, ChevronRight, AlertTriangle, Filter as FilterIcon } from 'lucide-react';
 import { useGoogleCalendar } from '../../../hooks/useGoogleCalendar';
 import { CalendarHeader } from './CalendarHeader';
 import { MonthView } from './MonthView';
@@ -17,11 +17,21 @@ export function CalendarModal({ onClose }: CalendarModalProps) {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [currentMonth, setCurrentMonth] = React.useState(new Date().getMonth());
   const [currentYear, setCurrentYear] = React.useState(new Date().getFullYear());
-  const { isConnected, connect, sync, isSyncing, connectedEmail, isConfigured, error } = useGoogleCalendar();
+  const { 
+    isConnected, 
+    connect, 
+    sync, 
+    isSyncing, 
+    connectedEmail,
+    error: googleError,
+    isConfigured,
+    events: googleEvents 
+  } = useGoogleCalendar();
+  const [error, setError] = React.useState<string | null>(null);
   const [taskStages, setTaskStages] = React.useState(['To Do', 'In Progress', 'Done']);
   const [displayMode, setDisplayMode] = React.useState<'month' | 'week' | 'day' | '4day' | 'schedule'>('month');
   const [taskDisplayMode, setTaskDisplayMode] = React.useState<'daily' | 'weekly' | 'monthly' | 'yearly'>('weekly');
-  const [events, setEvents] = React.useState([
+  const [localEvents, setLocalEvents] = React.useState([
     {
       id: Math.random().toString(36).substr(2, 9),
       title: 'Welcome to Calendar',
@@ -32,6 +42,32 @@ export function CalendarModal({ onClose }: CalendarModalProps) {
       attendees: []
     }
   ]);
+
+  // Merge Google Calendar events with local events
+  const events = React.useMemo(() => {
+    // If Google Calendar is not configured, only show local events
+    if (!isConfigured) {
+      return localEvents;
+    }
+
+    if (!googleEvents?.length) return localEvents;
+    
+    // Transform Google Calendar events to match local event format
+    const transformedGoogleEvents = googleEvents.map(event => ({
+      id: event.id,
+      title: event.title,
+      type: 'event',
+      date: event.start.split('T')[0],
+      time: event.start.split('T')[1]?.slice(0, 5) || '00:00',
+      endTime: event.end.split('T')[1]?.slice(0, 5),
+      description: event.description || '',
+      location: event.location,
+      attendees: event.attendees?.map(a => a.email) || [],
+      isGoogleEvent: true
+    }));
+    
+    return [...localEvents, ...transformedGoogleEvents];
+  }, [localEvents, googleEvents, isConfigured]);
 
   const [filters, setFilters] = React.useState({
     showWeekends: true,
@@ -62,7 +98,7 @@ export function CalendarModal({ onClose }: CalendarModalProps) {
   };
 
   const handleEventDrop = (eventId: string, newDate: string) => {
-    setEvents(prev => prev.map(event => 
+    setLocalEvents(prev => prev.map(event => 
       event.id === eventId 
         ? { ...event, date: newDate }
         : event
@@ -89,30 +125,47 @@ export function CalendarModal({ onClose }: CalendarModalProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setError(null);
     
     try {
+      if (!eventForm.title.trim()) {
+        throw new Error('Event title is required');
+      }
+
+      if (!eventForm.startDate) {
+        throw new Error('Start date is required');
+      }
+
+      if (!eventForm.isAllDay && !eventForm.time) {
+        throw new Error('Start time is required for non-all-day events');
+      }
+
       const newEvent = {
         id: Math.random().toString(36).substr(2, 9),
         title: eventForm.title,
         type: eventForm.type,
         date: eventForm.startDate,
-        time: eventForm.isAllDay ? 'All Day' : eventForm.time,
+        time: eventForm.isAllDay ? '00:00' : eventForm.time,
         endTime: eventForm.endTime,
         description: eventForm.description,
         location: eventForm.location,
         videoConference: eventForm.videoConference,
         notifications: eventForm.notifications,
-        attendees: eventForm.attendees.split(',').map(email => email.trim()).filter(Boolean),
+        attendees: typeof eventForm.attendees === 'string' 
+          ? eventForm.attendees.split(',').map(email => email.trim()).filter(Boolean)
+          : eventForm.attendees || [],
         status: eventForm.type === 'task' ? 'To Do' : undefined,
         isAllDay: eventForm.isAllDay,
         recurrence: eventForm.recurrence
       };
       
-      setEvents(prev => [...prev, newEvent]);
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      setLocalEvents(prev => [...prev, newEvent]);
+      
+      // Clear form and close modal
       setShowEventForm(false);
       setSelectedDate(new Date(eventForm.startDate));
       
+      // Reset form
       setEventForm({
         title: '',
         type: 'event',
@@ -129,6 +182,8 @@ export function CalendarModal({ onClose }: CalendarModalProps) {
         attendees: '',
         attachments: []
       });
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Failed to create event');
     } finally {
       setIsSubmitting(false);
     }
@@ -136,20 +191,20 @@ export function CalendarModal({ onClose }: CalendarModalProps) {
 
   // Update event when edited
   const handleEventEdit = (updatedEvent: any) => {
-    setEvents(prev => prev.map(event => 
+    setLocalEvents(prev => prev.map(event => 
       event.id === updatedEvent.id ? updatedEvent : event
     ));
   };
 
   // Delete event
   const handleEventDelete = (eventId: string) => {
-    setEvents(prev => prev.filter(event => event.id !== eventId));
+    setLocalEvents(prev => prev.filter(event => event.id !== eventId));
   };
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center px-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-md" onClick={onClose} />
-      <div 
+      <div
         className="relative w-[1200px] h-[calc(100vh-6rem)] max-h-[800px] rounded-xl bg-zinc-900/70 backdrop-blur-xl border border-[#B38B3F]/30 shadow-2xl overflow-hidden flex flex-col"
       >
         <div className="flex items-center justify-between p-4 border-b border-[#B38B3F]/20">
@@ -177,7 +232,7 @@ export function CalendarModal({ onClose }: CalendarModalProps) {
                 <div className="flex items-center space-x-4">
                   <button
                     onClick={goToPreviousMonth}
-                    className="w-6 h-6 rounded-full hover:bg-white/10 flex items-center justify-center transition-colors group"
+                    className="w-8 h-8 rounded-full hover:bg-white/10 flex items-center justify-center transition-colors group"
                   >
                     <ChevronLeft className="w-4 h-4 text-white/70 group-hover:text-[#FFD700] transition-colors" />
                   </button>
@@ -186,45 +241,51 @@ export function CalendarModal({ onClose }: CalendarModalProps) {
                   </h3>
                   <button
                     onClick={goToNextMonth}
-                    className="w-6 h-6 rounded-full hover:bg-white/10 flex items-center justify-center transition-colors group"
+                    className="w-8 h-8 rounded-full hover:bg-white/10 flex items-center justify-center transition-colors group"
                   >
                     <ChevronRight className="w-4 h-4 text-white/70 group-hover:text-[#FFD700] transition-colors" />
                   </button>
                 </div>
-                <button
-                  onClick={isConnected ? sync : connect}
-                  disabled={!isConfigured}
-                  className={`px-3 py-1.5 flex items-center space-x-2 rounded-lg transition-all duration-200 text-sm ${
-                    isConnected 
-                      ? 'bg-[#B38B3F]/20 text-[#FFD700] hover:bg-[#B38B3F]/30'
-                      : 'bg-white hover:bg-gray-50 text-gray-600 shadow-md hover:shadow-lg border border-gray-200'
-                  } ${!isConfigured ? 'opacity-50 cursor-not-allowed' : ''}`}
-                  title={!isConfigured ? 'Google Calendar is not configured. Please add your Google Client ID to the environment variables.' : undefined}
-                >
-                  {!isConnected && (
-                    <div className="w-4 h-4 relative mr-2">
-                      <svg viewBox="0 0 24 24" className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-                        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-                        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-                      </svg>
-                    </div>
-                  )}
-                  {isConnected && <Calendar className={`w-4 h-4 mr-2 ${isSyncing ? 'animate-spin' : ''}`} />}
-                  <span className="font-medium">{isConnected ? (isSyncing ? 'Syncing...' : 'Sync Calendar') : 'Sign in with Google'}</span>
-                  {!isConfigured && (
-                    <div className="absolute -top-2 -right-2 w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-                  )}
-                </button>
-                {isConnected && connectedEmail && (
-                  <div className="text-sm text-white/60">
-                    Connected as {connectedEmail}
-                  </div>
+                {/* Only show Google Calendar integration if configured */}
+                {isConfigured && (
+                  <>
+                    <button
+                      onClick={isConnected ? sync : connect}
+                      className={`px-3 py-1.5 flex items-center space-x-2 rounded-lg transition-all duration-200 text-sm ${
+                        isConnected 
+                          ? 'bg-[#B38B3F]/20 text-[#FFD700] hover:bg-[#B38B3F]/30'
+                          : 'bg-white hover:bg-gray-50 text-gray-600 shadow-md hover:shadow-lg border border-gray-200'
+                      }`}
+                    >
+                      {!isConnected && (
+                        <div className="w-4 h-4 relative mr-2">
+                          <svg viewBox="0 0 24 24" className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                          </svg>
+                        </div>
+                      )}
+                      {isConnected && <Calendar className={`w-4 h-4 mr-2 ${isSyncing ? 'animate-spin' : ''}`} />}
+                      <span className="font-medium">{isConnected ? (isSyncing ? 'Syncing...' : 'Sync Calendar') : 'Sign in with Google'}</span>
+                    </button>
+                    {isConnected && connectedEmail && (
+                      <div className="text-sm text-white/60">
+                        Connected as {connectedEmail}
+                      </div>
+                    )}
+                    {googleError && (
+                      <div className="text-sm text-red-400 mt-2 bg-red-500/10 px-3 py-1.5 rounded-lg border border-red-500/20">
+                        {googleError}
+                      </div>
+                    )}
+                  </>
                 )}
-                {error && (
-                  <div className="text-sm text-red-400 mt-2 bg-red-500/10 px-3 py-1.5 rounded-lg border border-red-500/20">
-                    {error}
+                {!isConfigured && (
+                  <div className="text-sm text-amber-400 bg-amber-500/10 px-3 py-1.5 rounded-lg border border-amber-500/20 flex items-center space-x-2">
+                    <AlertTriangle className="w-4 h-4" />
+                    <span>Google Calendar requires configuration</span>
                   </div>
                 )}
               </div>
@@ -264,7 +325,7 @@ export function CalendarModal({ onClose }: CalendarModalProps) {
                     <button
                       className="px-2.5 py-1 bg-zinc-800/50 hover:bg-zinc-700/50 text-white/80 text-xs rounded-lg transition-colors flex items-center space-x-1"
                     >
-                      <Filter className="w-4 h-4" />
+                      <FilterIcon className="w-4 h-4" />
                       <span>Filter</span>
                     </button>
                   </>
@@ -303,7 +364,8 @@ export function CalendarModal({ onClose }: CalendarModalProps) {
                 )}
                 <button
                   onClick={() => setShowEventForm(true)}
-                  className="flex items-center space-x-1.5 px-3 py-1.5 bg-gradient-to-r from-[#B38B3F] to-[#FFD700] text-black font-medium text-xs rounded-lg hover:opacity-90 transition-opacity"
+                  className="flex items-center space-x-1.5 px-3 py-1.5 bg-gradient-to-r from-[#B38B3F] to-[#FFD700] text-black font-medium text-xs rounded-lg hover:opacity-90 transition-opacity" 
+                  title="Create new event"
                 >
                   <Plus className="w-4 h-4" />
                   <span>{viewMode === 'tasks' ? 'Add Task' : 'Add Event'}</span>
@@ -342,7 +404,7 @@ export function CalendarModal({ onClose }: CalendarModalProps) {
               events={events}
               filters={filters}
               onEventDrop={handleEventDrop}
-            />
+            /> 
           )}
             </div>
           </div>
@@ -371,7 +433,7 @@ export function CalendarModal({ onClose }: CalendarModalProps) {
             
             <div className="space-y-4">
               {events
-                .filter(event => event.date === selectedDate?.toISOString().split('T')[0])
+                ?.filter(event => event.date === selectedDate?.toISOString().split('T')[0])
                 .sort((a, b) => a.time.localeCompare(b.time))
                 .map(event => (
                   <div
@@ -415,6 +477,7 @@ export function CalendarModal({ onClose }: CalendarModalProps) {
             selectedDate={selectedDate}
             eventForm={eventForm}
             setEventForm={setEventForm}
+            error={error}
             onClose={() => setShowEventForm(false)}
             onSubmit={handleSubmit}
             isSubmitting={isSubmitting}

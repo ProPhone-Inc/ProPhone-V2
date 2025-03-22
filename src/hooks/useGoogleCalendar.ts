@@ -16,7 +16,13 @@ interface UseGoogleCalendarReturn {
 export function useGoogleCalendar(): UseGoogleCalendarReturn {
   // Check if Google client ID is configured
   const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-  const isGoogleConfigured = Boolean(googleClientId && googleClientId !== 'your-google-client-id-here');
+  const isConfigured = Boolean(googleClientId && 
+    googleClientId && 
+    googleClientId !== 'your-google-client-id' && 
+    googleClientId !== '' && 
+    googleClientId !== 'your-google-client-id-here' &&
+    /^\d+(-[a-z0-9]+)?\.apps\.googleusercontent\.com$/.test(googleClientId)
+  );
 
   const [isConnected, setIsConnected] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
@@ -25,12 +31,33 @@ export function useGoogleCalendar(): UseGoogleCalendarReturn {
   const [connectedEmail, setConnectedEmail] = useState<string | null>(null);
   const [connectedCalendars, setConnectedCalendars] = useState<Array<{id: string; name: string}>>([]);
   const [selectedCalendar, setSelectedCalendar] = useState<string | null>(null);
+  const [events, setEvents] = useState<Array<{
+    id: string;
+    title: string;
+    start: string;
+    end: string;
+    description?: string;
+    location?: string;
+    attendees?: Array<{email: string; responseStatus?: string}>;
+    recurrence?: string[];
+    status: string;
+  }>>([]);
+  const [lastSync, setLastSync] = useState<Date | null>(null);
 
   const login = useGoogleLogin({
     scope: 'https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/calendar.readonly',
     flow: 'implicit',
+    onNonOAuthError: (error) => {
+      console.error('Google Calendar setup error:', error);
+      if (!isConfigured) {
+        setError('Google Calendar is not configured. Please add your Google Client ID to the environment variables.');
+      } else {
+        setError('Google Calendar is not properly configured');
+      }
+      setIsConnected(false);
+    },
     onSuccess: async (response) => {
-      if (!isGoogleConfigured) {
+      if (!isConfigured) {
         setError('Google Calendar is not configured. Please add your Google Client ID to the environment variables.');
         return;
       }
@@ -38,11 +65,11 @@ export function useGoogleCalendar(): UseGoogleCalendarReturn {
       setAccessToken(response.access_token);
       setIsConnected(true);
       setError(null);
-      
+
       // Get user email and calendar list
       await getUserInfo(response.access_token);
       await getCalendarList(response.access_token);
-      
+
       // Perform initial sync after connection
       await handleSync(response.access_token);
     },
@@ -91,12 +118,19 @@ export function useGoogleCalendar(): UseGoogleCalendarReturn {
   const handleSync = async (token: string) => {
     setIsSyncing(true);
     setError(null);
-    
+
     try {
-      // Get events from Google Calendar
+      // Get events from last 30 days to next 90 days
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      
+      const ninetyDaysAhead = new Date();
+      ninetyDaysAhead.setDate(ninetyDaysAhead.getDate() + 90);
+
       const params = new URLSearchParams({
-        timeMin: new Date().toISOString(),
-        maxResults: '100',
+        timeMin: thirtyDaysAgo.toISOString(),
+        timeMax: ninetyDaysAhead.toISOString(),
+        maxResults: '2500',
         singleEvents: 'true',
         orderBy: 'startTime'
       });
@@ -109,15 +143,29 @@ export function useGoogleCalendar(): UseGoogleCalendarReturn {
       );
 
       const data = await response.json();
-      const events = data.items;
-
-      // Store events in local state/database
-      // This would integrate with your app's calendar storage
-      console.log('Synced events:', events);
-
-      // Dispatch success notification
-      // You can integrate this with your notification system
-      console.log('Calendar sync successful');
+      
+      if (!data.items) {
+        throw new Error('No events data received');
+      }
+      
+      // Transform Google Calendar events to our format
+      const transformedEvents = data.items.map((event: any) => ({
+        id: event.id,
+        title: event.summary,
+        start: event.start.dateTime || event.start.date,
+        end: event.end.dateTime || event.end.date,
+        description: event.description,
+        location: event.location,
+        attendees: event.attendees?.map((attendee: any) => ({
+          email: attendee.email,
+          responseStatus: attendee.responseStatus
+        })),
+        recurrence: event.recurrence,
+        status: event.status
+      }));
+      
+      setEvents(transformedEvents);
+      setLastSync(new Date());
 
     } catch (error) {
       console.error('Calendar sync failed:', error);
@@ -128,13 +176,15 @@ export function useGoogleCalendar(): UseGoogleCalendarReturn {
   };
 
   const sync = useCallback(async () => {
-    if (!isGoogleConfigured) {
+    if (!isConfigured) {
       setError('Google Calendar is not configured. Please add your Google Client ID to the environment variables.');
+      setIsConnected(false);
       return;
     }
 
     if (!accessToken) {
       setError('Not connected to Google Calendar');
+      setIsConnected(false);
       return;
     }
     await handleSync(accessToken);
@@ -143,7 +193,9 @@ export function useGoogleCalendar(): UseGoogleCalendarReturn {
   return {
     isConnected,
     isSyncing,
-    isConfigured: isGoogleConfigured,
+    isConfigured,
+    events,
+    lastSync,
     connectedEmail,
     connectedCalendars,
     selectedCalendar,

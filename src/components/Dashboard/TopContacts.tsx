@@ -1,8 +1,10 @@
 import React from 'react';
 import { Calendar, Clock, CheckCircle, ArrowRight, PenSquare } from 'lucide-react';
+import { CalendarModal } from './Calendar/CalendarModal';
 
 export function TopContacts() {
   const [showEdit, setShowEdit] = React.useState(false);
+  const [showCalendar, setShowCalendar] = React.useState(false);
   const hoverTimer = React.useRef<number | null>(null);
 
   const handleMouseEnter = () => {
@@ -133,11 +135,19 @@ export function TopContacts() {
       </div>
       
       <div className="border-t border-[#B38B3F]/20 p-4">
-        <button className="w-full py-2 text-center text-[#B38B3F] hover:text-[#FFD700] font-medium transition-colors flex items-center justify-center">
+        <button 
+          onClick={() => setShowCalendar(true)}
+          className="w-full py-2 text-center text-[#B38B3F] hover:text-[#FFD700] font-medium transition-colors flex items-center justify-center"
+        >
           View Full Calendar
           <ArrowRight className="w-4 h-4 ml-1" />
         </button>
       </div>
+      
+      {/* Calendar Modal */}
+      {showCalendar && (
+        <CalendarModal onClose={() => setShowCalendar(false)} />
+      )}
     </div>
   );
 }
