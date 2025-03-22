@@ -1,13 +1,17 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
-export default defineConfig(({ command }) => ({
+export default defineConfig({
   plugins: [react()],
   server: {
     host: '0.0.0.0',
     port: 4173,
     hmr: {
-      clientPort: 4173
+      protocol: 'ws',
+      host: '0.0.0.0',
+      port: 4173,
+      clientPort: 4173,
+      timeout: 120000
     }
   },
   build: {
@@ -42,27 +46,15 @@ export default defineConfig(({ command }) => ({
     esbuildOptions: {
       target: 'esnext'
     }
-  },
-  server: {
     // Configure server for both development and production
-    host: process.env.HOST || '0.0.0.0',
-    port: parseInt(process.env.PORT || '3000'),
-    fs: {
-      strict: true
-    },
-    hmr: {
-      protocol: 'ws',
-      host: process.env.HOST || '0.0.0.0',
-      port: parseInt(process.env.PORT || '3000')
-    },
-    watch: {
-      usePolling: true,
-      interval: 1000
-    }
   },
   preview: {
-    port: parseInt(process.env.PORT || '4173'),
-    host: process.env.HOST || '0.0.0.0',
-    strictPort: true
+    port: 4173,
+    host: '0.0.0.0',
+    strictPort: true,
+    cors: true,
+    headers: {
+      'Access-Control-Allow-Origin': '*'
+    }
   }
-}));
+});

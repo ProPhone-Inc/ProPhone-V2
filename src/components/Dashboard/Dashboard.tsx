@@ -223,24 +223,21 @@ export function Dashboard() {
 
   const onPageChange = (page: string) => {
     setActivePage(page);
+    
+    // Reset modal states when changing pages
+    setShowAdminModal(false);
+    setShowTeamPanel(false);
+    setShowCopilot(false);
+    setShowReportingModal(false);
+    setShowCallLogs(false);
   };
   
   const handleSidebarClick = (page: string) => {
-    // Don't change page if user is in call logs, sms campaign, or power dialer
-    if ((activePage === 'call-logs' && page !== 'call-logs') || 
-        (activePage === 'sms-campaign' && page !== 'sms-campaign') ||
-        (activePage === 'power-dialer' && page !== 'power-dialer')) {
-      return;
-    }
-    
     // Handle ProFlow navigation
     if (page === 'proflow') {
       window.location.href = `https://flow.prophone.io/sign-in/?token=${token}`;
       return;
     }
-    
-    // Always call onPageChange first
-    onPageChange(page);
     
     // Handle copilot
     if (page === 'copilot') {
@@ -251,6 +248,7 @@ export function Dashboard() {
     // Handle call logs
     if (page === 'call-logs') {
       setShowCallLogs(true);
+      setActivePage('phone');
       return;
     }
     
@@ -280,7 +278,7 @@ export function Dashboard() {
     }
     
     // Handle regular page navigation
-    setActivePage(page);
+    onPageChange(page);
   };
 
   // Handle navigation with message selection
@@ -306,16 +304,14 @@ export function Dashboard() {
   return (
     <div className="min-h-screen bg-black text-white">
       <div className="relative">
-        {/* Admin Modal */}
-        {(user?.role === 'owner' || user?.role === 'super_admin') && showAdminModal && (
+        {showAdminModal && (user?.role === 'owner' || user?.role === 'super_admin') && (
           <AdminModal 
             isOpen={showAdminModal}
             onClose={() => setShowAdminModal(false)} 
           />
         )}
         
-        {/* Team Panel Modal */}
-        {showTeamPanel && canAccessTeamPanel(user) && (
+        {showTeamPanel && (
           <TeamPanelModal
             isOpen={showTeamPanel}
             onClose={() => setShowTeamPanel(false)}
@@ -328,6 +324,12 @@ export function Dashboard() {
           setCollapsed={setCollapsed} 
           activePage={activePage}
           onPageChange={handleSidebarClick}
+          token={token}
+          setCopilotExpanded={setCopilotExpanded}
+          setShowCallLogs={setShowCallLogs}
+          setShowAdminModal={setShowAdminModal}
+          setShowReportingModal={setShowReportingModal}
+          setShowTeamPanel={setShowTeamPanel}
         />
         
         <div className="flex-1 flex flex-col min-h-screen ml-16">

@@ -1,5 +1,6 @@
 import React from 'react';
 import { Plus, Users, Calendar, X, Filter, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useGoogleCalendar } from '../../../hooks/useGoogleCalendar';
 import { CalendarHeader } from './CalendarHeader';
 import { MonthView } from './MonthView';
 import { TaskView } from './TaskView';
@@ -16,6 +17,7 @@ export function CalendarModal({ onClose }: CalendarModalProps) {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [currentMonth, setCurrentMonth] = React.useState(new Date().getMonth());
   const [currentYear, setCurrentYear] = React.useState(new Date().getFullYear());
+  const { isConnected, connect, sync, isSyncing, connectedEmail, isConfigured, error } = useGoogleCalendar();
   const [taskStages, setTaskStages] = React.useState(['To Do', 'In Progress', 'Done']);
   const [displayMode, setDisplayMode] = React.useState<'month' | 'week' | 'day' | '4day' | 'schedule'>('month');
   const [taskDisplayMode, setTaskDisplayMode] = React.useState<'daily' | 'weekly' | 'monthly' | 'yearly'>('weekly');
@@ -171,7 +173,7 @@ export function CalendarModal({ onClose }: CalendarModalProps) {
         <div className="relative h-[calc(100%-5rem)] overflow-hidden">
           <div className="p-4 overflow-y-auto relative h-full">
             <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center space-x-6">
+              <div className="flex items-center space-x-4">
                 <div className="flex items-center space-x-4">
                   <button
                     onClick={goToPreviousMonth}
@@ -189,8 +191,44 @@ export function CalendarModal({ onClose }: CalendarModalProps) {
                     <ChevronRight className="w-4 h-4 text-white/70 group-hover:text-[#FFD700] transition-colors" />
                   </button>
                 </div>
+                <button
+                  onClick={isConnected ? sync : connect}
+                  disabled={!isConfigured}
+                  className={`px-3 py-1.5 flex items-center space-x-2 rounded-lg transition-all duration-200 text-sm ${
+                    isConnected 
+                      ? 'bg-[#B38B3F]/20 text-[#FFD700] hover:bg-[#B38B3F]/30'
+                      : 'bg-white hover:bg-gray-50 text-gray-600 shadow-md hover:shadow-lg border border-gray-200'
+                  } ${!isConfigured ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  title={!isConfigured ? 'Google Calendar is not configured. Please add your Google Client ID to the environment variables.' : undefined}
+                >
+                  {!isConnected && (
+                    <div className="w-4 h-4 relative mr-2">
+                      <svg viewBox="0 0 24 24" className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                      </svg>
+                    </div>
+                  )}
+                  {isConnected && <Calendar className={`w-4 h-4 mr-2 ${isSyncing ? 'animate-spin' : ''}`} />}
+                  <span className="font-medium">{isConnected ? (isSyncing ? 'Syncing...' : 'Sync Calendar') : 'Sign in with Google'}</span>
+                  {!isConfigured && (
+                    <div className="absolute -top-2 -right-2 w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+                  )}
+                </button>
+                {isConnected && connectedEmail && (
+                  <div className="text-sm text-white/60">
+                    Connected as {connectedEmail}
+                  </div>
+                )}
+                {error && (
+                  <div className="text-sm text-red-400 mt-2 bg-red-500/10 px-3 py-1.5 rounded-lg border border-red-500/20">
+                    {error}
+                  </div>
+                )}
               </div>
-              <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-2">
                 {viewMode === 'calendar' && (
                   <>
                     <div className="flex bg-zinc-800/50 rounded-lg p-0.5">

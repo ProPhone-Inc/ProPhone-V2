@@ -90,6 +90,12 @@ interface SidebarProps {
   setCollapsed: (collapsed: boolean) => void;
   activePage: string;
   onPageChange: (page: string) => void;
+  token?: string;
+  setCopilotExpanded?: (expanded: boolean) => void;
+  setShowCallLogs?: (show: boolean) => void;
+  setShowAdminModal?: (show: boolean) => void;
+  setShowReportingModal?: (show: boolean) => void;
+  setShowTeamPanel?: (show: boolean) => void;
 }
 
 interface SidebarState {
@@ -166,7 +172,18 @@ function SidebarItem({
   );
 }
 
-export function Sidebar({ collapsed: propCollapsed, setCollapsed, activePage, onPageChange }: SidebarProps) {
+export function Sidebar({ 
+  collapsed: propCollapsed, 
+  setCollapsed, 
+  activePage, 
+  onPageChange,
+  token,
+  setCopilotExpanded,
+  setShowCallLogs,
+  setShowAdminModal,
+  setShowReportingModal,
+  setShowTeamPanel
+}: SidebarProps) {
   const { user } = useAuth();
   const [isHovered, setIsHovered] = useState(false);
   const [internalCollapsed, setInternalCollapsed] = useState(propCollapsed);
@@ -181,6 +198,14 @@ export function Sidebar({ collapsed: propCollapsed, setCollapsed, activePage, on
   const sidebarItems = ['phone', 'call-logs', 'sms-automation', 'power-dialer'].includes(activePage) 
     ? phoneSystemItems 
     : defaultItems;
+
+  // Keep track of previous page for phone system navigation
+  const prevPage = React.useRef(activePage);
+
+  React.useEffect(() => {
+    // Store previous page when changing pages
+    prevPage.current = activePage;
+  }, [activePage]);
 
   // Track if we should auto-open submenu
   const shouldAutoOpen = React.useRef(false);
@@ -252,40 +277,73 @@ export function Sidebar({ collapsed: propCollapsed, setCollapsed, activePage, on
   const effectiveCollapsed = internalCollapsed && !isHovered;
 
   const handleSidebarClick = (page: string) => {
+    // Special handling for phone system pages
+    if (page === 'phone' && prevPage.current === 'phone') {
+      return; // Don't re-navigate if already on phone
+    }
+
     // Handle ProFlow navigation
     if (page === 'proflow') {
-      window.open('https://flow.prophone.io', '_self');
+      if (token) {
+        window.location.href = `https://flow.prophone.io/sign-in/?token=${token}`;
+      }
       return;
     }
     
-    // Always call onPageChange first
-    onPageChange(page);
-
-    // Prevent access to team panel for regular members
-    if (page === 'team' && !canAccessTeamPanel(user)) {
+    // Handle copilot
+    if (page === 'copilot') {
+      if (setCopilotExpanded) {
+        setCopilotExpanded(prev => !prev);
+      }
       return;
     }
-
-    // Prevent access to admin panel for non-admin users
-    if (page === 'admin' && !canAccessAdminPanel(user)) {
-      return;
-    }
-
-    // Don't change active page for call logs, just trigger modal
+    
+    // Handle call logs
     if (page === 'call-logs') {
+      if (setShowCallLogs) {
+        setShowCallLogs(true);
+      }
       return;
     }
+    
+    // Handle admin panel access
+    if (page === 'admin') {
+      if (user?.role === 'owner' || user?.role === 'super_admin') {
+        if (setShowAdminModal) {
+          setShowAdminModal(true);
+        }
+        return;
+      }
+    }
+    
+    // Handle reporting panel access
+    if (page === 'reporting') {
+      if (user?.role === 'owner' || user?.role === 'super_admin') {
+        if (setShowReportingModal) {
+          setShowReportingModal(true);
+        }
+        return;
+      }
+      return;
+    }
+    
+    // Handle team panel access
+    if (page === 'team') {
+      if (canAccessTeamPanel(user)) {
+        if (setShowTeamPanel) {
+          setShowTeamPanel(true);
+        }
+      }
+      return;
+    }
+    
+    // Call the parent's onPageChange handler
+    onPageChange(page);
   };
 
   return (
     <div 
-      className={`
-        fixed top-0 left-0 h-screen z-[100]
-        bg-gradient-to-b from-zinc-900 to-black border-r border-[#B38B3F]/20
-        flex flex-col transition-all duration-300 ease-in-out
-        shadow-xl shadow-black/20
-        ${effectiveCollapsed ? 'w-16' : 'w-64'}
-      `}
+      className={`fixed top-0 left-0 h-screen z-[100] bg-gradient-to-b from-zinc-900 to-black border-r border-[#B38B3F]/20 flex flex-col transition-all duration-300 ease-in-out shadow-xl shadow-black/20 ${effectiveCollapsed ? 'w-16' : 'w-64'}`}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
