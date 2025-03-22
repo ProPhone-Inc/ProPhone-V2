@@ -2,6 +2,7 @@ import React, { useState, Suspense } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { useCopilot } from '../../hooks/useCopilot';
 import { useCallState } from '../../hooks/useCallState';
+import { useIncomingCalls } from '../../hooks/useIncomingCalls';
 import { useReporting } from '../../hooks/useReporting';
 import { ReportingModal } from './AdminPanel/ReportingModal';
 import { SMSAutomation } from '../Phone/components/SMSAutomation';
@@ -68,22 +69,37 @@ function AdminModal({ isOpen, onClose }: AdminModalProps) {
 export function Dashboard() {
   const { user, logout } = useAuth();
   const { provider, apiKey } = useCopilot();
-  const [token, setToken] = useState("");
   const { activeCall } = useCallState();
+  const { incomingCall, clearIncomingCall } = useIncomingCalls();
   const [collapsed, setCollapsed] = useState(true); // Default to collapsed
+  const [token, setToken] = useState("");
   const [activePage, setActivePage] = useState('dashboard');
   const [showAdminModal, setShowAdminModal] = useState(false);
   const [showTeamPanel, setShowTeamPanel] = useState(false);
   const [showCopilot, setShowCopilot] = useState(false);
   const [copilotExpanded, setCopilotExpanded] = useState(false);
   const [showReportingModal, setShowReportingModal] = useState(false);
+  const [actionSuccess, setActionSuccess] = useState<{message: string, type: string} | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const usersPerPage = 10;
   const [selectedMessage, setSelectedMessage] = useState<string | null>(null);
   const [selectedChat, setSelectedChat] = useState<string | null>(null);
   const [selectedLine, setSelectedLine] = useState<string | null>(null);
   const [totalUnreadCount, setTotalUnreadCount] = useState(0);
   const [showCallLogs, setShowCallLogs] = useState(false);
+  const [showCallModal, setShowCallModal] = useState(false);
+  const [callContact, setCallContact] = useState<{name?: string; number: string} | null>(null);
+  const [isIncomingCall, setIsIncomingCall] = useState(false);
+
   const handleMakeCall = (number: string) => {
-    setActiveCall({ number });
+    const chat = messages.find(m => m.sender.name === number || m.chatId === number);
+    
+    setCallContact({
+      name: chat?.sender.name,
+      number: number
+    });
+    setShowCallModal(true);
+    setIsIncomingCall(false);
   };
 
   // Initialize token from auth user
@@ -204,8 +220,19 @@ export function Dashboard() {
       }
     }
   ]);
+
+  const onPageChange = (page: string) => {
+    setActivePage(page);
+  };
   
   const handleSidebarClick = (page: string) => {
+    // Don't change page if user is in call logs, sms campaign, or power dialer
+    if ((activePage === 'call-logs' && page !== 'call-logs') || 
+        (activePage === 'sms-campaign' && page !== 'sms-campaign') ||
+        (activePage === 'power-dialer' && page !== 'power-dialer')) {
+      return;
+    }
+    
     // Handle ProFlow navigation
     if (page === 'proflow') {
       window.location.href = `https://flow.prophone.io/sign-in/?token=${token}`;
@@ -390,6 +417,23 @@ export function Dashboard() {
       {/* Reporting Modal */}
       {showReportingModal && (
         <ReportingModal onClose={() => setShowReportingModal(false)} />
+      )}
+      
+      {/* Phone Call Modal - Global */}
+      {(showCallModal || activeCall || incomingCall) && (callContact || activeCall || incomingCall) && (
+        <PhoneCallModal
+          onClose={() => {
+            setIsIncomingCall(false);
+            setShowCallModal(false);
+            setCallContact(null);
+            setActiveCall(null);
+            clearIncomingCall();
+          }}
+          contactName={incomingCall?.name || callContact?.name || activeCall?.name}
+          contactNumber={incomingCall?.number || callContact?.number || activeCall?.number}
+          isIncoming={incomingCall?.isIncoming || isIncomingCall}
+          isFloating={activePage === 'phone'}
+        />
       )}
       
       <CopilotBubble />

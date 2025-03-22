@@ -122,96 +122,7 @@ export function PhoneSystem({ selectedMessage, selectedChat, onMessageSelect, ac
   }>>([]);
   const [retryQueue, setRetryQueue] = React.useState<Set<string>>(new Set());
   const [attachedFiles, setAttachedFiles] = React.useState<any[]>([]);
-
-  const handleLineNameChange = React.useCallback((lineId: string, newName: string) => {
-    setLocalPhoneLines(prev => prev.map(line => 
-      line.id === lineId ? { ...line, name: newName } : line
-    ));
-  }, []);
-
-  const handleProviderSelect = React.useCallback((providerId: string) => {
-    setSelectedProvider(providerId);
-    setShowProviderModal(false);
-  }, []);
-
-  const handleMarkRead = React.useCallback((chatIds: string[]) => {
-    // Update conversations
-    setConversations(prev => prev.map(chat => {
-      if (chatIds.includes(chat.id)) {
-        return { ...chat, unread: 0 };
-      }
-      return chat;
-    }));
-    
-    // Update phone line unread counts
-    setLocalPhoneLines(prev => prev.map(line => {
-      const lineChats = line.chats.map(chat => ({
-        ...chat,
-        unread: chatIds.includes(chat.id) ? 0 : chat.unread
-      }));
-      
-      return {
-        ...line,
-        chats: lineChats,
-        unread: lineChats.reduce((sum, chat) => sum + chat.unread, 0)
-      };
-    }));
-    
-    // Clear selection
-    setSelectedChats([]);
-  }, []);
-
-  const handleMarkUnread = React.useCallback((chatIds: string[]) => {
-    // Update conversations
-    setConversations(prev => prev.map(chat => {
-      if (chatIds.includes(chat.id)) {
-        return { ...chat, unread: 1 };
-      }
-      return chat;
-    }));
-    
-    // Update phone line unread counts
-    setLocalPhoneLines(prev => prev.map(line => {
-      const lineChats = line.chats.map(chat => ({
-        ...chat,
-        unread: chatIds.includes(chat.id) ? 1 : chat.unread
-      }));
-      
-      return {
-        ...line,
-        chats: lineChats,
-        unread: lineChats.reduce((sum, chat) => sum + chat.unread, 0)
-      };
-    }));
-    
-    // Clear selection
-    setSelectedChats([]);
-  }, []);
-
-  const handleDeleteChats = React.useCallback((chatIds: string[]) => {
-    // Remove chats from conversations
-    setConversations(prev => prev.filter(chat => !chatIds.includes(chat.id)));
-    
-    // Clear selection
-    setSelectedChats([]);
-    
-    // If current chat was deleted, clear it
-    if (currentChat && chatIds.includes(currentChat)) {
-      setCurrentChat(null);
-    }
-  }, [currentChat]);
-
-  const handleReorderLines = React.useCallback((startIndex: number, endIndex: number) => {
-    setLocalPhoneLines(prev => {
-      const result = [...prev];
-      const [removed] = result.splice(startIndex, 1);
-      result.splice(endIndex, 0, removed);
-      return result;
-    });
-  }, []);
-
   const [chatStatuses, setChatStatuses] = React.useState<Record<string, { label: string; icon: React.ReactNode }>>({});
-
   const [conversations, setConversations] = React.useState<Chat[]>([
     {
       id: '1',
@@ -293,17 +204,99 @@ export function PhoneSystem({ selectedMessage, selectedChat, onMessageSelect, ac
     }
   ]);
 
+  // Resizable columns
+  const phoneLinesColumn = useResizable({ defaultWidth: 280, minWidth: 240, maxWidth: 400, storageKey: 'phone-lines-width' });
+  const chatsColumn = useResizable({ defaultWidth: 320, minWidth: 280, maxWidth: 480, storageKey: 'chats-width' });
+  const crmColumn = useResizable({ defaultWidth: 320, minWidth: 280, maxWidth: 480, storageKey: 'crm-width' });
+
+  const handleLineNameChange = React.useCallback((lineId: string, newName: string) => {
+    setLocalPhoneLines(prev => prev.map(line => 
+      line.id === lineId ? { ...line, name: newName } : line
+    ));
+  }, []);
+
+  const handleProviderSelect = React.useCallback((providerId: string) => {
+    setSelectedProvider(providerId);
+    setShowProviderModal(false);
+  }, []);
+
+  const handleMarkRead = React.useCallback((chatIds: string[]) => {
+    setConversations(prev => prev.map(chat => {
+      if (chatIds.includes(chat.id)) {
+        return { ...chat, unread: 0 };
+      }
+      return chat;
+    }));
+    
+    setLocalPhoneLines(prev => prev.map(line => {
+      const lineChats = line.chats.map(chat => ({
+        ...chat,
+        unread: chatIds.includes(chat.id) ? 0 : chat.unread
+      }));
+      
+      return {
+        ...line,
+        chats: lineChats,
+        unread: lineChats.reduce((sum, chat) => sum + chat.unread, 0)
+      };
+    }));
+    
+    setSelectedChats([]);
+  }, []);
+
+  const handleMarkUnread = React.useCallback((chatIds: string[]) => {
+    setConversations(prev => prev.map(chat => {
+      if (chatIds.includes(chat.id)) {
+        return { ...chat, unread: 1 };
+      }
+      return chat;
+    }));
+    
+    setLocalPhoneLines(prev => prev.map(line => {
+      const lineChats = line.chats.map(chat => ({
+        ...chat,
+        unread: chatIds.includes(chat.id) ? 1 : chat.unread
+      }));
+      
+      return {
+        ...line,
+        chats: lineChats,
+        unread: lineChats.reduce((sum, chat) => sum + chat.unread, 0)
+      };
+    }));
+    
+    setSelectedChats([]);
+  }, []);
+
+  const handleDeleteChats = React.useCallback((chatIds: string[]) => {
+    setConversations(prev => prev.filter(chat => !chatIds.includes(chat.id)));
+    
+    setSelectedChats([]);
+    
+    if (currentChat && chatIds.includes(currentChat)) {
+      setCurrentChat(null);
+    }
+  }, [currentChat]);
+
+  const handleReorderLines = React.useCallback((startIndex: number, endIndex: number) => {
+    setLocalPhoneLines(prev => {
+      const result = [...prev];
+      const [removed] = result.splice(startIndex, 1);
+      result.splice(endIndex, 0, removed);
+      return result;
+    });
+  }, []);
+
   const handleMakeCall = React.useCallback((number: string) => {
     const chat = conversations.find(c => c.number === number || c.name === number);
     
-    // Send desktop notification for incoming call
     if (Notification.permission === 'granted') {
       const notification = new Notification('Incoming Call', {
         body: chat?.name || number,
         icon: '/vite.svg',
         tag: 'incoming-call',
         silent: false,
-        requireInteraction: true // Keep notification visible until user interacts
+        requireInteraction: true
       });
 
       notification.onclick = () => {
@@ -312,7 +305,6 @@ export function PhoneSystem({ selectedMessage, selectedChat, onMessageSelect, ac
       };
     }
 
-    // Add system notification
     addNotification({
       type: 'announcement',
       title: 'Incoming Call',
@@ -325,9 +317,8 @@ export function PhoneSystem({ selectedMessage, selectedChat, onMessageSelect, ac
       number: chat?.number || number
     });
     setShowCallModal(true);
-  }, [conversations]);
+  }, [conversations, addNotification]);
 
-  // Initialize phone lines with correct unread counts from conversations
   React.useEffect(() => {
     setLocalPhoneLines(prev => prev.map(line => {
       const lineChats = line.chats.map(chat => {
@@ -348,10 +339,8 @@ export function PhoneSystem({ selectedMessage, selectedChat, onMessageSelect, ac
     }));
   }, [conversations]);
 
-  // Handle clicking outside and app blur
   React.useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      // Check if click is outside the phone system
       const phoneSystem = document.querySelector('.phone-system');
       if (phoneSystem && !phoneSystem.contains(e.target as Node)) {
         if (isCreatingMessage) {
@@ -381,7 +370,6 @@ export function PhoneSystem({ selectedMessage, selectedChat, onMessageSelect, ac
     };
   }, [isCreatingMessage]);
 
-  // Update total unread count and header when phone lines change
   React.useEffect(() => {
     const total = localPhoneLines.reduce((sum, line) => {
       return sum + (line.chats?.reduce((chatSum, chat) => chatSum + (chat.unread || 0), 0) || 0);
@@ -392,10 +380,8 @@ export function PhoneSystem({ selectedMessage, selectedChat, onMessageSelect, ac
     }
   }, [localPhoneLines, onMessageSelect]);
 
-  // Update unread counts when chat is selected
   React.useEffect(() => {
     if (currentChat && selectedLine) {
-      // Mark messages as read in the selected chat
       setConversations(prev => {
         const updated = prev.map(chat => 
           chat.id === currentChat ? { ...chat, unread: 0 } : chat
@@ -403,7 +389,6 @@ export function PhoneSystem({ selectedMessage, selectedChat, onMessageSelect, ac
         return updated;
       });
       
-      // Update phone line's unread count based on conversations
       setLocalPhoneLines(prev => prev.map(line => {
         if (line.id === selectedLine) {
           const updatedChats = line.chats.map(chat => ({
@@ -424,22 +409,18 @@ export function PhoneSystem({ selectedMessage, selectedChat, onMessageSelect, ac
     }
   }, [currentChat, selectedLine]);
 
-  // Calculate total unread messages for a phone line
   const getLineUnreadCount = React.useCallback((line: PhoneLine) => {
     const lineChats = conversations.filter(chat => chat.lineId === line.id);
     return lineChats.reduce((sum, chat) => sum + (chat.unread || 0), 0);
   }, [conversations]);
 
-  // WebSocket message handler
   const handleNewMessage = React.useCallback((data: any) => {
     const { lineId, chatId, message } = data;
 
-    // Request notification permission if needed
     if (Notification.permission === 'default') {
       Notification.requestPermission();
     }
 
-    // Update phone line and chat unread counts
     setLocalPhoneLines(prev => prev.map(line => {
       if (line.id === lineId) {
         const updatedChats = line.chats.map(chat => {
@@ -452,7 +433,6 @@ export function PhoneSystem({ selectedMessage, selectedChat, onMessageSelect, ac
         
         const lineUnread = updatedChats.reduce((sum, chat) => sum + chat.unread, 0);
         
-        // Update total unread count in header
         if (onMessageSelect) {
           const totalUnread = prev.reduce((sum, l) => {
             if (l.id === line.id) {
@@ -472,13 +452,11 @@ export function PhoneSystem({ selectedMessage, selectedChat, onMessageSelect, ac
       return line;
     }));
     
-    // Get current status or use default "New" status
     const currentStatus = chatStatuses[chatId] || {
       label: 'New',
       icon: <Home className="w-4 h-4 text-emerald-400" />
     };
 
-    // Update chat statuses if needed
     if (!chatStatuses[chatId] || chatStatuses[chatId].label !== currentStatus.label) {
       setChatStatuses(prev => ({
         ...prev,
@@ -488,9 +466,7 @@ export function PhoneSystem({ selectedMessage, selectedChat, onMessageSelect, ac
     
     setConversations(prev => prev.map(chat => {
       if (chat.id === chatId && chat.lineId === lineId) {
-        // Send notification for new messages when chat isn't selected
         if (currentChat !== chatId) {
-          // Send desktop notification if permission granted
           if (Notification.permission === 'granted') {
             const notification = new Notification(chat.name, {
               body: message.content,
@@ -507,7 +483,6 @@ export function PhoneSystem({ selectedMessage, selectedChat, onMessageSelect, ac
             };
           }
 
-          // Send in-app notification
           sendNotification({
             title: chat.name,
             body: message.content,
@@ -529,46 +504,36 @@ export function PhoneSystem({ selectedMessage, selectedChat, onMessageSelect, ac
       }
       return chat;
     }));
-  }, [currentChat, sendNotification, chatStatuses, conversations]);
+  }, [currentChat, sendNotification, chatStatuses, conversations, onMessageSelect]);
 
   const { sendMessage } = useWebSocket(handleNewMessage);
 
-  // Resizable columns
-  const phoneLinesColumn = useResizable({ defaultWidth: 280, minWidth: 240, maxWidth: 400, storageKey: 'phone-lines-width' });
-  const chatsColumn = useResizable({ defaultWidth: 320, minWidth: 280, maxWidth: 480, storageKey: 'chats-width' });
-  const crmColumn = useResizable({ defaultWidth: 320, minWidth: 280, maxWidth: 480, storageKey: 'crm-width' });
-
-  // Effect to handle initial line selection when phone lines change
   React.useEffect(() => {
     if (!selectedLine && localPhoneLines.length > 0) {
       setSelectedLine(localPhoneLines[0].id);
     }
   }, [selectedLine, localPhoneLines]);
 
-  // Handle view changes when page changes
   React.useEffect(() => {
     if (activePage === 'call-logs') {
       setActiveView('call-logs'); 
     } else if (activePage === 'sms-automation') {
-      setActiveView('sms-campaign');
+      setActiveView('sms-automation');
     } else if (activePage === 'phone') {
       setActiveView('messages');
     }
   }, [activePage]);
 
-  // Check for scheduled messages that need to be sent
   React.useEffect(() => {
     const interval = setInterval(() => {
       const now = new Date();
       const messagesToSend = scheduledMessages.filter(msg => {
-        // Check if message is already being processed
         return msg.scheduledFor <= now && !messageQueue[msg.id];
       });
       
       messagesToSend.forEach(msg => {
         const chat = conversations.find(c => c.id === msg.chatId);
         if (chat) {
-          // Use the scheduled message's ID instead of generating a new one
           const newMessage = {
             id: msg.id,
             content: msg.content,
@@ -577,10 +542,8 @@ export function PhoneSystem({ selectedMessage, selectedChat, onMessageSelect, ac
             status: 'queued' as const
           };
           
-          // Remove the scheduled message immediately to prevent duplicate processing
           setScheduledMessages(prev => prev.filter(m => m.id !== msg.id));
           
-          // Update conversations
           setConversations(prev => prev.map(c => 
             c.id === chat.id 
               ? {
@@ -592,13 +555,11 @@ export function PhoneSystem({ selectedMessage, selectedChat, onMessageSelect, ac
               : c
           ));
           
-          // Add to message queue
           setMessageQueue(prev => ({
             ...prev,
             [newMessage.id]: 'queued'
           }));
 
-          // Process like a standard message
           setTimeout(() => {
             setMessageQueue(prev => ({
               ...prev,
@@ -606,7 +567,7 @@ export function PhoneSystem({ selectedMessage, selectedChat, onMessageSelect, ac
             }));
 
             setTimeout(() => {
-              const success = Math.random() > 0.1; // 90% success rate
+              const success = Math.random() > 0.1;
 
               if (success) {
                 setMessageQueue(prev => ({
@@ -628,7 +589,6 @@ export function PhoneSystem({ selectedMessage, selectedChat, onMessageSelect, ac
                   return c;
                 }));
 
-                // Send through WebSocket
                 sendMessage({
                   lineId: chat.lineId,
                   chatId: chat.id,
@@ -658,7 +618,7 @@ export function PhoneSystem({ selectedMessage, selectedChat, onMessageSelect, ac
           }, 500);
         }
       });
-    }, 1000); // Check every second
+    }, 1000);
     
     return () => clearInterval(interval);
   }, [scheduledMessages, conversations, sendMessage]);
@@ -678,7 +638,6 @@ export function PhoneSystem({ selectedMessage, selectedChat, onMessageSelect, ac
     
     setScheduledMessages(prev => [...prev, scheduledMessage]);
     
-    // Add placeholder message to conversation
     setConversations(prev => prev.map(chat => {
       if (chat.id === currentChat) {
         const newMessage = {
@@ -692,7 +651,6 @@ export function PhoneSystem({ selectedMessage, selectedChat, onMessageSelect, ac
           scheduledTime: date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         };
         
-        // Update status to scheduled after a short delay
         setTimeout(() => {
           setConversations(prev => prev.map(c => {
             if (c.id === currentChat) {
@@ -719,7 +677,6 @@ export function PhoneSystem({ selectedMessage, selectedChat, onMessageSelect, ac
       return chat;
     }));
     
-    // Clear input after successfully scheduling
     setMessageInput('');
   }, [messageInput, currentChat]);
 
@@ -729,7 +686,6 @@ export function PhoneSystem({ selectedMessage, selectedChat, onMessageSelect, ac
     setSelectedChats([]);
     setCurrentChat(null);
     setIsDraft(true);
-    // Create a draft chat
     setDraftChat({
       id: 'draft',
       lineId: selectedLine,
@@ -742,7 +698,6 @@ export function PhoneSystem({ selectedMessage, selectedChat, onMessageSelect, ac
     });
     setNewMessageNumber('');
     if (isValidPhoneNumber(newMessageNumber)) {
-      // Create new chat
       const newChat = {
         id: Math.random().toString(36).substr(2, 9),
         lineId: selectedLine,
@@ -755,13 +710,10 @@ export function PhoneSystem({ selectedMessage, selectedChat, onMessageSelect, ac
         unread: 0
       };
       
-      // Add new chat to conversations
       setConversations(prev => [...prev, newChat]);
       
-      // Select the new chat
       setCurrentChat(newChat.id);
       
-      // Reset creation state
       setIsCreatingMessage(false);
       setIsDraft(false);
       setDraftChat(null);
@@ -770,36 +722,31 @@ export function PhoneSystem({ selectedMessage, selectedChat, onMessageSelect, ac
   };
 
   const handleRetry = React.useCallback((messageId: string) => {
-    // Find the message in conversations
     const chat = conversations.find(c => 
       c.messages.some(m => m.id === messageId)
     );
     
     if (!chat) return;
     
-    // Find and remove the failed message
     const messageIndex = chat.messages.findIndex(m => m.id === messageId);
     if (messageIndex === -1) return;
     
     const message = chat.messages[messageIndex];
     if (!message) return;
 
-    // Add to retry queue
     setRetryQueue(prev => new Set(prev).add(messageId));
 
-    // Create new message with updated timestamp
     const newMessage = {
       ...message,
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       status: 'sending'
     };
 
-    // Update conversations by removing old message and adding new one at the end
     setConversations(prev => prev.map(c => {
       if (c.id === chat.id) {
         const messages = [...c.messages];
-        messages.splice(messageIndex, 1); // Remove old message
-        messages.push(newMessage); // Add new message at end
+        messages.splice(messageIndex, 1);
+        messages.push(newMessage);
 
         return {
           ...c,
@@ -811,9 +758,8 @@ export function PhoneSystem({ selectedMessage, selectedChat, onMessageSelect, ac
       return c;
     }));
 
-    // Simulate retry attempt
     setTimeout(() => {
-      const success = Math.random() > 0.5; // 50% success rate for demo
+      const success = Math.random() > 0.5;
       
       setConversations(prev => prev.map(c => {
         if (c.id === chat.id) {
@@ -830,7 +776,6 @@ export function PhoneSystem({ selectedMessage, selectedChat, onMessageSelect, ac
         return c;
       }));
 
-      // Remove from retry queue
       setRetryQueue(prev => {
         const next = new Set(prev);
         next.delete(messageId);
@@ -838,7 +783,6 @@ export function PhoneSystem({ selectedMessage, selectedChat, onMessageSelect, ac
       });
 
       if (success) {
-        // Send through WebSocket if successful
         sendMessage({
           lineId: chat.lineId,
           chatId: chat.id,
@@ -846,9 +790,8 @@ export function PhoneSystem({ selectedMessage, selectedChat, onMessageSelect, ac
         });
       }
     }, 2000);
-  }, [conversations]);
+  }, [conversations, sendMessage]);
 
-  // Clear draft when changing lines or closing new message
   React.useEffect(() => {
     if (!isCreatingMessage && isDraft) {
       setDraftChat(null);
@@ -860,7 +803,7 @@ export function PhoneSystem({ selectedMessage, selectedChat, onMessageSelect, ac
   const handleSendMessage = React.useCallback(() => {
     if ((!messageInput.trim() && !attachedFiles.length) || !currentChat || !selectedLine) return;
 
-    const messageId = Math.random().toString(36).substr(2, 9); 
+    const messageId = Math.random().toString(36).substr(2, 9);
 
     const newMessage = {
       id: messageId,
@@ -871,7 +814,6 @@ export function PhoneSystem({ selectedMessage, selectedChat, onMessageSelect, ac
       status: 'queued'
     };
 
-    // Update local state immediately
     setConversations(prev => prev.map(chat => {
       if (chat.id === currentChat) {
         return {
@@ -887,13 +829,11 @@ export function PhoneSystem({ selectedMessage, selectedChat, onMessageSelect, ac
     setMessageInput('');
     setAttachedFiles([]);
 
-    // Add to message queue
     setMessageQueue(prev => ({
       ...prev,
       [messageId]: 'queued'
     }));
 
-    // Simulate message sending
     setTimeout(() => {
       setMessageQueue(prev => ({
         ...prev,
@@ -901,7 +841,7 @@ export function PhoneSystem({ selectedMessage, selectedChat, onMessageSelect, ac
       }));
 
       setTimeout(() => {
-        const success = Math.random() > 0.1; // 90% success rate
+        const success = Math.random() > 0.1;
 
         if (success) {
           setMessageQueue(prev => ({
@@ -923,7 +863,6 @@ export function PhoneSystem({ selectedMessage, selectedChat, onMessageSelect, ac
             return chat;
           }));
 
-          // Send through WebSocket
           sendMessage({
             lineId: selectedLine,
             chatId: currentChat,
@@ -955,7 +894,6 @@ export function PhoneSystem({ selectedMessage, selectedChat, onMessageSelect, ac
 
   return (
     <div className="h-[calc(100vh-4rem)] bg-black flex border-b border-[#B38B3F]/20 phone-system relative">
-      {/* Phone Lines Column */}
       <PhoneLinesList
         width={phoneLinesColumn.width}
         isResizing={phoneLinesColumn.isResizing}
@@ -1061,7 +999,6 @@ export function PhoneSystem({ selectedMessage, selectedChat, onMessageSelect, ac
       {/* Provider Modal */}
       {showProviderModal && (
         <ProviderModal
-          className="z-50"
           onClose={() => setShowProviderModal(false)}
           onSelect={handleProviderSelect}
           selectedProvider={selectedProvider}
@@ -1071,7 +1008,6 @@ export function PhoneSystem({ selectedMessage, selectedChat, onMessageSelect, ac
       {/* Search Modal */}
       {showSearch && (
         <SearchModal
-          className="z-50"
           onClose={() => setShowSearch(false)}
           conversations={conversations}
           onChatSelect={(chatId) => {

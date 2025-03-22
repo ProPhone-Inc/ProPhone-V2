@@ -21,26 +21,44 @@ export function PhoneCallModal({ onClose, contactName, contactNumber, isFloating
   const [error, setError] = React.useState('');
   const [isCallActive, setIsCallActive] = React.useState(false);
   const [callDuration, setCallDuration] = React.useState(0);
-  const inputRef = React.useRef<HTMLInputElement>(null); 
+  const inputRef = React.useRef<HTMLInputElement>(null);
+  const ringtoneRef = React.useRef<HTMLAudioElement | null>(null);
   const startCallSound = React.useRef<HTMLAudioElement | null>(null);
   const { addLog, updateLog } = useCallLogs();
   const dialToneSound = React.useRef<HTMLAudioElement | null>(null);
   const hangUpSound = React.useRef<HTMLAudioElement | null>(null);
   const durationInterval = React.useRef<number | null>(null);
-  const ringtoneRef = React.useRef<HTMLAudioElement | null>(null);
 
   React.useEffect(() => {
     if (isIncoming && !isCallActive) {
       // Create audio element for ringtone
       ringtoneRef.current = new Audio('https://dallasreynoldstn.com/wp-content/uploads/2025/03/ringtone.mp3');
       ringtoneRef.current.loop = true;
-      ringtoneRef.current.play().catch(() => console.log('Ringtone playback prevented'));
+      // Play ringtone with user interaction
+      const playRingtone = () => {
+        if (ringtoneRef.current) {
+          ringtoneRef.current.play().catch(() => {
+            console.log('Ringtone playback prevented');
+          });
+        }
+      };
+      
+      // Try to play immediately
+      playRingtone();
+      
+      // Also try to play on next user interaction
+      const handleInteraction = () => {
+        playRingtone();
+        document.removeEventListener('click', handleInteraction);
+      };
+      document.addEventListener('click', handleInteraction);
 
       return () => {
         if (ringtoneRef.current) {
           ringtoneRef.current.pause();
           ringtoneRef.current = null;
         }
+        document.removeEventListener('click', handleInteraction);
       };
     }
   }, [isIncoming, isCallActive]);
@@ -245,6 +263,12 @@ export function PhoneCallModal({ onClose, contactName, contactNumber, isFloating
   };
 
   const handleDecline = () => {
+    // Stop ringtone
+    if (ringtoneRef.current) {
+      ringtoneRef.current.pause();
+      ringtoneRef.current = null;
+    }
+    
     // Play hang up sound
     hangUpSound.current = new Audio('https://dallasreynoldstn.com/wp-content/uploads/2025/03/HangUp.mp3');
     hangUpSound.current.play().catch(() => console.log('Hang up sound playback prevented'));
@@ -256,12 +280,6 @@ export function PhoneCallModal({ onClose, contactName, contactNumber, isFloating
       name: contactName,
       status: 'denied'
     });
-
-    // Stop ringtone
-    if (ringtoneRef.current) {
-      ringtoneRef.current.pause();
-      ringtoneRef.current = null;
-    }
 
     // Stop dial tone if playing
     if (dialToneSound.current) {
