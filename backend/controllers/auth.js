@@ -52,8 +52,7 @@ exports.verifycode = async (req, res) => {
 
     await magicloginCollection.deleteOne({ email });
     if(!register){
-    // const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: "1h" });
-    const token = jwt.sign({ user_id: user._id,email: user.email  }, SECRET_KEY, { expiresIn: '1h' });
+    const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: "1h" });
 
       return res.json({  token:token });
 
@@ -248,8 +247,7 @@ exports.login = async (req, res) => {
   console.log(req.body)
   try {
     if (email === 'dallas@prophone.io' && password === 'owner') {
-      // const token = jwt.sign({ user_id: 1 }, SECRET_KEY, { expiresIn: '1h' });
-      const token = jwt.sign({ user_id: 1,email:  'dallas@prophone.io'  }, SECRET_KEY, { expiresIn: '1h' });
+      const token = jwt.sign({ user_id: 1 }, SECRET_KEY, { expiresIn: '1h' });
 
       const ownerData = {
 
@@ -297,9 +295,7 @@ exports.login = async (req, res) => {
               }
 
              
-              // const token = jwt.sign({ user_id: user._id }, SECRET_KEY, { expiresIn: '1h' });
-      const token = jwt.sign({ user_id: user._id,email:  user.email  }, SECRET_KEY, { expiresIn: '1h' });
-
+              const token = jwt.sign({ user_id: user.id }, SECRET_KEY, { expiresIn: '1h' });
               const ownerData = {
 
                 token: token,
@@ -326,9 +322,7 @@ exports.login = async (req, res) => {
                   );
               }
 
-              // const token = jwt.sign({ user_id: user.id }, SECRET_KEY, { expiresIn: '1h' });
-      const token = jwt.sign({ user_id: user._id,email:  user.email  }, SECRET_KEY, { expiresIn: '1h' });
-
+              const token = jwt.sign({ user_id: user.id }, SECRET_KEY, { expiresIn: '1h' });
               const ownerData = {
 
                 token: token,
