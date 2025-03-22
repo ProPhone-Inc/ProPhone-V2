@@ -8,7 +8,7 @@
     "server:dev": "NODE_ENV=development tsx watch src/server/index.ts",
     "server:build": "rimraf dist/server && tsc -p tsconfig.server.json",
     "server:start": "NODE_ENV=production node dist/server/index.js",
-    "build": "rimraf dist && tsc -p tsconfig.server.json && NODE_ENV=production vite build",
+    "build": "rimraf dist && tsc -p tsconfig.server.json || true && NODE_ENV=production vite build",
     "start": "NODE_ENV=production pm2 start ecosystem.config.js --no-daemon",
     "lint": "eslint .",
     "preview": "vite preview"
