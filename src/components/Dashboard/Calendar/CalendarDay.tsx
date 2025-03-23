@@ -36,6 +36,12 @@ export function CalendarDay({
   const firstDayOfMonth = getFirstDayOfMonth(currentYear, currentMonth);
   const today = new Date();
 
+  const handleDateClick = (date: Date) => {
+    if (onDateSelect) {
+      onDateSelect(date);
+    }
+  };
+
   const getEventsForDate = (dateString: string) => {
     const today = new Date().toISOString().split('T')[0];
     return events.filter(event => {
@@ -70,6 +76,9 @@ export function CalendarDay({
     if (onEventDrop) {
       onEventDrop(data.eventId, date);
     }
+    if (isCurrentMonth && onDateSelect) {
+      onDateSelect(date);
+    }
   };
 
   return (
@@ -88,10 +97,9 @@ export function CalendarDay({
         return (
           <button
             key={i}
-            onClick={() => isCurrentMonth && onDateSelect(date)}
+            onClick={() => isCurrentMonth && handleDateClick(date)}
             onDragOver={handleDragOver}
             onDrop={(e) => handleDrop(e, dateString)}
-            disabled={!isCurrentMonth}
             className={`
               h-full p-2 transition-all duration-200 relative group flex flex-col items-start
               ${isCurrentMonth

@@ -6,6 +6,7 @@ export function IntegrationsSection() {
   const { provider, initializeProvider } = usePhoneProvider();
   const [selectedProvider, setSelectedProvider] = React.useState<string | null>(null);
   const [isConfiguring, setIsConfiguring] = React.useState(false);
+  const [providerStatus, setProviderStatus] = React.useState<Record<string, boolean>>({});
   const [error, setError] = React.useState<string | null>(null);
 
   const phoneProviders = [
@@ -13,27 +14,39 @@ export function IntegrationsSection() {
       id: 'twilio',
       name: 'Twilio',
       logo: 'https://www.twilio.com/assets/icons/twilio-icon.svg',
-      description: 'Global communications platform for SMS, voice, and video',
-      status: 'active',
-      lines: ['(555) 123-4567', '(555) 234-5678']
+      description: 'Global communications platform for SMS, voice, and video'
     },
     {
       id: 'telnyx',
       name: 'Telnyx',
-      logo: 'https://cdn.telnyx.com/u/favicon.png',
-      description: 'Enterprise-grade communications platform',
-      status: 'active',
-      lines: ['(555) 345-6789']
+      logo: 'https://dallasreynoldstn.com/wp-content/uploads/2025/02/10522416.png',
+      description: 'Enterprise-grade communications platform'
     },
     {
       id: 'bandwidth',
       name: 'Bandwidth',
       logo: 'https://www.bandwidth.com/wp-content/themes/bandwidth/favicon/favicon-32x32.png',
-      description: 'Communications APIs and network platform',
-      status: 'inactive',
-      lines: []
+      description: 'Communications APIs and network platform'
     }
   ];
+
+  // Check provider status on mount
+  React.useEffect(() => {
+    const checkProviderStatus = async () => {
+      const status: Record<string, boolean> = {};
+      for (const p of phoneProviders) {
+        try {
+          const isActive = await provider?.isInitialized(p.id);
+          status[p.id] = isActive || false;
+        } catch {
+          status[p.id] = false;
+        }
+      }
+      setProviderStatus(status);
+    };
+    
+    checkProviderStatus();
+  }, [provider]);
 
   const handleProviderSelect = async (providerId: string) => {
     setSelectedProvider(providerId);
@@ -101,18 +114,16 @@ export function IntegrationsSection() {
             {phoneProviders.map(provider => (
               <div key={provider.id} className="flex items-center justify-between p-4 bg-zinc-900/50 rounded-lg">
                 <div className="flex items-center space-x-4">
-                  <div className="w-12 h-12 rounded-lg bg-white/10 flex items-center justify-center p-2">
-                    <img src={provider.logo} alt={provider.name} className="w-full h-full object-contain" />
+                  <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center">
+                    <img src={provider.logo} alt={provider.name} className="w-8 h-8 object-contain" />
                   </div>
                   <div>
                     <div className="font-medium text-white">{provider.name}</div>
-                    <div className="text-sm text-white/60">
-                      {provider.lines.length} active {provider.lines.length === 1 ? 'line' : 'lines'}
-                    </div>
+                    <div className="text-sm text-white/60">{provider.description}</div>
                   </div>
                 </div>
-                <div className="flex items-center space-x-4">
-                  {provider.status === 'active' ? (
+                <div className="flex items-center space-x-2">
+                  {providerStatus[provider.id] ? (
                     <span className="flex items-center text-emerald-400 text-sm">
                       <Check className="w-4 h-4 mr-1" />
                       Active
@@ -126,7 +137,7 @@ export function IntegrationsSection() {
                   <button 
                     onClick={() => handleProviderSelect(provider.id)}
                     disabled={isConfiguring && selectedProvider === provider.id}
-                    className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors"
+                    className="p-2 hover:bg-white/10 rounded-lg transition-colors"
                   >
                     {isConfiguring && selectedProvider === provider.id ? (
                       <div className="flex items-center space-x-2">

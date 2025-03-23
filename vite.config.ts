@@ -5,12 +5,12 @@ export default defineConfig({
   plugins: [react()],
   server: {
     host: '0.0.0.0',
-    port: 4173,
+    port: 3000,
     hmr: {
       protocol: 'ws',
       host: '0.0.0.0',
-      port: 4173,
-      clientPort: 4173,
+      port: 3000,
+      clientPort: 3000,
       timeout: 120000
     }
   },
@@ -32,7 +32,7 @@ export default defineConfig({
       }
     },
     modulePreload: {
-      polyfill: false
+      polyfill: true
     },
     reportCompressedSize: false,
     emptyOutDir: true,
@@ -49,10 +49,11 @@ export default defineConfig({
     // Configure server for both development and production
   },
   preview: {
-    port: 4173,
+    port: 3000,
     host: '0.0.0.0',
     strictPort: true,
     cors: true,
+    open: true,
     headers: {
       'Access-Control-Allow-Origin': '*'
     }

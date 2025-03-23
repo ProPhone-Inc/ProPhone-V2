@@ -5,6 +5,7 @@ export interface PhoneProvider {
   
   // Core functionality
   initialize(config: ProviderConfig): Promise<void>;
+  isInitialized(providerId: string): Promise<boolean>;
   sendSMS(to: string, message: string): Promise<SendSMSResult>;
   makeCall(to: string, options?: CallOptions): Promise<CallResult>;
   
@@ -24,11 +25,25 @@ export interface PhoneProvider {
 }
 
 export interface ProviderConfig {
-  apiKey: string;
+  // Common config
+  apiKey?: string;
   apiSecret?: string;
   accountSid?: string;
-  region?: string;
-  [key: string]: any;
+  phoneNumber: string;
+  
+  // Webhooks
+  webhookUrl: string;
+  statusCallbackUrl: string;
+  
+  // Voice config
+  voiceUrl: string;
+  answerUrl: string;
+  
+  // Provider-specific config
+  connectionId?: string; // Telnyx
+  messagingProfileId?: string; // Telnyx
+  applicationId?: string; // Bandwidth
+  siteId?: string; // Bandwidth
 }
 
 export interface PhoneNumber {
@@ -41,6 +56,15 @@ export interface PhoneNumber {
   };
   monthlyPrice: number;
   status: 'active' | 'pending' | 'released';
+}
+
+export interface Message {
+  id: string;
+  content: string;
+  direction: 'inbound' | 'outbound';
+  status: MessageStatus['status'];
+  timestamp: string;
+  cost?: number;
 }
 
 export interface SendSMSResult {
@@ -63,6 +87,7 @@ export interface CallOptions {
   transcriptionEnabled?: boolean;
   timeout?: number;
   machineDetection?: boolean;
+  tag?: string;
 }
 
 export interface CallResult {

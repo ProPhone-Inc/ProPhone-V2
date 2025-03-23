@@ -193,6 +193,7 @@ export function useGoogleCalendar(): UseGoogleCalendarReturn {
   return {
     isConnected,
     isSyncing,
+    events,
     isConfigured,
     events,
     lastSync,

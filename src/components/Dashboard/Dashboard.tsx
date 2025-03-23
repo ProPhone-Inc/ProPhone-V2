@@ -2,9 +2,12 @@ import React, { useState, Suspense } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { useCopilot } from '../../hooks/useCopilot';
 import { useCallState } from '../../hooks/useCallState';
+import { KanbanBoard } from '../CRM/KanbanBoard';
+import { CalendarModal } from './Calendar';
 import { useIncomingCalls } from '../../hooks/useIncomingCalls';
 import { useReporting } from '../../hooks/useReporting';
 import { ReportingModal } from './AdminPanel/ReportingModal';
+import { ContactsTable } from '../CRM/ContactsTable';
 import { SMSAutomation } from '../Phone/components/SMSAutomation';
 import { CallLogs } from '../Phone/components/CallLogs';
 import { X } from 'lucide-react';
@@ -20,8 +23,8 @@ import { ErrorBoundary } from '../ErrorBoundary';
 import { PhoneSystem } from '../Phone/PhoneSystem';
 import { TeamPanelModal } from './TeamPanel/components/TeamPanelModal';
 import { CopilotPage } from './CopilotPage';
-import { CRMDashboard } from '../CRM/CRMDashboard';
 import { AdminPanel } from './AdminPanel';
+import { DocumentSystem } from '../Documents/DocumentSystem';
 
 const ComponentLoader = () => (
   <div className="animate-pulse bg-zinc-800/50 rounded-xl h-full min-h-[200px]" />
@@ -76,6 +79,7 @@ export function Dashboard() {
   const [showTeamPanel, setShowTeamPanel] = useState(false);
   const [showCopilot, setShowCopilot] = useState(false);
   const [copilotExpanded, setCopilotExpanded] = useState(false);
+  const [showCalendar, setShowCalendar] = useState(false);
   const [showReportingModal, setShowReportingModal] = useState(false);
   const [actionSuccess, setActionSuccess] = useState<{message: string, type: string} | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -87,6 +91,7 @@ export function Dashboard() {
   const [showCallLogs, setShowCallLogs] = useState(false);
   const [showCallModal, setShowCallModal] = useState(false);
   const [callContact, setCallContact] = useState<{name?: string; number: string} | null>(null);
+  const [showDocuPro, setShowDocuPro] = useState(false);
   const [isIncomingCall, setIsIncomingCall] = useState(false);
 
   const handleMakeCall = (number: string) => {
@@ -227,6 +232,7 @@ export function Dashboard() {
     setShowTeamPanel(false);
     setShowCopilot(false);
     setShowReportingModal(false);
+    setShowCalendar(false);
     setShowCallLogs(false);
   };
   
@@ -370,12 +376,20 @@ export function Dashboard() {
                     </Suspense>
                   </ErrorBoundary>
                 )}
-                {activePage === 'crm' && (
+                {activePage === 'crm-contacts' && (
                   <ErrorBoundary>
                     <Suspense fallback={<ComponentLoader />}>
-                      <CRMDashboard
-                        activeView="kanban"
-                        onViewChange={(view) => console.log('View changed:', view)}
+                      <ContactsTable />
+                    </Suspense>
+                  </ErrorBoundary>
+                )}
+                {activePage === 'crm-pipelines' && (
+                  <ErrorBoundary>
+                    <Suspense fallback={<ComponentLoader />}>
+                      <KanbanBoard 
+                        onAddLead={() => {}}
+                        onEditLead={() => {}}
+                        onDeleteLead={() => {}}
                       />
                     </Suspense>
                   </ErrorBoundary>
@@ -399,6 +413,9 @@ export function Dashboard() {
                     </Suspense>
                   </ErrorBoundary>
                 )}
+                {activePage.startsWith('docupro-') && (
+                  <DocumentSystem />
+                )}
               </>
             </div>
           </main>
@@ -415,6 +432,11 @@ export function Dashboard() {
       {/* Reporting Modal */}
       {showReportingModal && (
         <ReportingModal onClose={() => setShowReportingModal(false)} />
+      )}
+      
+      {/* Calendar Modal */}
+      {showCalendar && (
+        <CalendarModal onClose={() => setShowCalendar(false)} />
       )}
       
       {/* Phone Call Modal - Global */}

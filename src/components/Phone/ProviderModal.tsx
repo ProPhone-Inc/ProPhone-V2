@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Check } from 'lucide-react';
+import { X, Check, Globe } from 'lucide-react';
 
 interface Provider {
   id: string;
@@ -17,6 +17,12 @@ interface ProviderModalProps {
 export function ProviderModal({ onClose, onSelect, selectedProvider }: ProviderModalProps) {
   const providers: Provider[] = [
     {
+      id: 'all',
+      name: 'All Providers',
+      logo: 'globe',
+      lines: ['1', '2', '3', '4', '5']
+    },
+    {
       id: 'twilio',
       name: 'Twilio',
       logo: 'https://www.twilio.com/assets/icons/twilio-icon.svg',
@@ -25,7 +31,7 @@ export function ProviderModal({ onClose, onSelect, selectedProvider }: ProviderM
     {
       id: 'telnyx',
       name: 'Telnyx',
-      logo: 'https://cdn.telnyx.com/u/favicon.png',
+      logo: 'https://dallasreynoldstn.com/wp-content/uploads/2025/02/10522416.png',
       lines: ['3', '4']
     },
     {
@@ -62,7 +68,11 @@ export function ProviderModal({ onClose, onSelect, selectedProvider }: ProviderM
               }`}
             >
               <div className="w-12 h-12 rounded-lg bg-white/10 flex items-center justify-center mr-4">
-                <img src={provider.logo} alt={provider.name} className="w-8 h-8 object-contain" />
+                {provider.logo === 'globe' ? (
+                  <Globe className="w-8 h-8 text-[#FFD700]" />
+                ) : (
+                  <img src={provider.logo} alt={provider.name} className="w-8 h-8 object-contain" />
+                )}
               </div>
               <div className="flex-1 text-left">
                 <div className="font-medium text-white">{provider.name}</div>

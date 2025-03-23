@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   Home, 
   Phone,
+  ListChecks,
   Sparkles,
   Megaphone, 
   Rocket,
@@ -13,7 +14,11 @@ import {
   Settings, 
   Shield,
   History, 
-  BarChart2
+  BarChart2,
+  FileStack,
+  FileSignature,
+  FileSpreadsheet,
+  UserSquare2
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 
@@ -45,6 +50,29 @@ const defaultItems = [
   }
 ];
 
+const crmItems = [
+  {
+    id: 'crm-home',
+    text: 'Home',
+    icon: <Home size={20} />
+  },
+  {
+    id: 'crm-contacts',
+    text: 'Contacts',
+    icon: <Users size={20} />
+  },
+  {
+    id: 'crm-pipelines',
+    text: 'Pipeline',
+    icon: <FileText size={20} />
+  },
+  {
+    id: 'crm-lists',
+    text: 'My Lists',
+    icon: <ListChecks size={20} />
+  }
+];
+
 const phoneSystemItems = [
   {
     id: 'dashboard',
@@ -70,6 +98,34 @@ const phoneSystemItems = [
     id: 'power-dialer',
     text: 'Power Dialer',
     icon: <Rocket size={20} />
+  }
+];
+
+const docuProItems = [
+  {
+    id: 'docupro-home',
+    text: 'Home',
+    icon: <Home size={20} />
+  },
+  {
+    id: 'docupro-transactions',
+    text: 'Transactions',
+    icon: <FileStack size={20} />
+  },
+  {
+    id: 'docupro-templates',
+    text: 'Templates',
+    icon: <FileSignature size={20} />
+  },
+  {
+    id: 'docupro-reporting',
+    text: 'Reporting',
+    icon: <FileSpreadsheet size={20} />
+  },
+  {
+    id: 'docupro-people',
+    text: 'People',
+    icon: <UserSquare2 size={20} />
   }
 ];
 
@@ -197,7 +253,11 @@ export function Sidebar({
   // Determine which items to show based on active page
   const sidebarItems = ['phone', 'call-logs', 'sms-campaign', 'power-dialer'].includes(activePage) 
     ? phoneSystemItems 
-    : defaultItems;
+    : activePage.startsWith('docupro-') || activePage === 'docupro' 
+        ? docuProItems
+        : activePage.startsWith('crm-') || activePage === 'crm'
+          ? crmItems
+          : defaultItems;
 
   // Keep track of previous page for phone system navigation
   const prevPage = React.useRef(activePage);
@@ -277,6 +337,18 @@ export function Sidebar({
   const effectiveCollapsed = internalCollapsed && !isHovered;
 
   const handleSidebarClick = (page: string) => {
+    // Handle CRM navigation
+    if (page === 'crm') {
+      onPageChange('crm-contacts');
+      return;
+    }
+
+    // Handle CRM home navigation (return to dashboard)
+    if (page === 'crm-home') {
+      onPageChange('dashboard');
+      return;
+    }
+
     // Keep phone system menu for phone-related pages
     if (['phone', 'call-logs', 'sms-campaign', 'power-dialer'].includes(activePage) && 
         ['phone', 'call-logs', 'sms-campaign', 'power-dialer'].includes(page)) {
@@ -284,12 +356,24 @@ export function Sidebar({
       return;
     }
 
-    // Handle ProFlow external navigation
+    // Handle DocuPro home navigation
+    if (page === 'docupro-home') {
+      onPageChange('dashboard');
+      return;
+    }
+
+    // Handle ProFlow navigation
     if (page === 'proflow' && token) {
       window.location.href = `https://flow.prophone.io/sign-in/?token=${token}`;
       return;
     }
     
+    // Handle DocuPro navigation
+    if (page === 'docupro') {
+      onPageChange('docupro-transactions');
+      return;
+    }
+
     // Handle copilot
     if (page === 'copilot') {
       if (setCopilotExpanded) {
