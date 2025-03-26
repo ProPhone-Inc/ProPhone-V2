@@ -1,12 +1,7 @@
 export async function handleGoogleAuth(): Promise<{ id: string; name: string; email: string }> {
   const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
   if (!googleClientId) {
-    console.warn('Google client ID not configured, using mock auth');
-    return {
-      id: Math.random().toString(36).substr(2, 9),
-      name: 'Test User',
-      email: 'test@example.com'
-    };
+    throw new Error('Google client ID not configured');
   }
 
   const redirectUri = window.location.origin;
@@ -90,13 +85,8 @@ export async function handleFacebookAuth(): Promise<{ id: string; name: string; 
   return new Promise((resolve, reject) => {
     const facebookAppId = import.meta.env.VITE_FACEBOOK_APP_ID;
     if (!facebookAppId) {
-      console.warn('Facebook app ID not configured, using mock auth');
-      resolve({
-        id: Math.random().toString(36).substr(2, 9),
-        name: 'Test User',
-        email: 'test@example.com'
-      });
-      return;
+      reject(new Error('Facebook app ID not configured'));
+      return; 
     }
 
     if (!window.FB) {

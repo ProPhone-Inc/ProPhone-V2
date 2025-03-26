@@ -61,55 +61,26 @@ export function LoginForm({
   const handleSocialAuth = async (provider: 'google' | 'facebook') => {
     setIsLoading(true);
     setError('');
-    let userData;
-
+    
     try {
+      let userData;
       if (provider === 'google') {
-        if (!import.meta.env.VITE_GOOGLE_CLIENT_ID) {
-          throw new Error('Google client ID not configured');
-        }
         userData = await handleGoogleAuth();
-        // If not registering, log in and go to dashboard directly
-        if (userData && !isRegistering) {
-          await login(userData);
-          window.location.href = '/dashboard';
-          return;
-        }
-        // Otherwise continue with registration flow
-        if (userData && isRegistering) {
-          setFormData({
-            firstName: userData.name.split(' ')[0] || '',
-            lastName: userData.name.split(' ')[1] || '',
-            email: userData.email,
-            password: ''
-          });
-          setShowPlans(true);
-          setIsLoading(false);
-          return;
-        }
       } else {
-        if (!import.meta.env.VITE_FACEBOOK_APP_ID) {
-          throw new Error('Facebook app ID not configured');
-        }
         userData = await handleFacebookAuth();
-        // If not registering, log in and go to dashboard directly
-        if (userData && !isRegistering) {
-          await login(userData);
-          window.location.href = '/dashboard';
-          return;
-        }
-        // Otherwise continue with registration flow
-        if (userData && isRegistering) {
-          setFormData({
-            firstName: userData.name.split(' ')[0] || '',
-            lastName: userData.name.split(' ')[1] || '',
-            email: userData.email,
-            password: ''
-          });
-          setShowPlans(true);
-          setIsLoading(false);
-          return;
-        }
+      }
+      
+      // If we have user data, proceed to plan selection
+      if (userData) {
+        setFormData({
+          firstName: userData.name.split(' ')[0] || '',
+          lastName: userData.name.split(' ')[1] || '',
+          email: userData.email,
+          password: ''
+        });
+        setShowPlans(true);
+        setIsLoading(false);
+        return;
       }
       
       // Auto-login as owner for specific credentials
@@ -146,11 +117,10 @@ export function LoginForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    const currentFormData = { ...formData };
     setError('');
 
     try {
-      const { email, password } = currentFormData;
+      const { email, password } = formData;
       
       // Special case for owner login
       if (email === 'dallas@prophone.io' && password === 'owner') {
@@ -178,8 +148,14 @@ export function LoginForm({
         const code = verificationCode.join('');
         const userData = await verifyMagicCode(magicEmail, code);
         
-        // User can log in with magic code even if they have a social account
         if (isRegistering) {
+          // Store verified user data and show plans
+          setFormData(prev => ({
+            ...prev,
+            email: userData.email,
+            firstName: userData.name.split(' ')[0] || '',
+            lastName: userData.name.split(' ')[1] || ''
+          }));
           setShowPlans(true);
           setIsLoading(false);
           return;
@@ -195,12 +171,19 @@ export function LoginForm({
       }
 
       // Regular password login
-      await login({ email, password });
-      setShowSuccess(true);
-      setTimeout(() => {
-        setShowSuccess(false);
-        launchFireworks();
-      }, 1500);
+      if (isRegistering) {
+        // For registration, show plans after collecting initial data
+        setShowPlans(true);
+        setIsLoading(false);
+      } else {
+        // For login, proceed normally
+        await login({ email, password });
+        setShowSuccess(true);
+        setTimeout(() => {
+          setShowSuccess(false);
+          launchFireworks();
+        }, 1500);
+      }
     } catch (err) {
       const errorMessage = err instanceof Error 
         ? err.message 

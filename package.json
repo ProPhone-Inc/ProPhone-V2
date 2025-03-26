@@ -16,7 +16,7 @@
   "dependencies": {
     "@googleapis/calendar": "^9.7.0",
     "@react-oauth/google": "^0.12.1",
-    "@bandwidth/messaging": "^5.0.0",
+    "@bandwidth/messaging": "^4.0.0",
     "xlsx": "^0.18.5",
     "@stripe/react-stripe-js": "^2.4.0",
     "@stripe/stripe-js": "^2.4.0",
@@ -37,7 +37,8 @@
     "react-dom": "^18.3.1",
     "recharts": "^2.12.2",
     "socket.io-client": "^4.7.4",
-    "telnyx": "^1.25.5", 
+    "telnyx": "^1.25.5",
+    "@telnyx/api-docs": "^1.0.0",
     "twilio": "^4.23.0",
     "zustand": "^4.5.2"
   },

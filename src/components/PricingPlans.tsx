@@ -23,6 +23,7 @@ export function PricingPlans({ onSelect, selectedPlan }: PricingPlansProps) {
   const { plans, syncWithStripe } = usePlans();
   const [showSuccess, setShowSuccess] = React.useState(false);
   const [fireworksContainer, setFireworksContainer] = React.useState<HTMLDivElement | null>(null);
+  const [processingPlan, setProcessingPlan] = React.useState<string | null>(null);
 
   // Sync with Stripe on mount
   useEffect(() => {
@@ -70,6 +71,7 @@ export function PricingPlans({ onSelect, selectedPlan }: PricingPlansProps) {
     pro: 'Best for growing businesses',
     enterprise: 'For large scale operations'
   };
+
   React.useEffect(() => {
     // Create fireworks container
     const container = document.createElement('div');
@@ -116,6 +118,22 @@ export function PricingPlans({ onSelect, selectedPlan }: PricingPlansProps) {
     }
   }, [fireworksContainer]);
 
+  const handlePlanSelect = async (planId: string) => {
+    onSelect(planId);
+    setProcessingPlan(planId);
+
+    // Show success message and trigger fireworks
+    setShowSuccess(true);
+    launchFireworks();
+    setProcessingPlan(null);
+
+    // Let parent component handle the actual account creation
+    setTimeout(() => {
+      setShowSuccess(false);
+      onSelect(planId);
+    }, 1500);
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       {showSuccess && (
@@ -146,22 +164,7 @@ export function PricingPlans({ onSelect, selectedPlan }: PricingPlansProps) {
             icon={planIcons[plan.id as keyof typeof planIcons]}
             popular={plan.id === 'pro'}
             selected={selectedPlan === plan.id}
-            onSelect={() => {
-              // First select the plan
-              onSelect(plan.id);
-              
-              // Show success modal and launch fireworks
-              setTimeout(() => {
-                setShowSuccess(true);
-                launchFireworks();
-                
-                // Show dashboard after animation
-                setTimeout(() => {
-                  setShowSuccess(false);
-                  window.location.href = '/dashboard';
-                }, 3000);
-              }, 500);
-            }}
+            onSelect={() => handlePlanSelect(plan.id)}
           />
         ))}
       </div>
