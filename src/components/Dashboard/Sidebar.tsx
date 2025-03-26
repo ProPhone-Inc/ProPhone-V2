@@ -2,7 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { 
   Home, 
   Phone,
+  Globe,
+  Layout,
+  Palette, 
+  FormInput,
+  DollarSign,
+  Presentation,
   ListChecks,
+  Mail,
   Sparkles,
   Megaphone, 
   Rocket,
@@ -18,7 +25,8 @@ import {
   FileStack,
   FileSignature,
   FileSpreadsheet,
-  UserSquare2
+  UserSquare2,
+  Store
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 
@@ -41,12 +49,50 @@ const defaultItems = [
   {
     id: 'docupro',
     text: 'DocuPro',
-    icon: <FileText size={20} />
+    icon: <FileText size={20} />,
+    subItems: []
+  },
+  {
+    id: 'email',
+    text: 'Email System',
+    icon: <Mail size={20} />,
+    subItems: [
+      { id: 'email-campaigns', text: 'Campaigns', icon: <Megaphone size={16} /> },
+      { id: 'email-templates', text: 'Templates', icon: <FileText size={16} /> },
+      { id: 'email-analytics', text: 'Analytics', icon: <BarChart2 size={16} /> }
+    ]
   },
   {
     id: 'crm',
     text: 'CRM',
-    icon: <Users size={20} />
+    icon: <Users size={20} />,
+    subItems: []
+  },
+  {
+    id: 'website',
+    text: 'Website Builder',
+    icon: <Globe size={20} />,
+    subItems: [
+      { id: 'website-pages', text: 'Pages', icon: <Layout size={16} /> },
+      { id: 'website-themes', text: 'Themes', icon: <Palette size={16} /> },
+      { id: 'website-forms', text: 'Forms', icon: <FormInput size={16} /> },
+      { id: 'website-analytics', text: 'Analytics', icon: <BarChart2 size={16} /> }
+    ]
+  },
+  {
+    id: 'investor',
+    text: 'Investor Resources',
+    icon: <DollarSign size={20} />,
+    subItems: [
+      { id: 'investor-reports', text: 'Financial Reports', icon: <BarChart2 size={16} /> },
+      { id: 'investor-documents', text: 'Documents', icon: <FileText size={16} /> },
+      { id: 'investor-presentations', text: 'Presentations', icon: <Presentation size={16} /> }
+    ]
+  },
+  {
+    id: 'marketplace',
+    text: 'Marketplace',
+    icon: <Store size={20} />
   }
 ];
 
@@ -363,17 +409,29 @@ export function Sidebar({
     }
 
     // Handle ProFlow navigation
-    if (page === 'proflow' && token) {
+    if (page === 'proflow') {
       window.location.href = `https://flow.prophone.io/sign-in/?token=${token}`;
       return;
     }
     
-    // Handle DocuPro navigation
-    if (page === 'docupro') {
-      onPageChange('docupro-transactions');
+    // Handle Email System navigation
+    if (page.startsWith('email-')) {
+      onPageChange(page);
       return;
     }
-
+    
+    // Handle Investor Resources navigation
+    if (page.startsWith('investor-')) {
+      onPageChange(page);
+      return;
+    }
+    
+    // Handle Website Builder navigation
+    if (page.startsWith('website-')) {
+      onPageChange(page);
+      return;
+    }
+    
     // Handle copilot
     if (page === 'copilot') {
       if (setCopilotExpanded) {

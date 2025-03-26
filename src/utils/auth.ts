@@ -113,12 +113,7 @@ export async function handleFacebookAuth(): Promise<{ id: string; name: string; 
 }
 
 export async function sendMagicCode(email: string): Promise<void> {
-  // In a real app, check if user exists with this email first
-  // For demo, we'll simulate the API call
-  // For demo purposes, we'll simulate an API call
   await new Promise(resolve => setTimeout(resolve, 1000));
-  
-  // Log the code for testing - in production this would be sent via email
   console.log('Magic code for testing: 123456');
 }
 
@@ -132,9 +127,6 @@ export async function verifyMagicCode(email: string, code: string): Promise<{ id
   if (code !== validCode) {
     throw new Error('Invalid verification code. For testing, use code: 123456');
   }
-
-  // In a real app, this would verify the code and return the user's data
-  // including their auth method (google, facebook, email/password)
   return {
     id: Math.random().toString(36).substr(2, 9),
     name: email.split('@')[0],

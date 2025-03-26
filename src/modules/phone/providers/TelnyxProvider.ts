@@ -1,9 +1,5 @@
 import { PhoneProvider, ProviderConfig, SendSMSResult, CallResult, PhoneNumber, MessageStatus } from './PhoneProvider';
 
-/**
- * Telnyx Provider Implementation
- * API Documentation: https://developers.telnyx.com/docs/api
- */
 export class TelnyxProvider implements PhoneProvider {
   private client: any;
   private config: ProviderConfig;
@@ -25,7 +21,6 @@ export class TelnyxProvider implements PhoneProvider {
     if (!this.client || !this.config) return false;
     
     try {
-      // Test API access by making a lightweight request
       await this.client.balance.retrieve();
       return true;
     } catch {
@@ -156,7 +151,6 @@ export class TelnyxProvider implements PhoneProvider {
     const { call_control_id } = callData.data.payload;
 
     try {
-      // Example IVR flow
       await this.client.calls.answer(call_control_id);
       await this.client.calls.playback_start(call_control_id, {
         audio_url: this.config.welcomeMessageUrl
