@@ -151,58 +151,15 @@ export function PhoneSystem({ selectedMessage, selectedChat, onMessageSelect, ac
       lastMessage: 'Would tomorrow at 2 PM work?',
       time: '10:30 AM',
       unread: 3
-    },
-    {
-      id: '2',
-      lineId: '1',
-      name: 'Kevin Brown',
-      number: '(555) 987-6543',
-      avatar: 'KB',
-      messages: [{
-        id: '4',
-        content: 'Reaching out about your investment property',
-        time: '10:55 AM',
-        type: 'received'
-      },
-      {
-        id: '5',
-        content: 'Which property are you interested in?',
-        time: '11:00 AM',
-        type: 'sent'
-      },
-      {
-        id: '6',
-        content: 'The one on Oak Street. Is it still available?',
-        time: '11:05 AM',
-        type: 'received'
-      }],
-      lastMessage: 'The one on Oak Street. Is it still available?',
-      time: '10:55 AM',
-      unread: 2
-    },
-    {
-      id: '3',
-      lineId: '2',
-      name: 'Emma Wilson',
-      number: '(555) 456-7890',
-      avatar: 'EW',
-      messages: [{
-        id: '7',
-        content: 'Just wanted to confirm our appointment for tomorrow',
-        time: '9:15 AM',
-        type: 'received'
-      },
-      {
-        id: '8',
-        content: "Yes, we're all set for 3 PM at the Maple Avenue property",
-        time: '9:20 AM',
-        type: 'sent'
-      }],
-      lastMessage: "Yes, we're all set for 3 PM at the Maple Avenue property",
-      time: '9:20 AM',
-      unread: 0
     }
   ]);
+
+  const handleStatusChange = React.useCallback((chatId: string, status: { label: string; icon: React.ReactNode }) => {
+    setChatStatuses(prev => ({
+      ...prev,
+      [chatId]: status
+    }));
+  }, []);
 
   // Resizable columns
   const phoneLinesColumn = useResizable({ defaultWidth: 280, minWidth: 240, maxWidth: 400, storageKey: 'phone-lines-width' });

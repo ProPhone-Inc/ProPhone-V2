@@ -344,6 +344,8 @@ export function Dashboard() {
           setShowAdminModal={setShowAdminModal}
           setShowReportingModal={setShowReportingModal}
           setShowTeamPanel={setShowTeamPanel}
+          showProFlow={showProFlow}
+          setShowProFlow={setShowProFlow}
         />
         
         <div className="flex-1 flex flex-col min-h-screen ml-16">
@@ -434,7 +436,7 @@ export function Dashboard() {
                   </ErrorBoundary>
                 )}
                 {activePage.startsWith('docupro-') && (
-                  <DocumentSystem />
+                  <DocumentSystem defaultView="transactions" onPageChange={onPageChange} />
                 )}
                 {activePage.startsWith('email-') && (
                   <ErrorBoundary>

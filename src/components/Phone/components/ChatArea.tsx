@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowRight, Paperclip, Mic, MoreVertical, Home, ChevronDown, Phone, CheckCircle, Smile, Bot, Clock, Info } from 'lucide-react';
+import { ArrowRight, Paperclip, Mic, MoreVertical, Home, ChevronDown, Phone, CheckCircle, Smile, Bot, Clock, Info, MessageSquare, Eye, EyeOff, Users, Trash2, Zap } from 'lucide-react';
 import { QuickReplyModal } from './QuickReplyModal';
 import { useClickOutside } from '../../../hooks/useClickOutside';
 import { useCallState } from '../../../hooks/useCallState';
@@ -48,7 +48,7 @@ export function ChatArea({
   chatStatuses,
   onStatusChange,
   onMarkRead,
-  onMarkUnread, 
+  onMarkUnread,
   onMakeCall,
   onDeleteChats,
   onRetry,
@@ -73,6 +73,7 @@ export function ChatArea({
     isUserScrolling: false
   });
   const [showScrollButton, setShowScrollButton] = React.useState(false);
+  const currentStatus = selectedChat ? chatStatuses[selectedChat.id] : null;
 
   useClickOutside(menuRef, () => setShowMenu(false));
   
@@ -169,18 +170,18 @@ export function ChatArea({
             <div className="flex items-center space-x-3 flex-shrink-0 min-w-0">
               <div className="relative">
                 <div className="w-10 h-10 rounded-full bg-[#B38B3F]/20 flex items-center justify-center text-[#FFD700] flex-shrink-0">
-                  {selectedChat.id === 'draft' || /^\(\d{3}\) \d{3}-\d{4}$/.test(selectedChat.name) ? (
+                  {selectedChat?.id === 'draft' || (selectedChat && /^\(\d{3}\) \d{3}-\d{4}$/.test(selectedChat.name)) ? (
                     <MessageSquare className="w-5 h-5" />
                   ) : (
-                    selectedChat.name.split(' ').map(word => word[0]).join('').toUpperCase().slice(0, 2)
+                    selectedChat?.name.split(' ').map(word => word[0]).join('').toUpperCase().slice(0, 2)
                   )}
                 </div>
               </div>
               <div className="min-w-0">
                 <div className="font-medium text-white whitespace-nowrap overflow-hidden text-ellipsis">
-                  {selectedChat.name}
+                  {selectedChat?.name}
                 </div>
-                {selectedChat.number && !/^\(\d{3}\) \d{3}-\d{4}$/.test(selectedChat.name) && (
+                {selectedChat?.number && selectedChat && !/^\(\d{3}\) \d{3}-\d{4}$/.test(selectedChat.name) && (
                   <div className="text-sm text-white/60">{selectedChat.number}</div>
                 )}
               </div>
@@ -190,11 +191,11 @@ export function ChatArea({
                 <button 
                   onClick={() => setShowStatusDropdown(!showStatusDropdown)}
                   className={`px-3 py-1.5 rounded-lg transition-colors flex items-center space-x-2 text-sm ${
-                    currentStatus ? statusOptions.find(opt => opt.label === currentStatus.label)?.color : 'bg-zinc-800'
+                    currentStatus ? statusOptions.find(opt => opt.label === currentStatus?.label)?.color : 'bg-zinc-800'
                   }`}
                 >
-                  {currentStatus.icon}
-                  <span className="text-white">{currentStatus.label}</span>
+                  {currentStatus?.icon}
+                  <span className="text-white">{currentStatus?.label}</span>
                   <ChevronDown className="w-4 h-4 text-white/60" />
                 </button>
                 {showStatusDropdown && (
@@ -247,7 +248,7 @@ export function ChatArea({
                     <div className="py-1">
                       <button
                         onClick={() => {
-                          onMarkRead([selectedChat.id]);
+                          if (selectedChat) onMarkRead([selectedChat.id]);
                           setShowMenu(false);
                         }}
                         className="w-full px-4 py-2 text-left text-white hover:bg-white/5 transition-colors flex items-center space-x-2"
@@ -257,7 +258,7 @@ export function ChatArea({
                       </button>
                       <button
                         onClick={() => {
-                          onMarkUnread([selectedChat.id]);
+                          if (selectedChat) onMarkUnread([selectedChat.id]);
                           setShowMenu(false);
                         }}
                         className="w-full px-4 py-2 text-left text-white hover:bg-white/5 transition-colors flex items-center space-x-2"
@@ -278,7 +279,7 @@ export function ChatArea({
                       <div className="h-px bg-[#B38B3F]/20 my-1" />
                       <button
                         onClick={() => {
-                          onDeleteChats([selectedChat.id]);
+                          if (selectedChat) onDeleteChats([selectedChat.id]);
                           setShowMenu(false);
                         }}
                         className="w-full px-4 py-2 text-left text-red-400 hover:bg-red-500/10 transition-colors flex items-center space-x-2"

@@ -105,7 +105,7 @@ const investorItems = [
 const crmItems = [
   {
     id: 'crm-home',
-    text: 'Home',
+    text: 'Dashboard',
     icon: <Home size={20} />
   },
   {
@@ -179,7 +179,7 @@ const emailItems = [
 const docuProItems = [
   {
     id: 'docupro-home',
-    text: 'Home',
+    text: 'Dashboard',
     icon: <Home size={20} />
   },
   {
@@ -227,6 +227,8 @@ interface SidebarProps {
   setShowAdminModal?: (show: boolean) => void;
   setShowReportingModal?: (show: boolean) => void;
   setShowTeamPanel?: (show: boolean) => void;
+  showProFlow: boolean;
+  setShowProFlow: (show: boolean) => void;
 }
 
 interface SidebarState {
@@ -313,7 +315,9 @@ export function Sidebar({
   setShowCallLogs,
   setShowAdminModal,
   setShowReportingModal,
-  setShowTeamPanel
+  setShowTeamPanel,
+  showProFlow = false,
+  setShowProFlow = () => {}
 }: SidebarProps) {
   const { user } = useAuth();
   const [isHovered, setIsHovered] = useState(false);
@@ -353,9 +357,29 @@ export function Sidebar({
   }, []);
 
   const handleSidebarClick = React.useCallback((page: string) => {
-    // Handle other navigation
-    onPageChange(page);
-  }, [token, onPageChange]);
+    if (page === 'dashboard') {
+      // Reset ProFlow state and navigate to dashboard
+      setShowProFlow(false);
+      onPageChange('dashboard');
+    } else if (page === 'docupro-home') {
+      // DocuPro Home button should navigate to dashboard
+      setShowProFlow(false);
+      onPageChange('dashboard');
+    } else if (page === 'crm-home') {
+      // CRM Home button should navigate to dashboard
+      setShowProFlow(false);
+      onPageChange('dashboard');
+    } else if (page === 'proflow') {
+      // Handle ProFlow navigation
+      setShowProFlow?.(true);
+      return;
+    }
+    else {
+      // Handle other navigation
+      setShowProFlow(false);
+      onPageChange(page);
+    }
+  }, [token, onPageChange, setShowProFlow]);
 
   const effectiveCollapsed = internalCollapsed && !isHovered;
 
@@ -403,7 +427,7 @@ export function Sidebar({
                 })}
                 text={item.text}
                 id={item.id}
-                active={activePage === item.id}
+                active={item.id === 'proflow' ? showProFlow : (!showProFlow && activePage === item.id)}
                 collapsed={effectiveCollapsed}
                 onClick={() => handleSidebarClick(item.id)}
               />
