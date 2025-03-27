@@ -123,9 +123,9 @@ function Header({ user, onLogout, collapsed, activePage, messages, onPageChange 
 
       <div className="flex items-center space-x-2">
         {/* Remove Ads Button - Only show for free plan, sub users, and executives */}
-        {(user?.plan === 'starter' || user?.role === 'sub_user' || user?.role === 'executive') && (
+        {(user?.plan === 'starter' || user?.role === 'sub_user' || user?.role === 'executive') && user?.showAds && (
           <button
-            onClick={() => setShowRemoveAdsModal(true)}
+            onClick={() => setShowRemoveAdsModal(true)} 
             className="relative px-3 py-1.5 bg-gradient-to-r from-[#B38B3F]/20 to-[#FFD700]/10 text-[#FFD700] rounded-lg hover:bg-[#B38B3F]/30 transition-colors flex items-center space-x-2 border border-[#B38B3F]/20 overflow-hidden group"
           >
             <div className="absolute inset-0 bg-gradient-to-r from-[#FFD700]/0 via-[#FFD700]/20 to-[#FFD700]/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 ease-out" />

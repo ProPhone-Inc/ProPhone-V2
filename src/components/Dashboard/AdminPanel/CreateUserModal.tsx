@@ -8,7 +8,6 @@ interface CreateUserModalProps {
     id: string;
     name: string;
     email: string;
-    plan: string;
     status: string;
     joinDate: string;
     lastLogin: string;
@@ -22,16 +21,11 @@ export function CreateUserModal({ onClose, onSave }: CreateUserModalProps) {
   const canAssignGodMode = currentUser?.role === 'owner';
   const isExecutiveOrSuperAdmin = currentUser?.role === 'executive' || currentUser?.role === 'super_admin';
   const [formData, setFormData] = React.useState({
-    role: 'user' as 'user' | 'super_admin' | 'executive',
-    firstName: '',
-    lastName: '',
+    name: '',
     email: '',
-    plan: 'starter',
-    status: 'inactive', // Default to inactive until first login
-    authMethod: {
-      type: 'normal' as const,
-      verified: false
-    }
+    role: 'user',
+    status: 'active',
+    permissions: [] as string[]
   });
 
   const isOwner = currentUser?.role === 'owner';
@@ -51,6 +45,7 @@ export function CreateUserModal({ onClose, onSave }: CreateUserModalProps) {
       id: Math.random().toString(36).substr(2, 9),
       name: `${formData.firstName} ${formData.lastName}`,
       email: formData.email,
+      showAds: !(formData.role === 'owner' || formData.role === 'super_admin'),
       plan: isExecutiveOrSuperAdmin ? formData.plan : (canAssignGodMode && (formData.role === 'super_admin' || formData.role === 'executive') ? 'god_mode' : formData.plan),
       status: formData.status,
       joinDate: new Date().toISOString().split('T')[0],
@@ -137,26 +132,9 @@ export function CreateUserModal({ onClose, onSave }: CreateUserModalProps) {
             </div>
           </div>
 
-          <div>
-            <label className="block text-white/70 text-sm font-medium mb-2">Plan</label>
-            <select
-              name="plan"
-              value={formData.plan}
-              disabled={!isExecutiveOrSuperAdmin && ((formData.role === 'super_admin' && isOwner) || formData.role === 'executive')}
-              onChange={(e) => setFormData({ ...formData, plan: e.target.value })}
-              className="w-full px-3 py-2 bg-zinc-800 border border-[#B38B3F]/20 rounded-lg text-white"
-            >
-              <option value="starter">Business Starter</option>
-              <option value="pro">Business Pro</option>
-              <option value="enterprise">Business Elite</option>
-            </select>
-            {formData.role === 'super_admin' && isOwner && !isExecutiveOrSuperAdmin && (
-              <p className="text-xs text-[#FFD700] mt-1">Super Admins get unlimited God Mode access with no restrictions</p>
-            )}
-            {formData.role === 'executive' && !isExecutiveOrSuperAdmin && (
-              <p className="text-xs text-[#FFD700] mt-1">Executives get unlimited God Mode access with no restrictions</p>
-            )}
-          </div>
+          {formData.role === 'executive' && !isExecutiveOrSuperAdmin && (
+            <p className="text-xs text-[#FFD700] mt-1">Executives get unlimited God Mode access with no restrictions</p>
+          )}
           
           <p className="text-sm text-white/50 italic">
             User account will be inactive until their first login, which will start their 30-day activity period.
@@ -178,11 +156,9 @@ export function CreateUserModal({ onClose, onSave }: CreateUserModalProps) {
                 className={`w-full pl-10 pr-4 py-2 bg-zinc-800 border border-[#B38B3F]/20 rounded-lg ${currentUser?.role === 'owner' ? 'text-white' : 'text-white/40'}`}
               >
                 <option value="user">User</option>
+                <option value="sub_user">Sub User</option>
                 {canAssignGodMode && (
-                  <>
-                    <option value="executive">Executive</option>
-                    <option value="super_admin">Super Admin</option>
-                  </>
+                  <option value="super_admin">Super Admin</option>
                 )}
               </select>
             </div>

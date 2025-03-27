@@ -57,12 +57,31 @@ function AdminPanel() {
 
   // User statistics
   const userStats = {
-    total: users.length,
-    starter: users.filter(user => user.plan === 'starter').length,
-    businessPro: users.filter(user => user.plan === 'pro').length,
-    businessElite: users.filter(user => user.plan === 'enterprise').length,
+    total: users.filter(user => !['owner', 'super_admin'].includes(user.role)).length,
+    adsDisabled: users.filter(user => !user.showAds && !['owner', 'super_admin'].includes(user.role)).length,
+    subUsers: users.filter(user => user.role === 'sub_user' && !['owner', 'super_admin'].includes(user.role)).length,
+    monthlyRevenue: calculateMonthlyRevenue(users),
     admin: users.filter(user => user.role === 'admin' || user.role === 'owner' || user.role === 'super_admin' || user.role === 'executive').length
   };
+
+  // Calculate monthly revenue from subscriptions
+  function calculateMonthlyRevenue(users: any[]): number {
+    let revenue = 0;
+    
+    // Add revenue from ad-free subscriptions ($10/month)
+    revenue += users.filter(user => 
+      user.adFreeSubscription?.active && 
+      !['owner', 'super_admin', 'admin'].includes(user.role)
+    ).length * 10;
+    
+    // Add revenue from sub-users ($5/month per sub-user)
+    revenue += users.filter(user => 
+      user.role === 'sub_user' && 
+      !['owner', 'super_admin'].includes(user.role)
+    ).length * 5;
+    
+    return revenue;
+  }
 
   // Apply filters
   useEffect(() => {
@@ -428,9 +447,9 @@ function AdminPanel() {
       {/* User Stats */}
       <UserStats
         totalUsers={userStats.total}
-        starterUsers={userStats.starter}
-        businessProUsers={userStats.businessPro}
-        businessEliteUsers={userStats.businessElite}
+        adsDisabledUsers={userStats.adsDisabled}
+        subUserCount={userStats.subUsers}
+        monthlyRevenue={userStats.monthlyRevenue}
         adminUsers={userStats.admin}
       />
       

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Users, UserCheck, Star, CreditCard, Shield } from 'lucide-react';
+import { Users, UserCheck, Star, CreditCard, Shield, Tv, DollarSign } from 'lucide-react';
 
 interface UserStatCardProps {
   title: string;
@@ -36,13 +36,13 @@ function UserStatCard({ title, value, icon, highlight = false }: UserStatCardPro
 
 interface UserStatsProps {
   totalUsers: number;
-  starterUsers: number;
-  businessProUsers: number;
-  businessEliteUsers: number;
   adminUsers: number;
+  adsDisabledUsers: number;
+  subUserCount: number;
+  monthlyRevenue: number;
 }
 
-export function UserStats({ totalUsers, starterUsers, businessProUsers, businessEliteUsers, adminUsers }: UserStatsProps) {
+export function UserStats({ totalUsers, adminUsers, adsDisabledUsers, subUserCount, monthlyRevenue }: UserStatsProps) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
       <UserStatCard
@@ -51,21 +51,21 @@ export function UserStats({ totalUsers, starterUsers, businessProUsers, business
         icon={<Users className="w-5 h-5 text-[#FFD700]" />}
       />
       <UserStatCard
-        title="Business Starter"
-        value={starterUsers}
-        icon={<Star className="w-5 h-5 text-[#FFD700]" />}
+        title="Ads Disabled"
+        value={adsDisabledUsers}
+        icon={<Tv className="w-5 h-5 text-[#FFD700]" />}
       />
       <UserStatCard
-        title="Business Pro"
-        value={businessProUsers}
-        icon={<Star className="w-5 h-5 text-[#FFD700]" />}
-        highlight
+        title="Sub Users"
+        value={subUserCount}
+        icon={<UserCheck className="w-5 h-5 text-[#FFD700]" />}
       />
       <UserStatCard
-        title="Business Elite"
-        value={businessEliteUsers}
-        icon={<CreditCard className="w-5 h-5 text-[#FFD700]" />}
+        title="Monthly Revenue"
+        value={monthlyRevenue}
+        icon={<DollarSign className="w-5 h-5 text-[#FFD700]" />}
         highlight
+        isRevenue
       />
       <UserStatCard
         title="Admin Users"

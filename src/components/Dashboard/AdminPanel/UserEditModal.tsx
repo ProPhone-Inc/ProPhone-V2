@@ -24,9 +24,8 @@ export function UserEditModal({ member, onClose, onSave }: UserEditModalProps) {
   // Prevent editing if:
   // 1. Editing owner account and not the owner
   // 2. Super admin trying to edit another super admin
-  // 3. Non-owner trying to edit super admin or executive
-  if ((isEditingOwner && !canAssignGodMode) || 
-      (!canAssignGodMode && (isEditingSuperAdmin || isEditingExecutive))) {
+  // 3. Non-owner trying to edit super admin
+  if ((isEditingOwner && !canAssignGodMode) || (!canAssignGodMode && isEditingSuperAdmin)) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
         <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
@@ -76,6 +75,7 @@ export function UserEditModal({ member, onClose, onSave }: UserEditModalProps) {
     
     const updatedUser = {
       ...formData,
+      showAds: !(formData.role === 'owner' || formData.role === 'super_admin'),
       plan
     };
     
@@ -139,42 +139,16 @@ export function UserEditModal({ member, onClose, onSave }: UserEditModalProps) {
               <select
                 name="role"
                 value={formData.role}
-                onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                onChange={(e) => setFormData({ ...formData, role: e.target.value as 'user' | 'sub_user' | 'super_admin' })}
                 className="w-full pl-10 pr-4 py-2 bg-zinc-800 border border-[#B38B3F]/20 rounded-lg text-white"
               >
-                <option value="sub_user">Sub User</option>
                 <option value="user">User</option>
+                <option value="sub_user">Sub User</option>
                 {canAssignGodMode && (
-                  <>
-                    <option value="executive">Executive</option>
-                    <option value="super_admin">Super Admin</option>
-                  </>
+                  <option value="super_admin">Super Admin</option>
                 )}
               </select>
             </div>
-          </div>
-
-          <div>
-            <label className="block text-white/70 text-sm font-medium mb-2">Plan</label>
-            <select
-              name="plan"
-              value={formData.plan}
-              disabled={formData.role === 'owner' || formData.role === 'super_admin' || formData.role === 'executive'}
-              onChange={(e) => setFormData({ ...formData, plan: e.target.value })}
-              className="w-full px-3 py-2 bg-zinc-800 border border-[#B38B3F]/20 rounded-lg text-white"
-            >
-              <option value="starter">Business Starter</option>
-              <option value="pro">Business Pro</option>
-              <option value="enterprise">Business Elite</option>
-              {(formData.role === 'owner' || formData.role === 'super_admin' || formData.role === 'executive') && (
-                <option value="god_mode">God Mode</option>
-              )}
-            </select>
-            {(formData.role === 'owner' || formData.role === 'super_admin' || formData.role === 'executive') && (
-              <p className="text-xs text-[#FFD700] mt-1">
-                {formData.role === 'owner' ? 'Platform Owner' : formData.role === 'super_admin' ? 'Super Admin' : 'Executive'} accounts automatically get God Mode access
-              </p>
-            )}
           </div>
 
           <div>

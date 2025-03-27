@@ -7,6 +7,13 @@ interface User {
   email: string;
   avatar?: string;
   role?: string;
+  showAds?: boolean;
+  parentUser?: {
+    id: string;
+    name: string;
+    email: string;
+    role: string;
+  };
 }
 
 interface AuthContextType {

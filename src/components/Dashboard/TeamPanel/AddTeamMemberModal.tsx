@@ -13,6 +13,9 @@ interface AddTeamMemberModalProps {
 }
 
 export function AddTeamMemberModal({ onClose, onAdd }: AddTeamMemberModalProps) {
+  const [showPermissions, setShowPermissions] = React.useState(false);
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [showBillingConfirm, setShowBillingConfirm] = React.useState(false);
   const [formData, setFormData] = React.useState({
     name: '',
     email: '',
@@ -28,8 +31,28 @@ export function AddTeamMemberModal({ onClose, onAdd }: AddTeamMemberModalProps) 
     { id: 'proflow', label: 'ProFlow', icon: <GitMerge className="w-4 h-4" /> }
   ];
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (formData.role === 'sub_user') {
+      setShowBillingConfirm(true);
+      return;
+    }
+    await createUser();
+  };
+
+  const createUser = async () => {
+    setIsSubmitting(true);
+    
+    const memberData = {
+      name: formData.name,
+      email: formData.email,
+      role: formData.role,
+      permissions: formData.permissions,
+      parentUser: formData.role === 'sub_user' ? currentUser?.id : null,
+      status: 'pending',
+      joinDate: new Date().toISOString().split('T')[0]
+    };
+
     onAdd(formData);
   };
 
@@ -157,6 +180,37 @@ export function AddTeamMemberModal({ onClose, onAdd }: AddTeamMemberModalProps) 
             </button>
           </div>
         </form>
+
+        {/* Billing Confirmation Modal */}
+        {showBillingConfirm && (
+          <div className="fixed inset-0 z-[70] flex items-center justify-center px-4">
+            <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setShowBillingConfirm(false)} />
+            <div className="relative bg-zinc-900 border border-[#B38B3F]/30 rounded-xl p-6 shadow-2xl transform animate-fade-in max-w-md w-full mx-auto">
+              <h3 className="text-xl font-bold text-white mb-4">Sub-User Billing</h3>
+              <p className="text-white/70 mb-6">
+                Adding a sub-user will cost $5/month. This will be added to your monthly billing.
+                The subscription will start immediately and continue until the sub-user is removed.
+              </p>
+              <div className="flex space-x-3">
+                <button
+                  onClick={() => setShowBillingConfirm(false)}
+                  className="flex-1 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white rounded-lg transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    setShowBillingConfirm(false);
+                    createUser();
+                  }}
+                  className="flex-1 px-4 py-2 bg-gradient-to-r from-[#B38B3F] to-[#FFD700] text-black font-medium rounded-lg hover:opacity-90 transition-opacity"
+                >
+                  Confirm ($5/month)
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
