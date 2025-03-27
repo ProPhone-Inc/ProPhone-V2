@@ -1,15 +1,16 @@
 import React from 'react';
-import { Plus, Users, Calendar, X, Filter, Clock, ChevronLeft, ChevronRight, AlertTriangle, Filter as FilterIcon } from 'lucide-react';
+import { Plus, Users, Calendar, X, Filter, Clock, ChevronLeft, ChevronRight, AlertTriangle, Filter as FilterIcon, ChevronDown } from 'lucide-react';
 import { CalendarHeader } from './CalendarHeader';
-import { MonthView } from './MonthView';
+import { MonthView } from './MonthView'; 
 import { TaskView } from './TaskView';
 import { EventFormModal } from '../EventFormModal';
 
 interface CalendarModalProps {
   onClose: () => void;
+  onAddEvent: () => void;
 }
 
-export function CalendarModal({ onClose }: CalendarModalProps) {
+export function CalendarModal({ onClose, onAddEvent }: CalendarModalProps) {
   const modalRef = React.useRef<HTMLDivElement>(null);
   const [viewMode, setViewMode] = React.useState<'calendar' | 'tasks'>('calendar');
   const [showEventForm, setShowEventForm] = React.useState<boolean>(false);
@@ -19,7 +20,7 @@ export function CalendarModal({ onClose }: CalendarModalProps) {
   const [isClosing, setIsClosing] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [taskStages, setTaskStages] = React.useState(['To Do', 'In Progress', 'Done']);
-  const [displayMode, setDisplayMode] = React.useState<'month' | 'week' | 'day' | '4day' | 'schedule'>('month');
+  const [displayMode, setDisplayMode] = React.useState<'month' | 'week' | 'day'>('month');
   const [taskDisplayMode, setTaskDisplayMode] = React.useState<'daily' | 'weekly' | 'monthly' | 'yearly'>('weekly');
   const [selectedDate, setSelectedDate] = React.useState<Date | null>(new Date());
   const initialEventForm = {
@@ -248,52 +249,59 @@ export function CalendarModal({ onClose }: CalendarModalProps) {
                     <ChevronRight className="w-4 h-4 text-white/70 group-hover:text-[#FFD700] transition-colors" />
                   </button>
                 </div>
-                <button
-                  onClick={onAddEvent}
-                  className="px-4 py-2 bg-gradient-to-r from-[#B38B3F] to-[#FFD700] text-black font-medium rounded-lg hover:opacity-90 transition-opacity flex items-center space-x-2"
-                >
-                  <Plus className="w-4 h-4" />
-                  <span>Add Event</span>
-                </button>
               </div>
               <div className="flex items-center space-x-2">
                 {viewMode === 'calendar' && (
                   <>
-                    <div className="flex bg-zinc-800/50 rounded-lg p-0.5">
+                    <div className="relative group">
                       <button
-                        onClick={() => setViewMode('calendar')}
-                        className={`relative px-3 py-1.5 rounded-lg transition-colors text-xs ${
-                          viewMode === 'calendar'
-                            ? 'bg-[#FFD700]/90 text-black font-medium text-sm'
-                            : 'text-white/70 hover:text-white hover:bg-white/5 text-sm'
-                        }
-                        ${viewMode === 'calendar' ? 'after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:bg-gradient-to-r after:from-[#B38B3F]/0 after:via-[#FFD700]/50 after:to-[#B38B3F]/0 after:animate-[glow_4s_ease-in-out_infinite] after:shadow-[0_0_15px_rgba(255,215,0,0.3)]' : ''}`}
+                        className="px-2.5 py-1 bg-zinc-800/50 hover:bg-zinc-700/50 text-white/80 text-xs rounded-lg transition-colors flex items-center space-x-1"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const dropdown = e.currentTarget.nextElementSibling;
+                          if (dropdown) {
+                            dropdown.classList.toggle('opacity-0');
+                            dropdown.classList.toggle('invisible');
+                          }
+                        }}
                       >
-                        Calendar
+                        <Calendar className="w-4 h-4" />
+                        <span>{displayMode.charAt(0).toUpperCase() + displayMode.slice(1)}</span>
+                        <ChevronDown className="w-3 h-3 ml-1" />
                       </button>
-                      <button
-                        onClick={() => setViewMode('tasks')}
-                        className={`relative px-3 py-1.5 rounded-lg transition-colors text-xs ${
-                          viewMode === 'tasks'
-                            ? 'bg-[#FFD700]/90 text-black font-medium text-sm'
-                            : 'text-white/70 hover:text-white hover:bg-white/5 text-sm'
-                        }
-                        ${viewMode === 'tasks' ? 'after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:bg-gradient-to-r after:from-[#B38B3F]/0 after:via-[#FFD700]/50 after:to-[#B38B3F]/0 after:animate-[glow_4s_ease-in-out_infinite] after:shadow-[0_0_15px_rgba(255,215,0,0.3)]' : ''}`}
-                      >
-                        Tasks
-                      </button>
+                      <div className="absolute right-0 top-full mt-1 w-32 bg-zinc-800 border border-[#B38B3F]/20 rounded-lg shadow-xl opacity-0 invisible transition-all duration-200 z-10">
+                        {['month', 'week', 'day'].map((mode) => (
+                          <button
+                            key={mode}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setDisplayMode(mode as 'month' | 'week' | 'day');
+                              const dropdown = e.currentTarget.parentElement;
+                              if (dropdown) {
+                                dropdown.classList.add('opacity-0', 'invisible');
+                              }
+                            }}
+                            className={`w-full px-3 py-2 text-left text-xs hover:bg-white/5 transition-colors ${
+                              displayMode === mode ? 'text-[#FFD700]' : 'text-white/70'
+                            }`}
+                          >
+                            {mode.charAt(0).toUpperCase() + mode.slice(1)} View
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                    <button
-                      className="px-2.5 py-1 bg-zinc-800/50 hover:bg-zinc-700/50 text-white/80 text-xs rounded-lg transition-colors flex items-center space-x-1"
-                    >
-                      <Calendar className="w-4 h-4" />
-                      <span>{displayMode.charAt(0).toUpperCase() + displayMode.slice(1)}</span>
-                    </button>
                     <button
                       className="px-2.5 py-1 bg-zinc-800/50 hover:bg-zinc-700/50 text-white/80 text-xs rounded-lg transition-colors flex items-center space-x-1"
                     >
                       <FilterIcon className="w-4 h-4" />
                       <span>Filter</span>
+                    </button>
+                    <button
+                      onClick={onAddEvent}
+                      className="px-2.5 py-1 bg-[#FFD700]/20 text-[#FFD700] text-xs rounded-lg hover:bg-[#FFD700]/30 transition-colors flex items-center space-x-1"
+                    >
+                      <Plus className="w-4 h-4" />
+                      <span>Add Event</span>
                     </button>
                   </>
                 )}
@@ -348,6 +356,7 @@ export function CalendarModal({ onClose }: CalendarModalProps) {
             <MonthView
               currentMonth={currentMonth}
               currentYear={currentYear}
+              displayMode={displayMode}
               setCurrentMonth={setCurrentMonth}
               setCurrentYear={setCurrentYear}
               selectedDate={selectedDate}

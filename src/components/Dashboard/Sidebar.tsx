@@ -42,7 +42,7 @@ const defaultItems = [
   },
   {
     id: 'proflow',
-    text: 'ProFlow Automation',
+    text: 'ProFlow',
     icon: <GitMerge size={20} />
   },
   {
@@ -325,215 +325,53 @@ export function Sidebar({
     showSubItems: false
   });
   
-  // Determine which items to show based on active page
-  const sidebarItems = ['phone', 'call-logs', 'sms-campaign', 'power-dialer'].includes(activePage) 
-    ? phoneSystemItems 
-    : activePage.startsWith('docupro-') || activePage === 'docupro' 
-        ? docuProItems
-        : activePage.startsWith('crm-') || activePage === 'crm'
-          ? crmItems
-          : activePage.startsWith('email-') || activePage === 'email'
-            ? emailItems
-          : activePage.startsWith('investor-') || activePage === 'investor'
-            ? investorItems
-          : defaultItems;
-
-  // Keep track of previous page for phone system navigation
-  const prevPage = React.useRef(activePage);
-
-  React.useEffect(() => {
-    // Store previous page when changing pages
-    prevPage.current = activePage;
+  const memoizedSidebarItems = React.useMemo(() => {
+    return ['phone', 'call-logs', 'sms-campaign', 'power-dialer'].includes(activePage) 
+      ? phoneSystemItems 
+      : activePage.startsWith('docupro-') || activePage === 'docupro' 
+          ? docuProItems
+          : activePage.startsWith('crm-') || activePage === 'crm'
+            ? crmItems
+            : activePage.startsWith('email-') || activePage === 'email'
+              ? emailItems
+            : activePage.startsWith('investor-') || activePage === 'investor'
+              ? investorItems
+            : defaultItems;
   }, [activePage]);
-
-  // Track if we should auto-open submenu
-  const shouldAutoOpen = React.useRef(false);
 
   // Sync with parent state
   useEffect(() => {
     setInternalCollapsed(propCollapsed);
   }, [propCollapsed]);
 
-  // When hover state changes, update parent if needed
-  useEffect(() => {
-    if (isHovered && internalCollapsed) {
-      // Check if current page is a submenu item
-      const activeParent = sidebarItems.find(item => 
-        item.subItems?.some(sub => sub.id === activePage)
-      );
-      if (activeParent) {
-        setSidebarState({
-          showSubmenu: true,
-          isExpanded: true,
-          activeSubmenu: activeParent.text,
-          showSubItems: true
-        });
-      }
-      shouldAutoOpen.current = true;
-    } else if (!isHovered && !internalCollapsed && propCollapsed) {
-      // Return to collapsed state when un-hovering if parent wants collapsed
-      setInternalCollapsed(true);
-      setSidebarState({
-        showSubmenu: false,
-        isExpanded: false,
-        activeSubmenu: null,
-        showSubItems: false
-      });
-      shouldAutoOpen.current = false;
-    }
-  }, [isHovered, internalCollapsed, propCollapsed]);
-
-  const handleMouseEnter = () => {
+  const handleMouseEnter = React.useCallback(() => {
     setIsHovered(true);
-    // Check if current page is a submenu item
-    const activeParent = sidebarItems.find(item => 
-      item.subItems?.some(sub => sub.id === activePage)
-    );
-    if (activeParent) {
-      setSidebarState({
-        showSubmenu: true,
-        isExpanded: true,
-        activeSubmenu: activeParent.text,
-        showSubItems: true
-      });
-    }
-  };
+  }, []);
 
-  const handleMouseLeave = () => {
+  const handleMouseLeave = React.useCallback(() => {
     setIsHovered(false);
-    shouldAutoOpen.current = false;
-    if (propCollapsed) {
-      setSidebarState({
-        showSubmenu: false,
-        isExpanded: false,
-        activeSubmenu: null,
-        showSubItems: false
-      });
-    }
-  };
+  }, []);
 
-  // Calculate effective collapsed state (collapsed unless hovered)
+  const handleSidebarClick = React.useCallback((page: string) => {
+    // Handle other navigation
+    onPageChange(page);
+  }, [token, onPageChange]);
+
   const effectiveCollapsed = internalCollapsed && !isHovered;
 
-  const handleSidebarClick = (page: string) => {
-    // Handle email system navigation
-    if (page === 'email') {
-      onPageChange('email-inbox');
-      return;
-    }
-
-    // Handle CRM navigation
-    if (page === 'crm') {
-      onPageChange('crm-contacts');
-      return;
-    }
-
-    // Handle CRM home navigation (return to dashboard)
-    if (page === 'crm-home') {
-      onPageChange('dashboard');
-      return;
-    }
-
-    // Keep phone system menu for phone-related pages
-    if (['phone', 'call-logs', 'sms-campaign', 'power-dialer'].includes(activePage) && 
-        ['phone', 'call-logs', 'sms-campaign', 'power-dialer'].includes(page)) {
-      onPageChange(page);
-      return;
-    }
-
-    // Handle Email System home navigation
-    if (page === 'email-home') {
-      onPageChange('dashboard');
-      return;
-    }
-
-    // Handle DocuPro home navigation
-    if (page === 'docupro-home') {
-      onPageChange('dashboard');
-      return;
-    }
-
-    // Handle ProFlow navigation
-    if (page === 'proflow') {
-      window.location.href = `https://flow.prophone.io/sign-in/?token=${token}`;
-      return;
-    }
-    
-    // Handle Email System navigation
-    if (page.startsWith('email-')) {
-      onPageChange(page);
-      return;
-    }
-
-    // Handle investor home navigation
-    if (page === 'dashboard' && activePage.startsWith('investor-')) {
-      onPageChange('dashboard');
-      return;
-    }
-    
-    // Handle Investor Resources navigation
-    if (page.startsWith('investor-')) {
-      onPageChange(page);
-      return;
-    }
-    
-    // Handle Website Builder navigation
-    if (page.startsWith('website-')) {
-      onPageChange(page);
-      return;
-    }
-    
-    // Handle copilot
-    if (page === 'copilot') {
-      if (setCopilotExpanded) {
-        setCopilotExpanded(prev => !prev);
-      }
-      return;
-    }
-    
-    // Handle call logs
-    if (page === 'call-logs') {
-      if (setShowCallLogs) {
-        setShowCallLogs(true);
-      }
-      onPageChange('call-logs');
-      return;
-    }
-    
-    // Handle admin panel access
-    if (page === 'admin') {
-      if (user?.role === 'owner' || user?.role === 'super_admin') {
-        if (setShowAdminModal) {
-          setShowAdminModal(true);
-        }
-        return;
-      }
-    }
-    
-    // Handle reporting panel access
-    if (page === 'reporting') {
-      if (user?.role === 'owner' || user?.role === 'super_admin') {
-        if (setShowReportingModal) {
-          setShowReportingModal(true);
-        }
-        return;
-      }
-      return;
-    }
-    
-    // Handle team panel access
-    if (page === 'team') {
-      if (canAccessTeamPanel(user)) {
-        if (setShowTeamPanel) {
-          setShowTeamPanel(true);
-        }
-      }
-      return;
-    }
-    
-    // Call the parent's onPageChange handler
-    onPageChange(page);
-  };
+  const memoizedSidebarItem = React.useCallback((item: any) => (
+    <SidebarItem
+      key={item.id}
+      icon={React.cloneElement(item.icon as React.ReactElement, { 
+        size: effectiveCollapsed ? 18 : 20 
+      })}
+      text={item.text}
+      id={item.id}
+      active={activePage === item.id}
+      collapsed={effectiveCollapsed}
+      onClick={() => handleSidebarClick(item.id)}
+    />
+  ), [effectiveCollapsed, activePage, handleSidebarClick]);
 
   return (
     <div 
@@ -557,7 +395,7 @@ export function Sidebar({
       <div className="flex-1 py-4 px-3 overflow-y-auto scrollbar-hide">
         <nav>
           <ul className="space-y-2">
-            {sidebarItems.map((item) => (
+            {memoizedSidebarItems.map((item) => (
               <SidebarItem
                 key={item.id}
                 icon={React.cloneElement(item.icon as React.ReactElement, { 

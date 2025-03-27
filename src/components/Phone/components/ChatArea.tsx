@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowRight, Paperclip, Mic, MoreVertical, Home, ChevronDown, Phone, CheckCircle, Flame, Sun, Bell, Megaphone, Calendar, BarChart2, DollarSign, MessageSquare, X, ThumbsDown, Ban, Eye, EyeOff, Users, Trash2, Zap, Smile, Bot, Clock, Info } from 'lucide-react';
+import { ArrowRight, Paperclip, Mic, MoreVertical, Home, ChevronDown, Phone, CheckCircle, Smile, Bot, Clock, Info } from 'lucide-react';
 import { QuickReplyModal } from './QuickReplyModal';
 import { useClickOutside } from '../../../hooks/useClickOutside';
 import { useCallState } from '../../../hooks/useCallState';
@@ -74,14 +74,6 @@ export function ChatArea({
   });
   const [showScrollButton, setShowScrollButton] = React.useState(false);
 
-  const [activeFilters, setActiveFilters] = React.useState<{
-    readStatus: { value: string; label: string } | null;
-    statuses: Array<{ value: string; label: string; icon: React.ReactNode; color: string }>;
-  }>({
-    readStatus: null,
-    statuses: []
-  });
-
   useClickOutside(menuRef, () => setShowMenu(false));
   
   React.useEffect(() => {
@@ -91,30 +83,6 @@ export function ChatArea({
     }
   }, [isCreatingMessage]);
 
-  const statusOptions = [
-    { value: 'new', label: 'New', icon: <Home className="w-4 h-4 text-emerald-400" />, color: 'text-emerald-400 bg-emerald-400/20' },
-    { value: 'hot', label: 'Hot', icon: <Flame className="w-4 h-4 text-red-400" />, color: 'text-red-400 bg-red-400/20' },
-    { value: 'warm', label: 'Warm', icon: <Sun className="w-4 h-4 text-amber-400" />, color: 'text-amber-400 bg-amber-400/20' },
-    { value: 'follow-up', label: 'Follow Up', icon: <Bell className="w-4 h-4 text-purple-400" />, color: 'text-purple-400 bg-purple-400/20' },
-    { value: 'prospecting', label: 'Prospecting', icon: <Megaphone className="w-4 h-4 text-blue-400" />, color: 'text-blue-400 bg-blue-400/20' },
-    { value: 'appointment-set', label: 'Appointment Set', icon: <Calendar className="w-4 h-4 text-indigo-400" />, color: 'text-indigo-400 bg-indigo-400/20' },
-    { value: 'needs-analysis', label: 'Needs Analysis', icon: <BarChart2 className="w-4 h-4 text-cyan-400" />, color: 'text-cyan-400 bg-cyan-400/20' },
-    { value: 'make-offer', label: 'Make Offer', icon: <DollarSign className="w-4 h-4 text-green-400" />, color: 'text-green-400 bg-green-400/20' },
-    { value: 'not-interested', label: 'Not Interested', icon: <ThumbsDown className="w-4 h-4 text-gray-400" />, color: 'text-gray-400 bg-gray-400/20' },
-    { value: 'dnc', label: 'DNC', icon: <Ban className="w-4 h-4 text-red-700" />, color: 'text-red-700 bg-red-700/20' },
-    { value: 'conversion', label: 'Conversion', icon: <CheckCircle className="w-4 h-4 text-emerald-400" />, color: 'text-emerald-400 bg-emerald-400/20' }
-  ];
-
-  useClickOutside(statusRef, () => setShowStatusDropdown(false));
-
-  // Scroll to bottom when new messages arrive
-  React.useEffect(() => {
-    if (selectedChat?.messages && scrollState.isScrolledToBottom && !scrollState.isUserScrolling) {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [selectedChat?.messages, scrollState.isScrolledToBottom, scrollState.isUserScrolling]);
-
-  // Handle scroll events
   const handleScroll = React.useCallback((e: React.UIEvent<HTMLDivElement>) => {
     const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
     const isAtBottom = Math.abs(scrollHeight - clientHeight - scrollTop) < 50;
@@ -149,73 +117,6 @@ export function ChatArea({
     setShowScrollButton(false);
   };
 
-  const formatPhoneNumber = (value: string) => {
-    const numbers = value.replace(/\D/g, '');
-    
-    // Remove leading 1 if present
-    const cleanNumbers = numbers.startsWith('1') ? numbers.slice(1) : numbers;
-    
-    // Format remaining digits
-    if (cleanNumbers.length <= 3) {
-      return `(${cleanNumbers}`;
-    } else if (cleanNumbers.length <= 6) {
-      return `(${cleanNumbers.slice(0, 3)}) ${cleanNumbers.slice(3)}`;
-    } else {
-      return `(${cleanNumbers.slice(0, 3)}) ${cleanNumbers.slice(3, 6)}-${cleanNumbers.slice(6, 10)}`;
-    }
-  };
-
-  const isValidPhoneNumber = (number: string) => {
-    // Check if number matches (XXX) XXX-XXXX format
-    return /^\(\d{3}\) \d{3}-\d{4}$/.test(number);
-  };
-
-  const currentStatus = selectedChat?.id ? chatStatuses[selectedChat.id] || {
-    label: 'New',
-    icon: <Home className="w-4 h-4 text-emerald-400" />
-  } : null;
-
-  const handlePhoneNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const input = e.target;
-    const content = input.value;
-    const isBackspace = content.length < newMessageNumber.length;
-    
-    setError('');
-    
-    // Handle empty input
-    if (content === '') {
-      setIsCreatingMessage(false);
-      onNewMessageChange('');
-      return;
-    }
-    
-    // Handle backspacing
-    if (isBackspace) {
-      const strippedNumber = content.replace(/\D/g, '');
-      const formattedNumber = strippedNumber ? formatPhoneNumber(strippedNumber) : ''; 
-      onNewMessageChange(formattedNumber);
-      return;
-    }
-    
-    // Handle regular input
-    const formattedNumber = formatPhoneNumber(content);
-    onNewMessageChange(formattedNumber);
-  };
-
-  if (!selectedChat && !isCreatingMessage) {
-    return (
-      <div className="flex-1 flex items-center justify-center text-white/40 text-center p-8">
-        <div>
-          <div className="w-16 h-16 rounded-full bg-[#FFD700]/10 flex items-center justify-center mx-auto mb-4">
-            <MessageSquare className="w-8 h-8 text-[#FFD700]" />
-          </div>
-          <h3 className="text-xl font-bold text-white mb-2">Select a Message</h3>
-          <p className="text-white/60">Choose an existing message or start a draft</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <>
       <div className="px-4 py-3 border-b border-[#B38B3F]/20 flex items-center justify-between">
@@ -226,7 +127,7 @@ export function ChatArea({
                 ref={inputRef}
                 type="text"
                 value={newMessageNumber}
-                onChange={handlePhoneNumberChange}
+                onChange={(e) => onNewMessageChange(e.target.value)}
                 onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
                   if (e.key === 'Enter' && newMessageNumber.trim()) {
                     e.preventDefault();
@@ -262,12 +163,6 @@ export function ChatArea({
                 <ArrowRight className="w-5 h-5" />
               </button>
             )}
-            <button
-              onClick={() => setIsCreatingMessage(false)}
-              className="p-2 hover:bg-red-500/20 rounded-lg transition-colors group"
-            >
-              <X className="w-5 h-5 text-red-400/70 group-hover:text-red-400 transition-colors" />
-            </button>
           </div>
         ) : (
           <>
@@ -397,47 +292,6 @@ export function ChatArea({
               </div>
             </div>
           </>
-        )}
-        
-        {/* Active Filters */}
-        {(activeFilters.readStatus || activeFilters.statuses.length > 0) && (
-          <div className="mt-2 flex items-center flex-wrap gap-2 px-2">
-            {activeFilters.readStatus && (
-              <div className="px-2 py-1 rounded-full bg-[#FFD700]/20 text-[#FFD700] text-xs font-medium flex items-center space-x-1">
-                <span>{activeFilters.readStatus.label}</span>
-                <button
-                  onClick={() => {
-                    setActiveFilters(prev => ({ ...prev, readStatus: null }));
-                    setFilters(prev => ({ ...prev, readStatus: 'all' }));
-                  }}
-                  className="ml-1 hover:text-white transition-colors"
-                >
-                  <X className="w-3 h-3" />
-                </button>
-              </div>
-            )}
-            {activeFilters.statuses.map((status) => (
-              <div 
-                key={status.value}
-                className={`px-2 py-1 rounded-full text-xs font-medium flex items-center space-x-1 ${status.color}`}
-              >
-                {status.icon}
-                <span>{status.label}</span>
-                <button
-                  onClick={() => {
-                    setActiveFilters(prev => ({
-                      ...prev,
-                      statuses: prev.statuses.filter(s => s.value !== status.value)
-                    }));
-                    setFilters(prev => ({ ...prev, status: 'all' }));
-                  }}
-                  className="ml-1 hover:text-white transition-colors"
-                >
-                  <X className="w-3 h-3" />
-                </button>
-              </div>
-            ))}
-          </div>
         )}
       </div>
 
@@ -609,29 +463,30 @@ export function ChatArea({
           <button 
             onClick={onSendMessage}
             disabled={!messageInput.trim()}
-            className="p-2 bg-[#FFD700] hover:bg-[#FFD700]/90 rounded-lg transition-colors disabled:opacity-50"
+            className={`p-2 bg-gradient-to-r from-[#B38B3F] to-[#FFD700] text-black rounded-lg transition-all duration-300 transform hover:scale-105 active:scale-95 ${
+              !messageInput.trim() ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-90'
+            }`}
           >
-            <ArrowRight className="w-5 h-5 text-black" />
+            <ArrowRight className="w-5 h-5" />
           </button>
         </div>
       </div>
-      
+
       {/* Quick Reply Modal */}
       {showQuickReply && (
         <QuickReplyModal
-          className="z-50"
           onClose={() => setShowQuickReply(false)}
-          onSelect={(content) => {
-            onInputChange(content);
+          onSelect={(text) => {
+            onInputChange(text);
             setShowQuickReply(false);
           }}
+          cursorPosition={cursorPosition}
         />
       )}
       
       {/* Schedule Message Modal */}
       {showScheduleModal && (
         <ScheduleMessageModal
-          className="z-50"
           onClose={() => {
             setShowScheduleModal(false);
             setError('');

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, Flame, Sun, Bell, Megaphone, Calendar, BarChart2, DollarSign, ThumbsDown, Ban, CheckCircle } from 'lucide-react';
+import { Home, Flame, Sun, ArrowUpRight, Megaphone, Calendar, BarChart2, DollarSign, ThumbsDown, Ban, CheckCircle } from 'lucide-react';
 
 export function StatusTracking() {
   return (
@@ -16,7 +16,7 @@ export function StatusTracking() {
             { status: 'New', count: 12, color: 'bg-emerald-500/20 text-emerald-400', icon: <Home className="w-5 h-5" /> },
             { status: 'Hot', count: 15, color: 'bg-red-500/20 text-red-400', icon: <Flame className="w-5 h-5" /> },
             { status: 'Warm', count: 24, color: 'bg-amber-500/20 text-amber-400', icon: <Sun className="w-5 h-5" /> },
-            { status: 'Follow Up', count: 18, color: 'bg-purple-500/20 text-purple-400', icon: <Bell className="w-5 h-5" /> },
+            { status: 'Follow Up', count: 18, color: 'bg-blue-500/20 text-blue-400', icon: <ArrowUpRight className="w-5 h-5" /> },
             { status: 'Prospecting', count: 31, color: 'bg-blue-500/20 text-blue-400', icon: <Megaphone className="w-5 h-5" /> },
           ].map((item) => (
             <div key={item.status} className="bg-zinc-800/50 rounded-lg p-4 border border-[#B38B3F]/20">

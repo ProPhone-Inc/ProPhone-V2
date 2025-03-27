@@ -948,6 +948,7 @@ export function PhoneSystem({ selectedMessage, selectedChat, onMessageSelect, ac
                 selectedChat={conversations.find(c => c.id === currentChat) || null}
                 messageInput={messageInput}
                 onInputChange={setMessageInput}
+                conversations={conversations}
                 onSendMessage={handleSendMessage}
                 isCreatingMessage={isCreatingMessage}
                 setIsCreatingMessage={setIsCreatingMessage}
@@ -955,12 +956,7 @@ export function PhoneSystem({ selectedMessage, selectedChat, onMessageSelect, ac
                 onNewMessageChange={setNewMessageNumber}
                 onStartChat={handleStartNewMessage}
                 chatStatuses={chatStatuses}
-                onStatusChange={(chatId, status) => {
-                  setChatStatuses(prev => ({
-                    ...prev,
-                    [chatId]: status
-                  }));
-                }}
+                onStatusChange={handleStatusChange}
                 onMarkRead={handleMarkRead}
                 onMarkUnread={handleMarkUnread}
                 onMakeCall={handleMakeCall}

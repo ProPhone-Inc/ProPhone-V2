@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Bell, Menu, X, User, LogOut, Calendar, MessageSquare, Shield, HelpCircle, Phone, Mail, Settings } from 'lucide-react';
+import { Bell, Menu, X, User, LogOut, Calendar, MessageSquare, Shield, HelpCircle, Phone, Settings, Mail, CreditCard } from 'lucide-react';
 import { useClickOutside } from '../../hooks/useClickOutside';
 import { CalendarModal } from './Calendar';
 import { useAuth } from '../../hooks/useAuth'; 
@@ -57,6 +57,7 @@ function Header({ user, onLogout, collapsed, activePage, messages, onPageChange 
   const [showNotifications, setShowNotifications] = useState(false);
   const [showAppDrawer, setShowAppDrawer] = useState(false);
   const [showRemoveAdsModal, setShowRemoveAdsModal] = useState(false);
+  const [showEmailDropdown, setShowEmailDropdown] = useState(false);
   const { unreadCount: unreadNotifications } = useSystemNotifications();
   const { sendNotification } = useNotifications();
   const { used: smsUsed, limit: smsLimit } = useSMSUsage();
@@ -64,6 +65,7 @@ function Header({ user, onLogout, collapsed, activePage, messages, onPageChange 
   const menuRef = React.useRef<HTMLDivElement>(null);
   const readMessageIds = React.useRef<Set<string>>(new Set());
   const messagesRef = React.useRef<HTMLDivElement>(null);
+  const emailRef = React.useRef<HTMLDivElement>(null);
   const notificationsRef = React.useRef<HTMLDivElement>(null);
   const appDrawerRef = React.useRef<HTMLDivElement>(null);
   const totalUnreadCount = messages.filter(msg => !msg.read).length;
@@ -75,6 +77,10 @@ function Header({ user, onLogout, collapsed, activePage, messages, onPageChange 
   
   useClickOutside(messagesRef, () => {
     setShowMessagesDropdown(false);
+  });
+  
+  useClickOutside(emailRef, () => {
+    setShowEmailDropdown(false);
   });
   
   useClickOutside(notificationsRef, () => {
@@ -170,6 +176,94 @@ function Header({ user, onLogout, collapsed, activePage, messages, onPageChange 
           </button>
         )}
 
+        <div className="relative" ref={emailRef}>
+          <div 
+            onClick={() => setShowEmailDropdown(!showEmailDropdown)}
+            className="relative w-10 h-10 rounded-lg hover:bg-white/10 flex items-center justify-center text-white/70 hover:text-white transition-colors cursor-pointer"
+          >
+            <Mail className="w-5 h-5" />
+            <span className="absolute top-1 right-1 min-w-[18px] h-[18px] rounded-full bg-[#FFD700] text-black text-xs font-medium flex items-center justify-center px-1">
+              15
+            </span>
+          </div>
+          
+          {showEmailDropdown && (
+            <div className="fixed right-4 mt-2 w-96 bg-zinc-900 border border-[#B38B3F]/30 rounded-xl shadow-2xl overflow-hidden z-[50]">
+              <div className="p-4 border-b border-[#B38B3F]/20">
+                <h3 className="text-lg font-bold text-white">Email</h3>
+                <p className="text-sm text-white/60">15 unread emails</p>
+              </div>
+              
+              <div className="max-h-[400px] overflow-y-auto">
+                {[
+                  {
+                    id: '1',
+                    subject: 'New Property Listing',
+                    from: 'Sarah Johnson',
+                    preview: 'I wanted to share this amazing property that just came on the market...',
+                    time: '10 mins ago',
+                    avatar: 'https://randomuser.me/api/portraits/women/44.jpg'
+                  },
+                  {
+                    id: '2',
+                    subject: 'Meeting Follow-up',
+                    from: 'Mike Chen',
+                    preview: 'Thank you for taking the time to discuss the investment opportunity...',
+                    time: '1 hour ago',
+                    avatar: 'https://randomuser.me/api/portraits/men/22.jpg'
+                  },
+                  {
+                    id: '3',
+                    subject: 'Contract Review',
+                    from: 'Emma Wilson',
+                    preview: 'Please find attached the revised contract for your review...',
+                    time: '2 hours ago',
+                    avatar: 'https://randomuser.me/api/portraits/women/28.jpg'
+                  }
+                ].map((email) => (
+                  <div
+                    key={email.id}
+                    onClick={() => {
+                      setShowEmailDropdown(false);
+                      onPageChange?.('email-inbox');
+                    }}
+                    className="w-full p-4 hover:bg-white/5 transition-colors border-b border-[#B38B3F]/10 text-left flex items-start space-x-3 cursor-pointer"
+                  >
+                    <div className="relative">
+                      <div className="w-10 h-10 rounded-full overflow-hidden">
+                        <img 
+                          src={email.avatar}
+                          alt={email.from}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-[#FFD700] border-2 border-zinc-900" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium text-white">{email.from}</div>
+                      <div className="text-xs text-white/40 mb-1">{email.time}</div>
+                      <div className="text-sm font-medium text-white/90">{email.subject}</div>
+                      <p className="text-sm text-white/60 truncate mt-1">{email.preview}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              
+              <div className="p-3 border-t border-[#B38B3F]/20">
+                <button 
+                  onClick={() => {
+                    setShowEmailDropdown(false);
+                    onPageChange?.('email-inbox');
+                  }}
+                  className="w-full py-2 text-center text-[#FFD700] hover:text-[#FFD700]/80 font-medium transition-colors cursor-pointer"
+                >
+                  View All Emails
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
         <div className="relative" ref={messagesRef}>
           <div 
             onClick={() => setShowMessagesDropdown(!showMessagesDropdown)}
@@ -261,12 +355,17 @@ function Header({ user, onLogout, collapsed, activePage, messages, onPageChange 
           </span>
         </button>
 
-        {showCalendar && <CalendarModal onClose={() => setShowCalendar(false)} />}
+        {showCalendar && (
+          <CalendarModal 
+            onClose={() => setShowCalendar(false)} 
+            onAddEvent={() => setShowCalendar(false)}
+          />
+        )}
 
         <div className="relative" ref={notificationsRef}>
           <button 
             onClick={() => setShowNotifications(!showNotifications)}
-            className="relative w-10 h-10 rounded-lg hover:bg-white/10 flex items-center justify-center text-white/70 hover:text-white transition-colors"
+            className="relative w-10 h-10 rounded-lg hover:bg-white/10 flex items-center justify-center text-white/70 hover:text-white transition-colors group"
           >
             <Bell className="w-5 h-5" />
             {unreadNotifications > 0 && (
@@ -280,6 +379,19 @@ function Header({ user, onLogout, collapsed, activePage, messages, onPageChange 
             <SystemNotificationsPanel onClose={() => setShowNotifications(false)} />
           )}
         </div>
+
+        <button 
+          onClick={() => setShowSettings(true)}
+          className="w-10 h-10 rounded-lg hover:bg-white/10 flex items-center justify-center text-white/70 hover:text-white transition-colors group"
+        >
+          <Settings className="w-5 h-5" />
+        </button>
+
+        <button 
+          className="w-10 h-10 rounded-lg hover:bg-white/10 flex items-center justify-center text-white/70 hover:text-white transition-colors group"
+        >
+          <HelpCircle className="w-5 h-5" />
+        </button>
 
         {showSettings && (
           <SettingsModal isOpen={showSettings} onClose={() => setShowSettings(false)} />
@@ -319,21 +431,23 @@ function Header({ user, onLogout, collapsed, activePage, messages, onPageChange 
                 <button 
                   onClick={() => {
                     setShowUserMenu(false);
-                    setShowSettings(true);
+                    setShowSettings(true); 
                   }}
                   className="w-full flex items-center px-4 py-2 text-sm hover:bg-white/10 transition-colors text-left"
                 >
-                  <Settings className="w-4 h-4 mr-3 text-white/70" />
-                  <span>Settings</span>
+                  <User className="w-4 h-4 mr-3 text-white/70" />
+                  <span>Profile</span>
                 </button>
                 <button 
+                  onClick={() => {
+                    setShowUserMenu(false);
+                    setShowSettings(true); 
+                  }}
                   className="w-full flex items-center px-4 py-2 text-sm hover:bg-white/10 transition-colors text-left"
                 >
-                  <HelpCircle className="w-4 h-4 mr-3 text-white/70" />
-                  <span>Help</span>
+                  <CreditCard className="w-4 h-4 mr-3 text-white/70" />
+                  <span>Subscription & Billing</span>
                 </button>
-              </div>
-              <div className="py-2 border-t border-[#B38B3F]/20 space-y-1">
                 {user?.originalUser && (user?.originalUser?.role === 'super_admin' || user?.originalUser?.role === 'owner') && (
                   <button 
                     onClick={() => {
@@ -348,6 +462,7 @@ function Header({ user, onLogout, collapsed, activePage, messages, onPageChange 
                     <span className="whitespace-nowrap">Super Admin Panel</span>
                   </button>
                 )}
+                <div className="border-t border-[#B38B3F]/20 mt-2 pt-2">
                   <button
                     onClick={() => {
                       setShowUserMenu(false);
@@ -358,6 +473,7 @@ function Header({ user, onLogout, collapsed, activePage, messages, onPageChange 
                     <LogOut className="w-4 h-4 mr-3" />
                     <span>Sign out</span>
                   </button>
+                </div>
               </div>
             </div>
           )}

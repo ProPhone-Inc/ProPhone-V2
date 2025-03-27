@@ -1,6 +1,7 @@
 import React from 'react';
 import { User, Phone, MessageSquare, Users, Star, ChevronLeft, ChevronRight, Calendar, MapPin, Tag, Link2 } from 'lucide-react';
 import { useCallState } from '../../../hooks/useCallState';
+import { useDB } from '../../../hooks/useDB';
 import type { Chat } from '../../../modules/phone/types';
 
 interface CRMPanelProps {
@@ -22,6 +23,37 @@ export function CRMPanel({
 }: CRMPanelProps) {
   const [isDrawerOpen, setIsDrawerOpen] = React.useState(false);
   const { setActiveCall } = useCallState();
+  const { getContacts } = useDB();
+  const [contactData, setContactData] = React.useState<any>(null);
+  const [isLoading, setIsLoading] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
+
+  // Fetch contact data when chat changes
+  React.useEffect(() => {
+    const fetchContactData = async () => {
+      if (!selectedChat?.number) return;
+      
+      setIsLoading(true);
+      setError(null);
+      
+      try {
+        const contacts = await getContacts();
+        const contact = contacts.find(c => 
+          c.phone === selectedChat.number || 
+          c.alternatePhones?.includes(selectedChat.number)
+        );
+        
+        setContactData(contact || null);
+      } catch (err) {
+        console.error('Failed to fetch contact data:', err);
+        setError('Failed to load contact information');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchContactData();
+  }, [selectedChat?.number, getContacts]);
 
   const handleMakeCall = () => {
     if (!selectedChat) return;
@@ -88,27 +120,19 @@ export function CRMPanel({
                 <div className="bg-zinc-800/50 rounded-lg p-4 border border-[#B38B3F]/20">
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="font-medium text-white">Contact Info</h3>
-                    <button className="text-[#FFD700] hover:text-[#FFD700]/80 text-sm">
-                      Edit
-                    </button>
-                  </div>
-                  <div className="space-y-2">
-                    <div className="flex items-center space-x-2 text-white/70">
-                      <User className="w-4 h-4" />
-                      <span>{selectedChat?.name || 'No contact selected'}</span>
-                    </div>
-                    <div className="flex items-center space-x-2 text-white/70">
-                      <Phone className="w-4 h-4" />
-                      <button
-                        onClick={handleMakeCall}
-                        className="hover:text-[#FFD700] transition-colors"
-                      >
-                        {selectedChat?.number || selectedChat?.name}
+                    {contactData ? (
+                      <div className="flex items-center space-x-2">
+                        <span className="text-emerald-400 text-xs">Found in CRM</span>
+                        <button className="text-[#FFD700] hover:text-[#FFD700]/80 text-sm">
+                          Edit
+                        </button>
+                      </div>
+                    ) : (
+                      <button className="text-[#FFD700] hover:text-[#FFD700]/80 text-sm">
+                        Add to CRM
                       </button>
-                    </div>
-                    <div className="flex items-center space-x-2 text-white/70">
-                      <MessageSquare className="w-4 h-4" />
-                      <span>{selectedChat?.email || 'No email available'}</span>
+                    )}
+                  </div>
                     </div>
                     <div className="flex items-center space-x-2 text-white/70">
                       <Calendar className="w-4 h-4" />
@@ -125,8 +149,57 @@ export function CRMPanel({
                     <div className="flex items-center space-x-2 text-white/70">
                       <Link2 className="w-4 h-4" />
                       <span>Source: Website Inquiry</span>
+                  {isLoading ? (
+                    <div className="animate-pulse space-y-4">
+                      <div className="h-4 bg-white/10 rounded w-3/4"></div>
+                      <div className="h-4 bg-white/10 rounded w-1/2"></div>
+                      <div className="h-4 bg-white/10 rounded w-2/3"></div>
                     </div>
-                  </div>
+                  ) : error ? (
+                    <div className="text-red-400 text-sm">{error}</div>
+                  ) : (
+                    <div className="space-y-3">
+                      <div className="flex items-center space-x-2 text-white/70">
+                        <User className="w-4 h-4" />
+                        <span>{contactData?.name || selectedChat?.name || 'No contact selected'}</span>
+                      </div>
+                      <div className="flex items-center space-x-2 text-white/70">
+                        <Phone className="w-4 h-4" />
+                        <button
+                          onClick={handleMakeCall}
+                          className="hover:text-[#FFD700] transition-colors"
+                        >
+                          {selectedChat?.number || selectedChat?.name}
+                        </button>
+                      </div>
+                      <div className="flex items-center space-x-2 text-white/70">
+                        <MessageSquare className="w-4 h-4" />
+                        <span>{contactData?.email || selectedChat?.email || 'No email available'}</span>
+                      </div>
+                      {contactData && (
+                        <>
+                          <div className="flex items-center space-x-2 text-white/70">
+                            <MapPin className="w-4 h-4" />
+                            <span>{contactData.address || 'No address available'}</span>
+                          </div>
+                          <div className="flex items-center space-x-2 text-white/70">
+                            <Tag className="w-4 h-4" />
+                            <div className="flex flex-wrap gap-2">
+                              {contactData.tags?.map((tag: string) => (
+                                <span key={tag} className="px-2 py-0.5 rounded-full bg-[#B38B3F]/20 text-[#FFD700] text-xs">
+                                  {tag}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                          <div className="flex items-center space-x-2 text-white/70">
+                            <Link2 className="w-4 h-4" />
+                            <span>{contactData.source || 'Unknown source'}</span>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  )}
                 </div>
                 
                 <div className="bg-zinc-800/50 rounded-lg p-4 border border-[#B38B3F]/20">

@@ -25,25 +25,28 @@ export default defineConfig({
     target: 'esnext',
     minify: 'esbuild',
     cssMinify: true,
+    cssMinify: true,
     rollupOptions: {
       input: {
         main: './index.html'
       },
       output: {
         manualChunks: {
-          'react-vendor': ['react', 'react-dom'],
-          'icons': ['lucide-react'],
-          'auth': ['@react-oauth/google'],
-          'charts': ['recharts']
+          'vendor': ['react', 'react-dom', 'lucide-react', '@react-oauth/google', 'recharts'],
+          'auth': ['@react-oauth/google', 'jsonwebtoken', 'bcryptjs'],
+          'ui': ['lucide-react', 'recharts'],
+          'utils': ['axios', 'zustand']
         }
-      }
+      },
+      treeshake: true
     },
+    chunkSizeWarningLimit: 1000,
     modulePreload: {
       polyfill: true
     },
     reportCompressedSize: false,
     emptyOutDir: true,
-    assetsInlineLimit: 4096,
+    assetsInlineLimit: 8192,
     // Ensure source maps are generated for debugging
     sourcemap: true
   },
@@ -56,7 +59,9 @@ export default defineConfig({
       '@stripe/stripe-js'
     ],
     esbuildOptions: {
-      target: 'esnext'
+      target: 'esnext',
+      treeShaking: true,
+      minify: true
     }
     // Configure server for both development and production
   },

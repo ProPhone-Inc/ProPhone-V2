@@ -80,6 +80,7 @@ export function Dashboard() {
   const [showTeamPanel, setShowTeamPanel] = useState(false);
   const [showCopilot, setShowCopilot] = useState(false);
   const [copilotExpanded, setCopilotExpanded] = useState(false);
+  const [showProFlow, setShowProFlow] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
   const [showReportingModal, setShowReportingModal] = useState(false);
   const [actionSuccess, setActionSuccess] = useState<{message: string, type: string} | null>(null);
@@ -228,6 +229,12 @@ export function Dashboard() {
   const onPageChange = (page: string) => {
     setActivePage(page);
     
+    // Handle ProFlow navigation
+    if (page === 'proflow') {
+      setShowProFlow(true);
+      return;
+    }
+    
     // Reset modal states when changing pages
     setShowAdminModal(false);
     setShowTeamPanel(false);
@@ -240,7 +247,7 @@ export function Dashboard() {
   const handleSidebarClick = (page: string) => {
     // Handle ProFlow navigation
     if (page === 'proflow') {
-      window.location.href = `https://flow.prophone.io/sign-in/?token=${token}`;
+      setShowProFlow(true);
       return;
     }
     
@@ -282,7 +289,7 @@ export function Dashboard() {
       return;
     }
     
-    // Handle regular page navigation
+    // Call the parent's onPageChange handler
     onPageChange(page);
   };
 
@@ -291,6 +298,7 @@ export function Dashboard() {
     if (page === 'phone' && messageId) {
       setSelectedMessage(messageId);
       setSelectedChat(chatId || null);
+      setShowProFlow(false);
       setActivePage('phone');
       
       // Mark message as read and update unread count
@@ -302,6 +310,7 @@ export function Dashboard() {
       });
     } else {
       setSelectedMessage(null);
+      setShowProFlow(false);
       setActivePage(page);
     }
   };
@@ -350,6 +359,15 @@ export function Dashboard() {
           <main className="flex-1 overflow-y-auto bg-gradient-to-br from-black to-zinc-900">
             <div className={`${activePage === 'phone' ? 'h-[calc(100vh-4rem)]' : 'max-w-7xl mx-auto p-4 md:p-6'} w-full`}>
               <>
+                {showProFlow ? (
+                  <div className="fixed top-16 left-16 right-0 bottom-0 z-0">
+                    <iframe
+                      src={`https://flow.prophone.io/sign-in/?token=${token}`}
+                      className="w-full h-full border-none"
+                      title="ProFlow"
+                    />
+                  </div>
+                ) : (<>
                 {activePage === 'dashboard' && (
                   <div>
                     <StatsCards />
@@ -366,6 +384,7 @@ export function Dashboard() {
                     </div>
                   </div>
                 )}
+                </>)}
                 {copilotExpanded && (
                   <ErrorBoundary>
                     <Suspense fallback={<ComponentLoader />}>
