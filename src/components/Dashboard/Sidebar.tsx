@@ -49,6 +49,7 @@ const defaultItems = [
     id: 'docupro',
     text: 'DocuPro',
     icon: <FileText size={20} />,
+    defaultView: 'docupro-transactions',
     subItems: []
   },
   {
@@ -357,6 +358,18 @@ export function Sidebar({
   }, []);
 
   const handleSidebarClick = React.useCallback((page: string) => {
+    // Handle DocuPro navigation
+    if (page === 'docupro') {
+      onPageChange('docupro-transactions');
+      return;
+    }
+    
+    // Handle ProFlow navigation
+    if (page === 'proflow') {
+      setShowProFlow(true);
+      return;
+    }
+    
     if (page === 'dashboard') {
       // Reset ProFlow state and navigate to dashboard
       setShowProFlow(false);
@@ -369,12 +382,7 @@ export function Sidebar({
       // CRM Home button should navigate to dashboard
       setShowProFlow(false);
       onPageChange('dashboard');
-    } else if (page === 'proflow') {
-      // Handle ProFlow navigation
-      setShowProFlow?.(true);
-      return;
-    }
-    else {
+    } else {
       // Handle other navigation
       setShowProFlow(false);
       onPageChange(page);
