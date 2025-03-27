@@ -2,10 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { 
   Home, 
   Phone,
-  Globe,
-  Layout,
-  Palette, 
-  FormInput,
   DollarSign,
   Presentation,
   ListChecks,
@@ -26,7 +22,10 @@ import {
   FileSignature,
   FileSpreadsheet,
   UserSquare2,
-  Store
+  Store,
+  Calculator,
+  ClipboardList,
+  Hammer
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 
@@ -69,30 +68,37 @@ const defaultItems = [
     subItems: []
   },
   {
-    id: 'website',
-    text: 'Website Builder',
-    icon: <Globe size={20} />,
-    subItems: [
-      { id: 'website-pages', text: 'Pages', icon: <Layout size={16} /> },
-      { id: 'website-themes', text: 'Themes', icon: <Palette size={16} /> },
-      { id: 'website-forms', text: 'Forms', icon: <FormInput size={16} /> },
-      { id: 'website-analytics', text: 'Analytics', icon: <BarChart2 size={16} /> }
-    ]
-  },
-  {
     id: 'investor',
     text: 'Investor Resources',
-    icon: <DollarSign size={20} />,
-    subItems: [
-      { id: 'investor-reports', text: 'Financial Reports', icon: <BarChart2 size={16} /> },
-      { id: 'investor-documents', text: 'Documents', icon: <FileText size={16} /> },
-      { id: 'investor-presentations', text: 'Presentations', icon: <Presentation size={16} /> }
-    ]
+    icon: <DollarSign size={20} />
+  }
+];
+
+const investorItems = [
+  {
+    id: 'dashboard',
+    text: 'Home',
+    icon: <Home size={20} />
   },
   {
-    id: 'marketplace',
-    text: 'Marketplace',
+    id: 'investor-calculator',
+    text: 'Deal Calculator',
+    icon: <Calculator size={20} />
+  },
+  {
+    id: 'investor-tracker',
+    text: 'Deal Tracker',
+    icon: <ClipboardList size={20} />
+  },
+  {
+    id: 'investor-marketplace',
+    text: 'Wholesell Marketplace',
     icon: <Store size={20} />
+  },
+  {
+    id: 'investor-renovation',
+    text: 'Renovation Material',
+    icon: <Hammer size={20} />
   }
 ];
 
@@ -144,6 +150,29 @@ const phoneSystemItems = [
     id: 'power-dialer',
     text: 'Power Dialer',
     icon: <Rocket size={20} />
+  }
+];
+
+const emailItems = [
+  {
+    id: 'email-home',
+    text: 'Home',
+    icon: <Home size={20} />
+  },
+  {
+    id: 'email-inbox',
+    text: 'Emails',
+    icon: <Mail size={20} />
+  },
+  {
+    id: 'email-templates',
+    text: 'Template Designer',
+    icon: <FileText size={20} />
+  },
+  {
+    id: 'email-campaign',
+    text: 'Email Campaign',
+    icon: <Megaphone size={20} />
   }
 ];
 
@@ -303,6 +332,10 @@ export function Sidebar({
         ? docuProItems
         : activePage.startsWith('crm-') || activePage === 'crm'
           ? crmItems
+          : activePage.startsWith('email-') || activePage === 'email'
+            ? emailItems
+          : activePage.startsWith('investor-') || activePage === 'investor'
+            ? investorItems
           : defaultItems;
 
   // Keep track of previous page for phone system navigation
@@ -383,6 +416,12 @@ export function Sidebar({
   const effectiveCollapsed = internalCollapsed && !isHovered;
 
   const handleSidebarClick = (page: string) => {
+    // Handle email system navigation
+    if (page === 'email') {
+      onPageChange('email-inbox');
+      return;
+    }
+
     // Handle CRM navigation
     if (page === 'crm') {
       onPageChange('crm-contacts');
@@ -402,6 +441,12 @@ export function Sidebar({
       return;
     }
 
+    // Handle Email System home navigation
+    if (page === 'email-home') {
+      onPageChange('dashboard');
+      return;
+    }
+
     // Handle DocuPro home navigation
     if (page === 'docupro-home') {
       onPageChange('dashboard');
@@ -417,6 +462,12 @@ export function Sidebar({
     // Handle Email System navigation
     if (page.startsWith('email-')) {
       onPageChange(page);
+      return;
+    }
+
+    // Handle investor home navigation
+    if (page === 'dashboard' && activePage.startsWith('investor-')) {
+      onPageChange('dashboard');
       return;
     }
     

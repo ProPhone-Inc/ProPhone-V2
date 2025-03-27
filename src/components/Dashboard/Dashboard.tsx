@@ -22,6 +22,7 @@ import CopilotBubble from './CopilotBubble';
 import { ErrorBoundary } from '../ErrorBoundary';
 import { PhoneSystem } from '../Phone/PhoneSystem';
 import { TeamPanelModal } from './TeamPanel/components/TeamPanelModal';
+import { EmailClient } from '../Email/EmailClient';
 import { CopilotPage } from './CopilotPage';
 import { AdminPanel } from './AdminPanel';
 import { DocumentSystem } from '../Documents/DocumentSystem';
@@ -415,6 +416,13 @@ export function Dashboard() {
                 )}
                 {activePage.startsWith('docupro-') && (
                   <DocumentSystem />
+                )}
+                {activePage.startsWith('email-') && (
+                  <ErrorBoundary>
+                    <Suspense fallback={<ComponentLoader />}>
+                      <EmailClient />
+                    </Suspense>
+                  </ErrorBoundary>
                 )}
               </>
             </div>
