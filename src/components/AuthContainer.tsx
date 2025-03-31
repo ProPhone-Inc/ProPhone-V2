@@ -42,6 +42,11 @@ export function AuthContainer({ onVerified, teamInviteData }: AuthContainerProps
   const [isRegistering, setIsRegistering] = React.useState(false);
   const [showAuthModal, setShowAuthModal] = React.useState(false);
   const [authMode, setAuthMode] = React.useState<'login' | 'signup' | 'magic' | 'google' | 'facebook'>('login');
+  const [showEmailDropdown, setShowEmailDropdown] = React.useState(false);
+  const [showRemoveAdsModal, setShowRemoveAdsModal] = React.useState(false);
+  const [actionSuccess, setActionSuccess] = React.useState<{message: string, type: string} | null>(null);
+  const [currentPage, setCurrentPage] = React.useState(1);
+  const usersPerPage = 10;
 
   const resetAllStates = () => {
     setIsCodeLogin(false);
@@ -104,7 +109,7 @@ export function AuthContainer({ onVerified, teamInviteData }: AuthContainerProps
       </div>
 
       <div className="relative w-full max-w-md p-8">
-        <div className="relative bg-black/60 rounded-3xl p-8 shadow-2xl border border-[#B38B3F]/20 transform transition-all duration-500 hover:scale-[1.02] hover:border-[#B38B3F]/40 hover:shadow-[#B38B3F]/10 hover:shadow-2xl">
+        <div className="relative bg-black/60 rounded-3xl p-8 shadow-2xl border border-[#B38B3F]/20 transform transition-all duration-500 hover:scale-105 hover:border-[#B38B3F]/40 hover:shadow-[0_0_15px_rgba(255,215,0,0.3)] group">
           <div className="absolute inset-0 backdrop-blur-md rounded-3xl pointer-events-none" />
           <div className="relative">
             <div className="space-y-8">
@@ -120,18 +125,12 @@ export function AuthContainer({ onVerified, teamInviteData }: AuthContainerProps
                   </h1>
                   <p className="text-white/70 mt-2 mb-8 max-w-[280px] mx-auto leading-relaxed text-sm">
                     {isForgotPassword 
-                      ? resetStep === 'email'
-                        ? 'Enter your email to receive a reset code'
-                        : resetStep === 'code'
-                        ? 'Enter the code sent to your email'
-                        : 'Create your new password'
-                      : isCodeLogin 
-                        ? 'Sign in with a magic code'
-                        : isRegistering
-                          ? teamInviteData
-                            ? `Welcome to the team! Complete your account setup to join as ${teamInviteData.role}`
-                            : "Unlock Your Exclusive Marketing Suite! Create Your FREE Account to Begin! 🚀"
-                          : 'Sign In to Continue Elevating Your Brand 💎'}
+                      ? 'Enter your email to receive a reset code'
+                      : isRegistering
+                        ? teamInviteData
+                          ? `Welcome to the team! Complete your account setup to join as ${teamInviteData.role}`
+                          : "Unlock Your Exclusive Marketing Suite! Create Your FREE Account to Begin! 🚀"
+                        : 'Sign In to Continue Elevating Your Brand 💎'}
                   </p>
                 </div>
               </div>
@@ -151,12 +150,7 @@ export function AuthContainer({ onVerified, teamInviteData }: AuthContainerProps
                   showSuccess={showSuccess}
                   setShowSuccess={setShowSuccess}
                   setShowSuccessModal={setShowSuccessModal}
-                  setIsForgotPassword={(value) => {
-                    if (!value) {
-                      resetAllStates();
-                    }
-                    setIsForgotPassword(value);
-                  }}
+                  setIsForgotPassword={setIsForgotPassword}
                 />
               ) : (
                 <LoginForm
