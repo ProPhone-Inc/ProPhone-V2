@@ -1,0 +1,25 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply antialiased;
+  }
+}
+
+@layer utilities {
+  .backdrop-blur-none {
+    backdrop-filter: none;
+  }
+}
+
+form {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Import all component styles */
+@import './components/AuthContainer.css';
+@import './components/MagicButton.css';
+@import './components/Fireworks.css';
+@import './animations.css';

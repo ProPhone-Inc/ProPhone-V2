@@ -1,0 +1,42 @@
+For all designs I ask you to make, have them be beautiful, not cookie cutter. Make webpages that are fully featured and worthy for production.
+
+By default, this template supports JSX syntax with Tailwind CSS classes, React hooks, and Lucide React for icons. Do not install other packages for UI themes, icons, etc unless absolutely necessary or I request them.
+
+Use icons from lucide-react for logos.
+
+Use stock photos from unsplash where appropriate, only valid URLs you know exist. Do not download the images, only link to them in image tags.
+
+General Development Guidelines:
+Write clean, modular, and maintainable React code using functional components and hooks.
+Ensure all components are mobile-responsive and follow best practices for modern UX & UI design.
+Use shadcn/ui components where applicable, ensuring a consistent design system.
+Use Lucide-react icons for all icons, making sure they align with the component's purpose.
+Implement a light and dark mode switch for every UI component, using Tailwind's dark: class.
+Always structure styles using Tailwind CSS utility classes, keeping the JSX clean.
+
+UI & UX Best Practices:
+Prioritise clarity, usability, and accessibility in all designs.
+Components should look modern, polished, and not cookie-cutter—follow current UI/UX design principles.
+Use framer-motion for subtle animations and transitions where appropriate to enhance user experience.
+Ensure good contrast, readable typography, and intuitive interactions across all devices.
+
+Performance & Optimisation:
+Optimise assets and components for fast loading and smooth performance using Vite's optimisations.
+Use lazy loading and dynamic imports where needed to improve performance.
+Ensure SEO best practices are considered (e.g., proper meta tags, OpenGraph tags, accessible content).
+
+Code Structure & Quality:
+Use TypeScript unless otherwise specified, ensuring better type safety.
+Use react-query or Zustand for state management where applicable.
+Ensure form validation is handled using react-hook-form with clear error messages.
+Structure data fetching logic efficiently, following best practices for handling API requests and caching.
+Write components in a way that allows easy reusability and scalability.
+
+Databases & Authorization
+MongoDB and JWT will be installed as the Database and Authorization. Do not change the Database or Authorization to anything else at all. It is forbidden to even suggest or initialize any changes to remove MongoDB and JWT. Supabase, Dexiejs, Indexdb are not to be used. System will force accept MongoDB and Indexdb.
+
+Production
+Projects will be built for a server production that already has MongoDB installed. Software will connect to that database and that is why it is important to not remove MongoDB or JWT. Do not treat this as a localhost project. It will be commercial and installed on a VPS. Do not make any changes to the software because you think this will be a browser only based software.
+
+Unauthorized Changes
+Do not make any modifications to the code other than exactly what i request.

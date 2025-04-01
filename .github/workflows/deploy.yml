@@ -1,0 +1,20 @@
+name: Deploy via SSH on push to Main
+
+on:
+  push:
+    branches:
+      - main  # Replace explicitly if using another branch name
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Setup SSH Agent
+        uses: webfactory/ssh-agent@v0.8.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Deploy explicitly via SSH (Custom Port)
+        run: |
+          ssh -o StrictHostKeyChecking=no -p 37980 ${{ secrets.SSH_USERNAME }}@${{ secrets.SERVER_IP }} 'bash /var/www/main/deploy.sh'
