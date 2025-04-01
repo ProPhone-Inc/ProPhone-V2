@@ -25,7 +25,6 @@ export default defineConfig({
     target: 'esnext',
     minify: 'esbuild',
     cssMinify: true,
-    cssMinify: true,
     rollupOptions: {
       input: {
         main: './index.html'

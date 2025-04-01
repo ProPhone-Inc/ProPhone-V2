@@ -6,8 +6,6 @@ import cors from 'cors';
 import helmet from 'helmet';
 import compression from 'compression';
 import morgan from 'morgan';
-import cluster from 'cluster';
-import os from 'os';
 import { auth } from './middleware/auth';
 import { generateToken } from './config/jwt';
 import { User } from './models/User';

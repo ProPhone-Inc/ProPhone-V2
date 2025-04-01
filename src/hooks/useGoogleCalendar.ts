@@ -20,8 +20,7 @@ export function useGoogleCalendar(): UseGoogleCalendarReturn {
     googleClientId && 
     googleClientId !== 'your-google-client-id' && 
     googleClientId !== '' && 
-    googleClientId !== 'your-google-client-id-here' &&
-    /^\d+(-[a-z0-9]+)?\.apps\.googleusercontent\.com$/.test(googleClientId)
+    googleClientId !== 'your-google-client-id-here'
   );
 
   const [isConnected, setIsConnected] = useState(false);

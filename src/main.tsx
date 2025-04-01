@@ -13,8 +13,7 @@ const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 const isValidGoogleClientId = Boolean(googleClientId && 
   googleClientId !== 'your-google-client-id' && 
   googleClientId !== '' && 
-  googleClientId !== 'your-google-client-id-here' &&
-  /^\d+(-[a-z0-9]+)?\.apps\.googleusercontent\.com$/.test(googleClientId));
+  googleClientId !== 'your-google-client-id-here');
 
 if (!isValidGoogleClientId) {
   console.warn('Valid Google Client ID not found in environment variables. Google Calendar integration will be disabled.');
