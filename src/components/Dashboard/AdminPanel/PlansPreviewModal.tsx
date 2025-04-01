@@ -1,13 +1,53 @@
 import React from 'react';
 import { X, Sparkles, Rocket, Crown, Plus, Trash2, Save, AlertTriangle, CheckCircle2 } from 'lucide-react';
-import { usePlans } from '../../../hooks/usePlans';
 
 interface PlansPreviewModalProps {
   onClose: () => void;
 }
 
 export function PlansPreviewModal({ onClose }: PlansPreviewModalProps) {
-  const { plans, updatePlan, updatePlanFeatures } = usePlans();
+  const [plans, setPlans] = React.useState([
+    {
+      id: 'starter',
+      name: 'Starter',
+      price: 'Free',
+      features: [
+        'Basic Marketing Tools',
+        'Up to 100 Contacts',
+        'Email Support',
+        'Basic Analytics',
+        'Standard Templates'
+      ]
+    },
+    {
+      id: 'pro',
+      name: 'Professional',
+      price: '$29/mo',
+      features: [
+        'Advanced Marketing Tools',
+        'Up to 2500 Contacts',
+        'Priority Support',
+        'Advanced Analytics',
+        'Custom Templates',
+        'API Access'
+      ]
+    },
+    {
+      id: 'enterprise',
+      name: 'Enterprise',
+      price: '$99/mo',
+      features: [
+        'Enterprise Marketing Suite',
+        'Unlimited Contacts',
+        '24/7 Dedicated Support',
+        'Custom Analytics',
+        'White Labeling',
+        'API Access',
+        'Custom Integrations',
+        'Dedicated Account Manager'
+      ]
+    }
+  ]);
   const [editingPlanId, setEditingPlanId] = React.useState<string | null>(null);
   const [editedFeatures, setEditedFeatures] = React.useState<Record<string, string[]>>({});
   const [newFeature, setNewFeature] = React.useState('');
@@ -58,20 +98,22 @@ export function PlansPreviewModal({ onClose }: PlansPreviewModalProps) {
     setIsSaving(true);
     setSaveStatus('saving');
     setUpdateStep('stripe');
-
+    
     try {
       // Update features in Stripe first
       await new Promise(resolve => setTimeout(resolve, 1000));
       setUpdateStep('local');
-
+      
       // Update local state
       for (const [planId, features] of Object.entries(editedFeatures)) {
-        await updatePlanFeatures(planId, features);
+        setPlans(prev => prev.map(plan => 
+          plan.id === planId ? { ...plan, features } : plan
+        ));
       }
-
+      
       setUpdateStep('sync');
       await new Promise(resolve => setTimeout(resolve, 1000));
-
+      
       setSaveStatus('success');
       setTimeout(() => {
         onClose();

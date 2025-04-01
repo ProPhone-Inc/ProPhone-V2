@@ -89,11 +89,15 @@ process.on('SIGINT', async () => {
   app.use(helmet({
     contentSecurityPolicy: {
       directives: {
-        defaultSrc: ["'self'"],
-        scriptSrc: ["'self'", "'unsafe-inline'"],
-        styleSrc: ["'self'", "'unsafe-inline'"],
-        imgSrc: ["'self'", "data:", "https:"],
-        connectSrc: ["'self'", "https:"]
+        defaultSrc: ["'self'", "https:", "http:", "ws:", "wss:"],
+        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https:", "http:"],
+        styleSrc: ["'self'", "'unsafe-inline'", "https:", "http:"],
+        imgSrc: ["'self'", "data:", "blob:", "https:", "http:"],
+        connectSrc: ["'self'", "https:", "http:", "ws:", "wss:"],
+        fontSrc: ["'self'", "data:", "https:", "http:"],
+        objectSrc: ["'none'"],
+        mediaSrc: ["'self'", "https:", "http:"],
+        frameSrc: ["'self'", "https:", "http:"]
       }
     }
   }));
@@ -107,8 +111,9 @@ process.on('SIGINT', async () => {
   app.use(cors({
     origin: process.env.CORS_ORIGIN || '*',
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+    exposedHeaders: ['Content-Length', 'X-Content-Type-Options'],
     maxAge: 86400 // Cache preflight requests for 24 hours
   }));
 

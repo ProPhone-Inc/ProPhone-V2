@@ -4,15 +4,29 @@ import { User } from '../models/User';
 
 export const auth = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const token = req.header('Authorization')?.replace('Bearer ', '');
+    // Get token from Authorization header
+    let token = req.header('Authorization');
+    
+    // Check if token exists and has the Bearer prefix
+    if (token && token.startsWith('Bearer ')) {
+      token = token.slice(7);
+    } else {
+      throw new Error('Invalid token format');
+    }
 
     if (!token) {
       throw new Error();
     }
 
     const decoded = verifyToken(token);
-    const user = await User.findOne({ _id: (decoded as any)._id })
-      .populate('parentUser', 'name email role');
+    
+    // Check if decoded contains the expected user ID
+    if (!(decoded as any)._id) {
+      throw new Error('Invalid token payload');
+    }
+    
+    // Find user by ID
+    const user = await User.findOne({ _id: (decoded as any)._id });
 
     if (!user) {
       throw new Error();
@@ -30,9 +44,11 @@ export const auth = async (req: Request, res: Response, next: NextFunction) => {
         throw new Error('Parent account is inactive');
       }
     }
+    
     req.user = user;
     next();
   } catch (error) {
-    res.status(401).send({ error: 'Please authenticate' });
+    console.error('Authentication error:', error);
+    return res.status(401).json({ error: 'Please authenticate' });
   }
 };

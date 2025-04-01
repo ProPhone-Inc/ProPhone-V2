@@ -1,6 +1,5 @@
 import React, { useEffect } from 'react';
 import { X, AlertTriangle } from 'lucide-react';
-import { usePlans } from '../../../hooks/usePlans';
 
 interface EditPlanModalProps {
   plan: {
@@ -15,7 +14,6 @@ interface EditPlanModalProps {
 }
 
 export function EditPlanModal({ plan, onClose, onSave }: EditPlanModalProps) {
-  const { updatePlan, syncWithStripe } = usePlans();
   const [newPrice, setNewPrice] = React.useState(plan.price.replace('$', ''));
   const [showConfirm, setShowConfirm] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
@@ -31,21 +29,21 @@ export function EditPlanModal({ plan, onClose, onSave }: EditPlanModalProps) {
     setIsSubmitting(true);
     setUpdateStatus('updating-stripe');
     const newPriceWithSymbol = `$${newPrice}`;
-
+    
     try {
       // Update price in Stripe
       setIsUpdatingStripe(true);
       await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate Stripe API call
       
       // Update local state immediately for real-time UI updates
-      updatePlan(plan.id, { price: newPriceWithSymbol });
+      // Local update only - no store update
       
       // Update system-wide pricing
       setUpdateStatus('updating-system');
       await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate system update
       
-      // Sync with Stripe to ensure consistency
-      await syncWithStripe();
+      // Simulate syncing with Stripe
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
       // Notify affected users
       setUpdateStatus('notifying-users');

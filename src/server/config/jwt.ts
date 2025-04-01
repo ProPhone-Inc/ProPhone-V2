@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-jwt-secret-key';
+// Get JWT secret from environment or use a fallback
+const JWT_SECRET = process.env.JWT_SECRET || 'AKoF52vMvHyD4+JlhqFtXGRK1hqpTV+Ca4DMdltbik8=';
 const JWT_EXPIRES_IN = '7d';
 
 export const generateToken = (userId: string): string => {
@@ -9,6 +10,11 @@ export const generateToken = (userId: string): string => {
   });
 };
 
-export const verifyToken = (token: string) => {
-  return jwt.verify(token, JWT_SECRET);
+export const verifyToken = (token: string): jwt.JwtPayload | string => {
+  try {
+    return jwt.verify(token, JWT_SECRET);
+  } catch (error) {
+    console.error('JWT verification error:', error);
+    throw new Error('Invalid or expired token');
+  }
 };

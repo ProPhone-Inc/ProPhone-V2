@@ -24,10 +24,25 @@ export const auth = {
       }
 
       try {
-        const { data } = await api.post('/auth/login', credentials);
+        // Use fetch directly to avoid axios interceptors
+        const response = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(credentials),
+          credentials: 'include'
+        });
+        
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({ error: 'Invalid credentials' }));
+          throw new Error(errorData.error || 'Invalid credentials');
+        }
+        
+        const data = await response.json();
         return data;
       } catch (error) {
-        if (error.response?.status === 401) {
+        if (error.response?.status === 401 || error.message.includes('credentials')) {
           throw new Error('Invalid email or password');
         }
         if (!error.response) {
@@ -42,8 +57,25 @@ export const auth = {
 
   async register(userData: RegisterData) {
     try {
-      const { data } = await api.post('/auth/register', userData);
-      localStorage.setItem('auth_token', data.token);
+      // Use fetch directly to avoid axios interceptors
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(userData),
+        credentials: 'include'
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Registration failed' }));
+        throw new Error(errorData.error || 'Registration failed');
+      }
+      
+      const data = await response.json();
+      if (data.token) {
+        localStorage.setItem('auth_token', data.token);
+      }
       return data;
     } catch (error) {
       console.error('Registration error:', error);
@@ -53,7 +85,23 @@ export const auth = {
 
   async getProfile() {
     try {
-      const { data } = await api.get('/user/profile');
+      const token = localStorage.getItem('auth_token');
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+      
+      const response = await fetch('/api/user/profile', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        credentials: 'include'
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to get profile');
+      }
+      
+      const data = await response.json();
       return data;
     } catch (error) {
       console.error('Get profile error:', error);
@@ -63,7 +111,26 @@ export const auth = {
 
   async updateProfile(updates: Partial<RegisterData>) {
     try {
-      const { data } = await api.put('/user/profile', updates);
+      const token = localStorage.getItem('auth_token');
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+      
+      const response = await fetch('/api/user/profile', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(updates),
+        credentials: 'include'
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to update profile');
+      }
+      
+      const data = await response.json();
       return data;
     } catch (error) {
       console.error('Update profile error:', error);

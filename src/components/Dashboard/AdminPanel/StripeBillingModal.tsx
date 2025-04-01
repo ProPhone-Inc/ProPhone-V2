@@ -3,14 +3,35 @@ import { X, CreditCard, ArrowUpRight, Building2, Link, CheckCircle2, Code, Copy,
 import { EditPlanModal } from './EditPlanModal';
 import { CreateInvoiceModal } from './CreateInvoiceModal';
 import { PlansPreviewModal } from './PlansPreviewModal';
-import { usePlans } from '../../../hooks/usePlans';
 
 interface StripeBillingModalProps {
   onClose: () => void;
 }
 
 export function StripeBillingModal({ onClose }: StripeBillingModalProps) {
-  const { plans, syncWithStripe } = usePlans();
+  const [plans, setPlans] = React.useState([
+    {
+      id: 'starter',
+      name: 'Starter',
+      price: 'Free',
+      users: 245,
+      revenue: '$0'
+    },
+    {
+      id: 'pro',
+      name: 'Professional',
+      price: '$29/mo',
+      users: 389,
+      revenue: '$11,281'
+    },
+    {
+      id: 'enterprise',
+      name: 'Enterprise',
+      price: '$99/mo',
+      users: 166,
+      revenue: '$16,434'
+    }
+  ]);
   const [activeTab, setActiveTab] = React.useState<'overview' | 'plans' | 'invoices' | 'settings'>('overview');
   const [showEditPlan, setShowEditPlan] = React.useState(false);
   const [selectedPlan, setSelectedPlan] = React.useState<any>(null);
@@ -58,9 +79,7 @@ export function StripeBillingModal({ onClose }: StripeBillingModalProps) {
   ];
 
   // Sync with Stripe on mount
-  useEffect(() => {
-    syncWithStripe();
-  }, [syncWithStripe]);
+  // Removed syncWithStripe call
 
   const handleEditPlan = (plan: any) => {
     setSelectedPlan(plan);

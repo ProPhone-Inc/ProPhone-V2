@@ -102,12 +102,23 @@ export function AuthProvider({ children }: AuthProviderProps) {
       });
 
       if (!response.ok) {
-        throw new Error('Invalid credentials');
+        const errorData = await response.json().catch(() => ({ error: 'Invalid credentials' }));
+        throw new Error(errorData.error || 'Invalid credentials');
       }
 
-      const { user, token } = await response.json();
-      localStorage.setItem('auth_token', token);
-      await handleLogin(user);
+      try {
+        const { user, token } = await response.json();
+        
+        if (!token) {
+          throw new Error('No authentication token received');
+        }
+        
+        localStorage.setItem('auth_token', token);
+        await handleLogin(user);
+      } catch (parseError) {
+        console.error('Error parsing login response:', parseError);
+        throw new Error('Invalid credentials');
+      }
       
     } catch (error) {
       const errorMessage = error instanceof Error 
