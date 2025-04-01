@@ -39,7 +39,6 @@ const connectDB = async () => {
       minPoolSize: 1,
       retryWrites: true,
       retryReads: true,
-      w: 'majority',
       compressors: 'zlib',
       connectTimeoutMS: CONNECT_TIMEOUT,
       socketTimeoutMS: SOCKET_TIMEOUT
@@ -57,7 +56,6 @@ const connectDB = async () => {
       minPoolSize: 1,
       retryWrites: true,
       retryReads: true,
-      w: 'majority',
       compressors: 'zlib',
       autoIndex: false,
       bufferCommands: false,

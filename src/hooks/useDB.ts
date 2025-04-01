@@ -60,14 +60,24 @@ export function useDB() {
 
   const getAutomations = async () => {
     if (!user?.id) return [];
-    const { data } = await api.get('/automations/active');
-    return data;
+    try {
+      const { data } = await api.get('/automations/active');
+      return data;
+    } catch (error) {
+      console.error('Failed to get automations:', error);
+      return [];
+    }
   };
 
   const getAnalytics = async (type: string) => {
     if (!user?.id) return [];
-    const { data } = await api.get(`/analytics/${type}`);
-    return data;
+    try {
+      const { data } = await api.get(`/analytics/${type}`);
+      return data;
+    } catch (error) {
+      console.error('Failed to get analytics:', error);
+      return [];
+    }
   };
 
   const getTeamMembers = async () => {

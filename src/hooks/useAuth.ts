@@ -135,7 +135,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
     isAuthenticated,
     user,
     isLoading,
-    error,
     login,
     logout
   };

@@ -63,7 +63,12 @@ export class GmailProvider implements EmailProvider {
         window.location.href = url;
       }
 
-      this.gmail = google.gmail({ version: 'v1', auth: this.auth });
+      // Initialize gmail API client
+      try {
+        this.gmail = google.gmail({ version: 'v1', auth: this.auth });
+      } catch (error) {
+        console.error('Failed to initialize Gmail client:', error);
+      }
     } catch (error) {
       console.error('Gmail connection error:', error);
       throw new Error('Failed to connect to Gmail');
