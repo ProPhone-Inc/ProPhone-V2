@@ -1,13 +1,7 @@
 #!/bin/bash
 
-echo "Stashing local changes..."
-git stash
-
 echo "Pulling latest updates from GitHub..."
 git pull origin main
-
-echo "Restoring local changes..."
-git stash pop
 
 echo "Installing dependencies..."
 npm install
