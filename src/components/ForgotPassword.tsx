@@ -16,6 +16,7 @@ interface ForgotPasswordProps {
   setShowSuccess: (show: boolean) => void;
   setShowSuccessModal: (show: boolean) => void;
   setIsForgotPassword: (forgot: boolean) => void;
+  setCodeSent: (sent: boolean) => void;
 }
 
 export function ForgotPassword({
@@ -33,6 +34,7 @@ export function ForgotPassword({
   setShowSuccess,
   setShowSuccessModal,
   setIsForgotPassword,
+  setCodeSent
 }: ForgotPasswordProps) {
   const formRef = React.useRef<HTMLFormElement>(null);
 
@@ -99,9 +101,11 @@ export function ForgotPassword({
         await new Promise(resolve => setTimeout(resolve, 1500));
         setShowSuccessModal(true);
         setShowSuccess(true);
+        setShowSuccess(true);
         
         setTimeout(() => {
           setShowSuccessModal(false);
+          setShowSuccess(false);
           setShowSuccess(false);
           setIsForgotPassword(false);
           setResetStep('email');
@@ -313,7 +317,7 @@ export function ForgotPassword({
                 : 'Send Reset Code'
               : resetStep === 'code'
               ? 'Verify Code'
-              : 'Reset Password'}
+              : 'Reset Password'} 
           </span>
           <Send className="w-5 h-5 ml-2" />
         </button>
@@ -323,7 +327,8 @@ export function ForgotPassword({
           onClick={() => {
             setIsForgotPassword(false);
             setResetStep('email');
-            setCodeSent(false);
+            setCodeSent && setCodeSent(false);
+            setCodeSent && setCodeSent(false);
             setResetEmail('');
             setCooldownTime(0);
             setError('');
@@ -336,5 +341,5 @@ export function ForgotPassword({
         </button>
       </div>
     </form>
-  );
+  ); 
 }

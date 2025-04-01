@@ -131,6 +131,38 @@
   }
 }
 
+@keyframes firework {
+  0% {
+    transform: translate(-50%, 60vh) scale(0.3);
+    opacity: 1;
+  }
+  50% {
+    transform: translate(-50%, -10vh) scale(0.8);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -20vh) scale(0.1);
+    opacity: 0;
+  }
+}
+
+@keyframes fireworkParticle {
+  0% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.9;
+    filter: brightness(1.5);
+  }
+  50% {
+    opacity: 1;
+    filter: brightness(2);
+  }
+  100% {
+    transform: translate(var(--tx), var(--ty)) scale(0);
+    opacity: 0;
+    filter: brightness(1);
+  }
+}
+
 @layer components {
   /* Base modal styles */
   .modal-overlay {
@@ -202,6 +234,27 @@
     border-radius: 50%;
     pointer-events: none;
     opacity: 0;
+  }
+
+  .firework {
+    position: absolute;
+    width: 6px;
+    height: 20px;
+    border-radius: 50%;
+    background: #F9B642;
+    box-shadow: 0 0 20px #F9B642, 0 0 40px #F9B642, 0 0 60px #F9B642;
+    animation: firework 1s ease-out forwards;
+    pointer-events: none;
+  }
+
+  .firework-particle {
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    pointer-events: none;
+    animation: fireworkParticle 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards, glowPulse 0.3s ease-in-out infinite;
+    box-shadow: 0 0 10px currentColor;
   }
 
   .card-gold-glow {

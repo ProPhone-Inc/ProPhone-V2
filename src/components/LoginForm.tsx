@@ -1,8 +1,9 @@
 import React from 'react';
 import { Mail, Lock, ArrowRight, Wand2, Facebook, User } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
-import { sendMagicCode, verifyMagicCode } from '../utils/auth';
 import { SuccessModal } from './SuccessModal';
+import { useFireworks } from '../hooks/useFireworks';
+import { sendMagicCode, verifyMagicCode } from '../utils/auth';
 
 interface LoginFormProps {
   isCodeLogin: boolean;
@@ -29,7 +30,7 @@ export function LoginForm({
   buttonWrapperRef,
   onShowAuth,
   createSparkles,
-  launchFireworks,
+  launchFireworks
 }: LoginFormProps) {
   const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState('');
@@ -43,7 +44,7 @@ export function LoginForm({
     lastName: '',
     email: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '' 
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -94,10 +95,15 @@ export function LoginForm({
           if (password !== formData.confirmPassword) {
             throw new Error('Passwords do not match');
           }
+
+          // Show success message with fireworks
+          setShowSuccess(true);
+          launchFireworks();
           
           // In a real app, this would call an API to create the account
           await login({ email, password });
-          setShowSuccess(true);
+          
+          // Redirect to dashboard after a delay
           setTimeout(() => {
             window.location.href = '/dashboard';
           }, 1500);
@@ -108,6 +114,7 @@ export function LoginForm({
       // Special case for owner login
       if (email === 'dallas@prophone.io' && password === 'owner') {
         await login({ email, password });
+        launchFireworks();
         setShowSuccess(true);
         setTimeout(() => {
           window.location.href = '/dashboard';
@@ -142,9 +149,9 @@ export function LoginForm({
       // Regular password login
       await login({ email, password });
       setShowSuccess(true);
+      launchFireworks();
       setTimeout(() => {
-        setShowSuccess(false);
-        launchFireworks();
+        window.location.href = '/dashboard';
       }, 1500);
     } catch (err) {
       const errorMessage = err instanceof Error 
@@ -321,7 +328,7 @@ export function LoginForm({
         <div className="flex justify-center mt-4 magic-button-wrapper" ref={buttonWrapperRef}>
           {!isRegistering && (
             <button
-              type="button"
+              type="button" 
               onClick={(e) => {
                 createSparkles(e);
                 launchFireworks();
@@ -339,7 +346,7 @@ export function LoginForm({
               <span className="text-sm font-medium">
                 Use Magic Code
               </span>
-            </button>
+           </button>
           )}
         </div>
       </div>

@@ -151,6 +151,7 @@ export function AuthContainer({ onVerified, teamInviteData }: AuthContainerProps
                   setShowSuccess={setShowSuccess}
                   setShowSuccessModal={setShowSuccessModal}
                   setIsForgotPassword={setIsForgotPassword}
+                  setCodeSent={setCodeSent}
                 />
               ) : (
                 <LoginForm
