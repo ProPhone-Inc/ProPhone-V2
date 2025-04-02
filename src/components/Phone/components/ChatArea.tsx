@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowRight, Paperclip, Mic, MoreVertical, Home, ChevronDown, Phone, CheckCircle, Smile, Bot, Clock, Info, MessageSquare, Eye, EyeOff, Users, Trash2, Zap } from 'lucide-react';
+import { ArrowRight, Paperclip, Mic, MoreVertical, Home, ChevronDown, Phone, CheckCircle, Smile, Bot, Clock, Info, MessageSquare, Eye, EyeOff, Users, Trash2, Zap, Bell } from 'lucide-react';
 import { QuickReplyModal } from './QuickReplyModal';
 import { useClickOutside } from '../../../hooks/useClickOutside';
 import { useCallState } from '../../../hooks/useCallState';

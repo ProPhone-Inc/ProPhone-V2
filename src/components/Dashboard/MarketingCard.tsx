@@ -4,16 +4,10 @@ import { useFireworks } from '../../hooks/useFireworks';
 import { useAuth } from '../../hooks/useAuth';
 
 export function MarketingCard() {
-  const { user } = useAuth();
   const containerRef = React.useRef<HTMLDivElement>(null);
   const { launchFireworks } = useFireworks(containerRef);
   const [isHovered, setIsHovered] = React.useState(false);
   const [showSparkles, setShowSparkles] = React.useState(false);
-
-  // Hide for platform owner, Business Elite plan, and God Mode users
-  if (user?.role === 'owner' || user?.plan === 'elite' || user?.plan === 'god_mode') {
-    return null;
-  }
 
   // Create sparkle effect
   const createSparkle = (e: React.MouseEvent) => {
@@ -88,13 +82,13 @@ export function MarketingCard() {
         </div>
         
         <h3 className="text-xl font-bold text-white mb-2 relative">
-          Ready to Go Unlimited or Add Your Team?
+          Want To Remove Ads Or Add Members To Your Team?
           {/* Gradient underline */}
           <div className="absolute bottom-0 left-0 w-full h-0.5 bg-gradient-to-r from-[#B38B3F]/0 via-[#FFD700] to-[#B38B3F]/0 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500" />
         </h3>
         
         <p className="text-white/70 mb-4">
-          Elevate your business today! Upgrade to Business Pro for unlimited usage of all applications—fuel your productivity and innovation without limits. Ready for more? Take it to the next level with Business Elite, featuring an exclusive Team Panel that lets you effortlessly add and manage your entire team. Click "Upgrade Now" to unlock your full potential!
+          Support the platform by upgrading your experience. Remove all ads for just $10/month, or add team members for $5/month each. Every dollar helps us build better tools for you.
         </p>
         
         <button 

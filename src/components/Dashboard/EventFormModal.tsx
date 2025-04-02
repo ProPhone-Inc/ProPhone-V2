@@ -109,16 +109,16 @@ export function EventFormModal({ selectedDate, eventForm, setEventForm, error, o
   };
 
   return (
-    <div className="fixed inset-0 z-[300] flex items-center justify-center">
+    <div className="fixed inset-0 z-[300] flex items-center justify-center px-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
       <div className="relative bg-zinc-900/70 backdrop-blur-xl border border-[#FFD700]/30 rounded-xl shadow-2xl w-[500px] max-h-[600px] overflow-y-auto">
         <div className="flex items-center justify-between p-6 border-b border-[#FFD700]/20">
           <h3 className="text-xl font-bold text-white">
             {selectedDate ? (
               `Create Event for ${selectedDate.toLocaleDateString('default', { 
-                month: 'long',
-                day: 'numeric',
-                year: 'numeric'
+                month: 'long', 
+                day: 'numeric', 
+                year: 'numeric' 
               })}`
             ) : (
               'Create Event'
@@ -235,8 +235,9 @@ export function EventFormModal({ selectedDate, eventForm, setEventForm, error, o
             <div className="relative">
               <CalendarIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
               <input
+                key="title-input"
                 type="text"
-                value={eventForm.title}
+                value={eventForm?.title || ''}
                 onChange={(e) => setEventForm(prev => ({ ...prev, title: e.target.value }))}
                 className="w-full pl-10 pr-4 py-2 bg-zinc-800 border border-[#FFD700]/20 rounded-lg text-white"
                 placeholder="Event title"
@@ -313,6 +314,7 @@ export function EventFormModal({ selectedDate, eventForm, setEventForm, error, o
                   <div className="relative">
                     <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
                     <input
+                      key="start-time-input"
                       type="time"
                       value={eventForm.time}
                       onChange={(e) => setEventForm(prev => ({ ...prev, time: e.target.value }))}
@@ -326,6 +328,7 @@ export function EventFormModal({ selectedDate, eventForm, setEventForm, error, o
                   <div className="relative">
                     <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
                     <input
+                      key="end-time-input"
                       type="time"
                       value={eventForm.endTime}
                       onChange={(e) => setEventForm(prev => ({ ...prev, endTime: e.target.value }))}
@@ -344,6 +347,7 @@ export function EventFormModal({ selectedDate, eventForm, setEventForm, error, o
             <div className="relative">
               <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
               <input
+                key="location-input"
                 type="text"
                 value={eventForm.location}
                 onChange={(e) => setEventForm(prev => ({ ...prev, location: e.target.value }))}
@@ -475,6 +479,7 @@ export function EventFormModal({ selectedDate, eventForm, setEventForm, error, o
             <div className="relative">
               <AlignLeft className="absolute left-3 top-3 w-5 h-5 text-white/40" />
               <textarea
+                key="description-textarea"
                 value={eventForm.description}
                 onChange={(e) => setEventForm(prev => ({ ...prev, description: e.target.value }))}
                 className="w-full pl-10 pr-4 py-2 bg-zinc-800 border border-[#FFD700]/20 rounded-lg text-white min-h-[100px]"

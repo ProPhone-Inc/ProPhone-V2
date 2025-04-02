@@ -41,6 +41,7 @@ export function AuthContainer({ onVerified, teamInviteData }: AuthContainerProps
   const [showSuccessModal, setShowSuccessModal] = React.useState(false);
   const [isRegistering, setIsRegistering] = React.useState(false);
   const [showAuthModal, setShowAuthModal] = React.useState(false);
+  const [formData, setFormData] = React.useState<any>(null);
   const [authMode, setAuthMode] = React.useState<'login' | 'signup' | 'magic' | 'google' | 'facebook'>('login');
   const [showEmailDropdown, setShowEmailDropdown] = React.useState(false);
   const [showRemoveAdsModal, setShowRemoveAdsModal] = React.useState(false);
@@ -83,7 +84,8 @@ export function AuthContainer({ onVerified, teamInviteData }: AuthContainerProps
       {showSuccessModal && (
         <SuccessModal 
           onClose={() => setShowSuccessModal(false)} 
-          message={isAuthenticated ? `Welcome back, ${user?.name}!` : undefined}
+          redirectPath={isRegistering || isAuthenticated ? "/dashboard" : null}
+          message={isRegistering ? `Welcome to ProPhone, ${formData?.firstName || ''}!` : isAuthenticated ? `Welcome back, ${user?.name}!` : undefined}
         />
       )}
       {showAuthModal && (
@@ -94,8 +96,8 @@ export function AuthContainer({ onVerified, teamInviteData }: AuthContainerProps
           onSuccess={(userData) => {
             if (userData) {
               setShowAuthModal(false);
-              setShowSuccessModal(true);
               launchFireworks();
+              setShowSuccessModal(true);
             }
           }}
         />
@@ -168,6 +170,7 @@ export function AuthContainer({ onVerified, teamInviteData }: AuthContainerProps
                     setShowAuthModal(true);
                   }}
                   onVerified={(email, userData) => {
+                    setFormData(userData);
                     onVerified(email, userData);
                   }}
                   createSparkles={createSparkles}

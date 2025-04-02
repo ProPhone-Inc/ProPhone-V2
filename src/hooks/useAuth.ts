@@ -60,7 +60,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
       if (savedUser) {
         try {
           const parsedUser = JSON.parse(savedUser);
-          await handleLogin(parsedUser);
+          setUser(parsedUser);
+          setIsAuthenticated(true);
         } catch (error) {
           console.error('Failed to parse saved user:', error);
           localStorage.removeItem('auth_user');
@@ -90,6 +91,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
           avatar: 'https://dallasreynoldstn.com/wp-content/uploads/2025/02/26F25F1E-C8E9-4DE6-BEE2-300815C83882.png'
         };
         await handleLogin(ownerData);
+        setIsAuthenticated(true);
         return;
       }
 
@@ -114,7 +116,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
         }
         
         localStorage.setItem('auth_token', token);
+        
+        // Ensure user is properly set and authentication state is updated
         await handleLogin(user);
+        setIsAuthenticated(true);
       } catch (parseError) {
         console.error('Error parsing login response:', parseError);
         throw new Error('Invalid credentials');

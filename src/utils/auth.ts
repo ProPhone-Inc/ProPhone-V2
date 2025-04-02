@@ -127,9 +127,36 @@ export async function verifyMagicCode(email: string, code: string): Promise<{ id
   if (code !== validCode) {
     throw new Error('Invalid verification code. For testing, use code: 123456');
   }
+  
+  // In a real app, this would verify the code with the backend
+  // For testing, we'll simulate a successful verification
+  await new Promise(resolve => setTimeout(resolve, 500));
+  
   return {
     id: Math.random().toString(36).substr(2, 9),
     name: email.split('@')[0],
     email: email
+  };
+}
+
+/**
+ * Register a new user
+ * @param userData User registration data
+ * @returns The created user object
+ */
+export async function registerUser(userData: { 
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+}): Promise<{ id: string; name: string; email: string }> {
+  // In a real app, this would call the backend API to create the user
+  // For testing, we'll simulate a successful registration
+  await new Promise(resolve => setTimeout(resolve, 1000));
+  
+  return {
+    id: Math.random().toString(36).substr(2, 9),
+    name: `${userData.firstName} ${userData.lastName}`,
+    email: userData.email
   };
 }

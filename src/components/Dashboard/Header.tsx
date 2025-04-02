@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Bell, Menu, X, User, LogOut, Calendar, MessageSquare, Shield, HelpCircle, Phone, Settings, Mail, CreditCard } from 'lucide-react';
+import { Bell, Menu, X, User, LogOut, Calendar, MessageSquare, Shield, HelpCircle, Phone, Settings, Mail, CreditCard, Ban, ExternalLink } from 'lucide-react';
 import { useClickOutside } from '../../hooks/useClickOutside';
 import { CalendarModal } from './Calendar';
 import { useAuth } from '../../hooks/useAuth'; 
@@ -122,36 +122,6 @@ function Header({ user, onLogout, collapsed, activePage, messages, onPageChange 
       <div className="flex-1" />
 
       <div className="flex items-center space-x-2">
-        {/* Remove Ads Button - Only show for free plan, sub users, and executives */}
-        {(user?.plan === 'starter' || user?.role === 'sub_user' || user?.role === 'executive') && user?.showAds && (
-          <button
-            onClick={() => setShowRemoveAdsModal(true)} 
-            className="relative px-3 py-1.5 bg-gradient-to-r from-[#B38B3F]/20 to-[#FFD700]/10 text-[#FFD700] rounded-lg hover:bg-[#B38B3F]/30 transition-colors flex items-center space-x-2 border border-[#B38B3F]/20 overflow-hidden group"
-          >
-            <div className="absolute inset-0 bg-gradient-to-r from-[#FFD700]/0 via-[#FFD700]/20 to-[#FFD700]/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 ease-out" />
-            <div className="absolute inset-0 bg-[#FFD700]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-            <div className="absolute -inset-1 bg-gradient-to-r from-[#FFD700]/0 via-[#FFD700]/10 to-[#FFD700]/0 opacity-0 group-hover:opacity-100 blur-lg transition-opacity duration-500" />
-            <Ban className="w-4 h-4" />
-            <span className="text-sm">Remove Ads</span>
-            <span className="text-xs opacity-75">$10/mo</span>
-          </button>
-        )}
-
-        {activePage === 'phone' && (
-        <div className="relative px-3 py-1.5 bg-zinc-800/50 border border-[#B38B3F]/20 rounded-lg flex items-center space-x-2">
-          <MessageSquareText className="w-4 h-4 text-[#FFD700]" />
-          <div className="text-sm">
-            <span className="text-white/70">{smsUsed.toLocaleString()}</span>
-            <span className="text-white/40"> / </span>
-            <span className={`${user?.plan === 'starter' && user?.role !== 'sub_user' ? 'text-white/70' : 'text-[#FFD700]'}`}>
-              {user?.plan === 'starter' && user?.role !== 'sub_user' ? `${smsLimit.toLocaleString()} SMS` : 'Unlimited'}
-            </span>
-          </div>
-          {user?.plan === 'starter' && user?.role !== 'sub_user' && smsUsed > smsLimit * 0.8 && (
-            <div className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-          )}
-        </div>
-        )}
 
         {activePage !== 'dashboard' && (
           <button 
@@ -380,19 +350,6 @@ function Header({ user, onLogout, collapsed, activePage, messages, onPageChange 
           )}
         </div>
 
-        <button 
-          onClick={() => setShowSettings(true)}
-          className="w-10 h-10 rounded-lg hover:bg-white/10 flex items-center justify-center text-white/70 hover:text-white transition-colors group"
-        >
-          <Settings className="w-5 h-5" />
-        </button>
-
-        <button 
-          className="w-10 h-10 rounded-lg hover:bg-white/10 flex items-center justify-center text-white/70 hover:text-white transition-colors group"
-        >
-          <HelpCircle className="w-5 h-5" />
-        </button>
-
         {showSettings && (
           <SettingsModal isOpen={showSettings} onClose={() => setShowSettings(false)} />
         )}
@@ -447,6 +404,26 @@ function Header({ user, onLogout, collapsed, activePage, messages, onPageChange 
                 >
                   <CreditCard className="w-4 h-4 mr-3 text-white/70" />
                   <span>Subscription & Billing</span>
+                </button>
+                <button 
+                  onClick={() => {
+                    setShowUserMenu(false);
+                    setShowSettings(true); 
+                  }}
+                  className="w-full flex items-center px-4 py-2 text-sm hover:bg-white/10 transition-colors text-left"
+                >
+                  <Settings className="w-4 h-4 mr-3 text-white/70" />
+                  <span>Settings</span>
+                </button>
+                <button 
+                  onClick={() => {
+                    setShowUserMenu(false);
+                    window.open('https://docs.prophone.io', '_blank');
+                  }}
+                  className="w-full flex items-center px-4 py-2 text-sm hover:bg-white/10 transition-colors text-left"
+                >
+                  <HelpCircle className="w-4 h-4 mr-3 text-white/70" />
+                  <span>Help & Support</span>
                 </button>
                 {user?.originalUser && (user?.originalUser?.role === 'super_admin' || user?.originalUser?.role === 'owner') && (
                   <button 

@@ -59,7 +59,11 @@ export function RemoveAdsModal({ onClose, onSubscribe }: RemoveAdsModalProps) {
                 </li>
                 <li className="flex items-center">
                   <span className="w-2 h-2 bg-[#FFD700] rounded-full mr-2" />
-                  Faster loading times
+                  Support Further Development of Software
+                </li>
+                <li className="flex items-center">
+                  <span className="w-2 h-2 bg-[#FFD700] rounded-full mr-2" />
+                  <span>$10/month per account</span>
                 </li>
               </ul>
             </div>

@@ -38,15 +38,29 @@ export function CalendarDay({
 
   const handleDateClick = (date: Date) => {
     if (onDateSelect) {
-      onDateSelect(date);
+      try {
+        // Create a new date object to avoid reference issues
+        const newDate = new Date(date.getTime());
+        // Reset time component
+        newDate.setHours(0, 0, 0, 0);
+        
+        // Validate the date is valid before passing it
+        if (!isNaN(newDate.getTime())) {
+          onDateSelect(newDate);
+        } else {
+          console.error("Invalid date created:", date);
+        }
+      } catch (error) {
+        console.error("Error selecting date:", error);
+      }
     }
   };
 
   const getEventsForDate = (dateString: string) => {
     const today = new Date().toISOString().split('T')[0];
     return events.filter(event => {
-      // Only show events for today's date
-      if (dateString !== today || event.date !== dateString) return false;
+      // Show events for the selected date instead of only today
+      if (event.date !== dateString) return false;
       if (!filters.eventTypes[event.type]) return false;
       
       const eventDate = new Date(dateString);
@@ -73,11 +87,8 @@ export function CalendarDay({
   const handleDrop = (e: DragEvent, date: string) => {
     e.preventDefault();
     const data = JSON.parse(e.dataTransfer.getData('text/plain'));
-    if (onEventDrop) {
+    if (onEventDrop && data && data.eventId) {
       onEventDrop(data.eventId, date);
-    }
-    if (isCurrentMonth && onDateSelect) {
-      onDateSelect(date);
     }
   };
 

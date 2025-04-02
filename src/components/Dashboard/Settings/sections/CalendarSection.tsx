@@ -1,24 +1,41 @@
 import React from 'react';
-import { Calendar, Clock, Globe, Users, Bell, Check, X, Mail } from 'lucide-react';
-import { useGoogleCalendar } from '../../../../hooks/useGoogleCalendar';
+import { Clock, Calendar, Globe, Users, Bell, Link2 } from 'lucide-react';
 
 export function CalendarSection() {
-  const { 
-    isConnected, 
-    connect, 
-    sync, 
-    isSyncing, 
-    connectedEmail,
-    connectedCalendars,
-    selectedCalendar,
-    selectCalendar,
-    error,
-    isConfigured 
-  } = useGoogleCalendar();
+  const [schedule, setSchedule] = React.useState({
+    daysOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
+    timezone: 'America/New_York',
+    startTime: '09:00',
+    endTime: '17:00', 
+    startDate: new Date().toISOString().split('T')[0],
+    endDate: ''
+  });
 
-  const [workingHours, setWorkingHours] = React.useState([
-    { start: '09:00', end: '17:00' }
-  ]);
+  // Get current time in selected timezone
+  const getCurrentTime = React.useCallback((tz: string) => {
+    try {
+      return new Date().toLocaleTimeString('en-US', { 
+        timeZone: tz,
+        hour: 'numeric',
+        minute: 'numeric',
+        hour12: true
+      });
+    } catch (error) {
+      console.error('Error formatting timezone:', error);
+      return '';
+    }
+  }, []);
+
+  const timezones = [
+    { id: 'America/New_York', name: 'Eastern Time' },
+    { id: 'America/Chicago', name: 'Central Time' },
+    { id: 'America/Denver', name: 'Mountain Time' },
+    { id: 'America/Los_Angeles', name: 'Pacific Time' }
+  ];
+
+  const daysOfWeek = [
+    'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'
+  ];
 
   const [settings, setSettings] = React.useState({
     defaultView: 'month',
@@ -32,13 +49,6 @@ export function CalendarSection() {
     },
     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
   });
-
-  const timezones = [
-    { id: 'America/New_York', name: 'Eastern Time' },
-    { id: 'America/Chicago', name: 'Central Time' },
-    { id: 'America/Denver', name: 'Mountain Time' },
-    { id: 'America/Los_Angeles', name: 'Pacific Time' }
-  ];
 
   return (
     <div className="space-y-8">
@@ -55,78 +65,6 @@ export function CalendarSection() {
       </div>
 
       <div className="space-y-6">
-        {/* Google Calendar Integration */}
-        <div className="bg-zinc-800/50 rounded-xl border border-[#B38B3F]/20 p-6">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 rounded-lg bg-white flex items-center justify-center">
-                <svg viewBox="0 0 24 24" className="w-6 h-6" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-                  <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                  <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-                  <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-                </svg>
-              </div>
-              <div>
-                <h3 className="font-medium text-white">Google Calendar</h3>
-                <p className="text-sm text-white/60">Sync your Google Calendar</p>
-              </div>
-            </div>
-            <button
-              onClick={isConnected ? sync : connect}
-              disabled={!isConfigured}
-              className={`px-4 py-2 rounded-lg transition-colors flex items-center space-x-2 ${
-                isConnected 
-                  ? 'bg-[#B38B3F]/20 text-[#FFD700] hover:bg-[#B38B3F]/30'
-                  : 'bg-white hover:bg-gray-50 text-gray-600 shadow-md hover:shadow-lg border border-gray-200'
-              }`}
-            >
-              {isConnected ? (
-                <>
-                  <Calendar className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
-                  <span>{isSyncing ? 'Syncing...' : 'Sync Now'}</span>
-                </>
-              ) : (
-                <>
-                  <span>Connect Calendar</span>
-                </>
-              )}
-            </button>
-          </div>
-
-          {isConnected && (
-            <div className="space-y-4">
-              <div className="flex items-center text-white/60 text-sm">
-                <Check className="w-4 h-4 text-emerald-400 mr-2" />
-                Connected as {connectedEmail}
-              </div>
-              
-              {connectedCalendars.length > 0 && (
-                <div>
-                  <label className="block text-white/70 text-sm font-medium mb-2">
-                    Default Calendar
-                  </label>
-                  <select
-                    value={selectedCalendar || ''}
-                    onChange={(e) => selectCalendar(e.target.value)}
-                    className="w-full px-3 py-2 bg-zinc-800 border border-[#B38B3F]/20 rounded-lg text-white"
-                  >
-                    {connectedCalendars.map(cal => (
-                      <option key={cal.id} value={cal.id}>{cal.name}</option>
-                    ))}
-                  </select>
-                </div>
-              )}
-            </div>
-          )}
-
-          {error && (
-            <div className="mt-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
-              {error}
-            </div>
-          )}
-        </div>
-
         {/* Working Hours */}
         <div className="bg-zinc-800/50 rounded-xl border border-[#B38B3F]/20 p-6">
           <div className="flex items-center space-x-3 mb-6">
@@ -140,36 +78,54 @@ export function CalendarSection() {
           </div>
 
           <div className="space-y-4">
-            {workingHours.map((hours, index) => (
-              <div key={index} className="flex items-center space-x-4">
-                <div className="flex-1">
-                  <label className="block text-white/70 text-sm font-medium mb-2">Start Time</label>
-                  <input
-                    type="time"
-                    value={hours.start}
-                    onChange={(e) => {
-                      const newHours = [...workingHours];
-                      newHours[index].start = e.target.value;
-                      setWorkingHours(newHours);
-                    }}
-                    className="w-full px-3 py-2 bg-zinc-800 border border-[#B38B3F]/20 rounded-lg text-white [color-scheme:dark]"
-                  />
-                </div>
-                <div className="flex-1">
-                  <label className="block text-white/70 text-sm font-medium mb-2">End Time</label>
-                  <input
-                    type="time"
-                    value={hours.end}
-                    onChange={(e) => {
-                      const newHours = [...workingHours];
-                      newHours[index].end = e.target.value;
-                      setWorkingHours(newHours);
-                    }}
-                    className="w-full px-3 py-2 bg-zinc-800 border border-[#B38B3F]/20 rounded-lg text-white [color-scheme:dark]"
-                  />
-                </div>
+            <div className="flex flex-wrap gap-2">
+              {daysOfWeek.map((day) => (
+                <button
+                  key={day}
+                  type="button"
+                  onClick={() => {
+                    if (schedule.daysOfWeek.includes(day)) {
+                      setSchedule({
+                        ...schedule,
+                        daysOfWeek: schedule.daysOfWeek.filter(d => d !== day)
+                      });
+                    } else {
+                      setSchedule({
+                        ...schedule,
+                        daysOfWeek: [...schedule.daysOfWeek, day]
+                      });
+                    }
+                  }}
+                  className={`px-3 py-1.5 rounded-lg transition-colors ${
+                    schedule.daysOfWeek.includes(day)
+                      ? 'bg-[#FFD700]/20 text-[#FFD700] border border-[#FFD700]/40'
+                      : 'bg-zinc-800 text-white/70 hover:text-white border border-[#B38B3F]/20'
+                  }`}
+                >
+                  {day}
+                </button>
+              ))}
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-white/70 text-sm font-medium mb-2">Start Time</label>
+                <input
+                  type="time"
+                  value={schedule.startTime}
+                  onChange={(e) => setSchedule({ ...schedule, startTime: e.target.value })}
+                  className="w-full px-3 py-2 bg-zinc-800 border border-[#B38B3F]/20 rounded-lg text-white [color-scheme:dark]"
+                />
               </div>
-            ))}
+              <div>
+                <label className="block text-white/70 text-sm font-medium mb-2">End Time</label>
+                <input
+                  type="time"
+                  value={schedule.endTime}
+                  onChange={(e) => setSchedule({ ...schedule, endTime: e.target.value })}
+                  className="w-full px-3 py-2 bg-zinc-800 border border-[#B38B3F]/20 rounded-lg text-white [color-scheme:dark]"
+                />
+              </div>
+            </div>
           </div>
         </div>
 
@@ -223,7 +179,10 @@ export function CalendarSection() {
                   <input
                     type="checkbox"
                     checked={settings.showWeekends}
-                    onChange={(e) => setSettings(prev => ({ ...prev, showWeekends: e.target.checked }))}
+                    onChange={(e) => setSettings(prev => ({ 
+                      ...prev, 
+                      showWeekends: e.target.checked 
+                    }))}
                     className="sr-only peer"
                   />
                   <div className="w-11 h-6 bg-zinc-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#B38B3F]"></div>
@@ -239,7 +198,10 @@ export function CalendarSection() {
                   <input
                     type="checkbox"
                     checked={settings.showDeclinedEvents}
-                    onChange={(e) => setSettings(prev => ({ ...prev, showDeclinedEvents: e.target.checked }))}
+                    onChange={(e) => setSettings(prev => ({ 
+                      ...prev, 
+                      showDeclinedEvents: e.target.checked 
+                    }))}
                     className="sr-only peer"
                   />
                   <div className="w-11 h-6 bg-zinc-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#B38B3F]"></div>

@@ -1,17 +1,12 @@
 import React from 'react';
 import { X, CreditCard, Lock, AlertTriangle } from 'lucide-react';
-import { Elements } from '@stripe/react-stripe-js';
-import { loadStripe } from '@stripe/stripe-js';
-
-// Initialize Stripe
-const stripePromise = loadStripe('pk_test_sample');
 
 interface PaymentMethodModalProps {
   onClose: () => void;
-  onSuccess: (paymentMethod: any) => void;
+  onSave: (paymentMethod: any) => void;
 }
 
-function PaymentMethodForm({ onClose, onSuccess }: PaymentMethodModalProps) {
+function PaymentMethodForm({ onClose, onSave }: PaymentMethodModalProps) {
   const [isProcessing, setIsProcessing] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [cardData, setCardData] = React.useState({
@@ -52,7 +47,6 @@ function PaymentMethodForm({ onClose, onSuccess }: PaymentMethodModalProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     setIsProcessing(true);
     setError(null);
 
@@ -67,7 +61,7 @@ function PaymentMethodForm({ onClose, onSuccess }: PaymentMethodModalProps) {
       const expMonth = parseInt(cardData.expMonth);
       const expYear = parseInt('20' + cardData.expYear);
 
-      // In a real app, send to your backend to create payment method
+      // In a real app, this would be sent to your backend to create payment method
       // For demo, simulate success after validation
       await new Promise(resolve => setTimeout(resolve, 1000));
 
@@ -82,7 +76,7 @@ function PaymentMethodForm({ onClose, onSuccess }: PaymentMethodModalProps) {
         isDefault: true
       };
 
-      onSuccess(mockPaymentMethod);
+      onSave(mockPaymentMethod);
     } catch (err) {
       console.error('Payment method error:', err);
       setError(err instanceof Error ? err.message : 'Failed to add payment method');
@@ -200,10 +194,4 @@ function PaymentMethodForm({ onClose, onSuccess }: PaymentMethodModalProps) {
   );
 }
 
-export function PaymentMethodModal(props: PaymentMethodModalProps) {
-  return (
-    <Elements stripe={stripePromise}>
-      <PaymentMethodForm {...props} />
-    </Elements>
-  );
-}
+export { PaymentMethodForm as PaymentMethodModal };

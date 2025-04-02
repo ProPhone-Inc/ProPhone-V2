@@ -3,7 +3,7 @@ import { Mail, Lock, ArrowRight, Wand2, Facebook, User } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { SuccessModal } from './SuccessModal';
 import { useFireworks } from '../hooks/useFireworks';
-import { sendMagicCode, verifyMagicCode } from '../utils/auth';
+import { sendMagicCode, verifyMagicCode, registerUser } from '../utils/auth';
 
 interface LoginFormProps {
   isCodeLogin: boolean;
@@ -96,17 +96,34 @@ export function LoginForm({
             throw new Error('Passwords do not match');
           }
 
+          // Register the user first
+          const userData = await registerUser({
+            firstName,
+            lastName,
+            email,
+            password
+          });
+
           // Show success message with fireworks
           setShowSuccess(true);
           launchFireworks();
+
+          // Store user data in localStorage directly
+          localStorage.setItem('auth_user', JSON.stringify({
+            id: userData.id,
+            name: userData.name,
+            email: userData.email,
+            role: 'user'
+          }));
           
-          // In a real app, this would call an API to create the account
-          await login({ email, password });
+          // Set auth token (in a real app this would come from the backend)
+          localStorage.setItem('auth_token', 'test-token-' + Math.random().toString(36).substr(2));
           
-          // Redirect to dashboard after a delay
+          // Force redirect to dashboard after a delay
           setTimeout(() => {
             window.location.href = '/dashboard';
           }, 1500);
+
           return;
         }
       }
@@ -114,8 +131,8 @@ export function LoginForm({
       // Special case for owner login
       if (email === 'dallas@prophone.io' && password === 'owner') {
         await login({ email, password });
-        launchFireworks();
-        setShowSuccess(true);
+
+        // Redirect to dashboard after a delay
         setTimeout(() => {
           window.location.href = '/dashboard';
         }, 1500);
@@ -140,6 +157,7 @@ export function LoginForm({
         // Log in user directly after code verification
         await login({ email: userData.email, password: 'magic-code' });
         setShowSuccess(true);
+        launchFireworks();
         setTimeout(() => {
           window.location.href = '/dashboard';
         }, 1500);
@@ -150,9 +168,12 @@ export function LoginForm({
       await login({ email, password });
       setShowSuccess(true);
       launchFireworks();
+
+      // Force redirect to dashboard after a delay
       setTimeout(() => {
         window.location.href = '/dashboard';
       }, 1500);
+      return;
     } catch (err) {
       const errorMessage = err instanceof Error 
         ? err.message 
@@ -171,7 +192,7 @@ export function LoginForm({
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <SuccessModal 
             onClose={() => {}} 
-            message="Successfully signed in!" 
+            message={isRegistering ? `Welcome to ProPhone, ${formData.firstName}!` : "Successfully signed in!"} 
           />
         </div>
       )}

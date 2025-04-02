@@ -2,14 +2,23 @@ import React from 'react';
 
 interface SuccessModalProps {
   onClose: () => void;
+  redirectPath?: string | null;
   message?: string;
 }
 
-export function SuccessModal({ onClose, message }: SuccessModalProps) {
+export function SuccessModal({ onClose, redirectPath, message }: SuccessModalProps) {
   React.useEffect(() => {
-    const timer = setTimeout(onClose, 2000);
+    const timer = setTimeout(() => {
+      if (redirectPath) {
+        // Force navigation to dashboard
+        window.location.href = redirectPath;
+      } else {
+        onClose();
+      }
+    }, 1000); // Reduced timeout for faster redirect
+
     return () => clearTimeout(timer);
-  }, [onClose]);
+  }, [onClose, redirectPath]);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
@@ -25,7 +34,7 @@ export function SuccessModal({ onClose, message }: SuccessModalProps) {
         <h3 className="text-2xl font-bold text-center bg-gradient-to-r from-[#B38B3F] via-[#FFD700] to-[#B38B3F] text-transparent bg-clip-text mb-3">
           Success!
         </h3>
-        <p className="text-center text-white/70">
+        <p className="text-center text-white/70 px-2">
           {message || 'Your password has been successfully updated. Redirecting to login...'}
         </p>
       </div>

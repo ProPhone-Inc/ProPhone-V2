@@ -1,13 +1,11 @@
 import React from 'react';
 import { CheckCircle, Circle, Clock, Calendar, PenSquare, Video, MapPin, Users } from 'lucide-react';
-import { useGoogleCalendar } from '../../hooks/useGoogleCalendar';
 import { CalendarModal } from './Calendar/CalendarModal';
 
 export function UpcomingTasks() {
   const [showEdit, setShowEdit] = React.useState(false);
   const [showCalendar, setShowCalendar] = React.useState(false);
   const hoverTimer = React.useRef<number | null>(null);
-  const { events: googleEvents, isConnected } = useGoogleCalendar();
   const [localEvents, setLocalEvents] = React.useState([
     {
       id: Math.random().toString(36).substr(2, 9),
@@ -38,20 +36,6 @@ export function UpcomingTasks() {
   const todaysEvents = React.useMemo(() => {
     const today = new Date().toISOString().split('T')[0];
 
-    // Get Google Calendar events for today
-    const googleEventsToday = (isConnected && googleEvents || [])
-      .filter(event => event.start.split('T')[0] === today)
-      .map(event => ({
-        id: event.id,
-        title: event.title,
-        type: 'event',
-        time: event.start.split('T')[1]?.slice(0, 5) || '00:00',
-        location: event.location,
-        attendees: event.attendees,
-        videoConference: event.videoConference,
-        isGoogleEvent: true
-      }));
-
     // Get local events and tasks for today
     const localEventsToday = localEvents
       .filter(event => event.dueDate.split('T')[0] === today)
@@ -61,9 +45,9 @@ export function UpcomingTasks() {
       }));
 
     // Combine and sort by time
-    return [...googleEventsToday, ...localEventsToday]
+    return [...localEventsToday]
       .sort((a, b) => a.time.localeCompare(b.time));
-  }, [googleEvents, localEvents, isConnected]);
+  }, [localEvents]);
 
   const tasks = [
     {

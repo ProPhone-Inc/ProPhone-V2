@@ -31,13 +31,8 @@ const ComponentLoader = () => (
   <div className="animate-pulse bg-zinc-800/50 rounded-xl h-full min-h-[200px]" />
 );
 
-const canAccessTeamPanel = (user: any) => {
-  return user?.role === 'owner' ||
-         user?.role === 'super_admin' ||
-         user?.role === 'executive' ||
-         user?.plan === 'elite' ||
-         user?.plan === 'god_mode';
-};
+// All users can access team panel
+const canAccessTeamPanel = (user: any) => true;
 
 interface AdminModalProps {
   isOpen: boolean;
@@ -266,10 +261,8 @@ export function Dashboard() {
     
     // Handle admin panel access
     if (page === 'admin') {
-      if (user?.role === 'owner' || user?.role === 'super_admin') {
-        setShowAdminModal(true);
-        return;
-      }
+      setShowAdminModal(true);
+      return;
     }
     
     // Handle reporting panel access

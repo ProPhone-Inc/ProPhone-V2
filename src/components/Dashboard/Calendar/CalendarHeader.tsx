@@ -1,6 +1,5 @@
 import React from 'react';
-import { Plus } from 'lucide-react';
-import { useGoogleCalendar } from '../../../hooks/useGoogleCalendar';
+import { Plus, X } from 'lucide-react';
 
 interface CalendarHeaderProps {
   viewMode: 'calendar' | 'tasks';
@@ -55,6 +54,13 @@ export function CalendarHeader({
           Tasks
         </button>
       </div>
+      <button
+        onClick={() => onClose()}
+        className="px-4 py-2 bg-gradient-to-r from-[#B38B3F] to-[#FFD700] text-black font-medium rounded-lg hover:opacity-90 transition-opacity flex items-center space-x-2"
+      >
+        <X className="w-4 h-4" />
+        <span>Close</span>
+      </button>
     </div>
   );
 }

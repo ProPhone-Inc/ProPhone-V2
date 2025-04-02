@@ -1,15 +1,8 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import { resolve } from 'path';
 
 export default defineConfig({
   plugins: [react()],
-  resolve: {
-    alias: {
-      '@stripe/react-stripe-js': resolve(__dirname, 'node_modules/@stripe/react-stripe-js/dist/react-stripe.esm.js'),
-      '@stripe/stripe-js': resolve(__dirname, 'node_modules/@stripe/stripe-js/dist/stripe.esm.js')
-    }
-  },
   server: {
     host: '0.0.0.0',
     port: 3000,
@@ -52,10 +45,8 @@ export default defineConfig({
   optimizeDeps: {
     entries: ['./index.html'],
     include: [
-      'react', 
-      'react-dom', 
-      '@stripe/react-stripe-js',
-      '@stripe/stripe-js'
+      'react',
+      'react-dom'
     ],
     esbuildOptions: {
       target: 'esnext',

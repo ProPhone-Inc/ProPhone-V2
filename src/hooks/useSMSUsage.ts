@@ -41,11 +41,7 @@ export const useSMSUsage = create<SMSUsageStore>((set, get) => ({
 
   getLimit: () => {
     const { user } = useAuth.getState();
-    // Return 5000 limit only for free plan users who aren't sub users
-    if (user?.plan === 'starter' && user?.role !== 'sub_user') {
-      return 5000;
-    }
-    // All other users (paid plans and sub users) get unlimited
+    // All users get unlimited
     return null;
   },
 
@@ -71,8 +67,8 @@ export const useSMSUsage = create<SMSUsageStore>((set, get) => ({
     const { user } = useAuth.getState();
     const { lastReset } = get();
     
-    // Skip if not a free plan user or is a sub user
-    if (!user || user.plan !== 'starter' || user.role === 'sub_user') return;
+    // No need to check plan since all users have unlimited
+    if (!user) return;
 
     // Get user's billing cycle start date (e.g., 1st of each month)
     const billingStartDay = 1; // Can be configured per user in a real app

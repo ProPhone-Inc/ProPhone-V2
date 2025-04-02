@@ -1,11 +1,22 @@
 import React from 'react';
-import { Calendar, Clock, CheckCircle, ArrowRight, PenSquare } from 'lucide-react';
+import { CheckCircle, Circle, Clock, Calendar, PenSquare, ArrowRight } from 'lucide-react';
 import { CalendarModal } from './Calendar/CalendarModal';
 
 export function TopContacts() {
   const [showEdit, setShowEdit] = React.useState(false);
   const [showCalendar, setShowCalendar] = React.useState(false);
   const hoverTimer = React.useRef<number | null>(null);
+  const [localEvents, setLocalEvents] = React.useState([
+    {
+      id: Math.random().toString(36).substr(2, 9),
+      title: 'Review Project Proposal',
+      type: 'task',
+      status: 'pending',
+      priority: 'high',
+      dueDate: new Date().toISOString(),
+      time: '14:00'
+    }
+  ]);
 
   const handleMouseEnter = () => {
     hoverTimer.current = window.setTimeout(() => {
@@ -20,53 +31,72 @@ export function TopContacts() {
     }
     setShowEdit(false);
   };
+  
+  // Combine and sort events for today
+  const todaysEvents = React.useMemo(() => {
+    const today = new Date().toISOString().split('T')[0];
 
-  const events = [
+    // Get local events and tasks for today
+    const localEventsToday = localEvents
+      .filter(event => event.dueDate.split('T')[0] === today)
+      .map(event => ({
+        ...event,
+        isGoogleEvent: false
+      }));
+
+    // Combine and sort by time
+    return [...localEventsToday]
+      .sort((a, b) => a.time.localeCompare(b.time));
+  }, [localEvents]);
+
+  const tasks = [
     {
       id: 1,
-      title: 'Team Meeting',
-      time: '10:00 AM',
-      type: 'meeting',
-      status: 'upcoming'
+      title: 'Finalize Fall Campaign',
+      date: 'Today, 2:00 PM',
+      priority: 'high',
+      completed: false,
     },
     {
       id: 2,
-      title: 'Client Call',
-      time: '11:30 AM',
-      type: 'call',
-      status: 'upcoming'
+      title: 'Review Contact List',
+      date: 'Today, 4:30 PM',
+      priority: 'medium',
+      completed: false,
     },
     {
       id: 3,
-      title: 'Review Campaign Results',
-      time: '2:00 PM',
-      type: 'task',
-      status: 'pending'
+      title: 'Social Media Post',
+      date: 'Tomorrow, 10:00 AM',
+      priority: 'medium',
+      completed: false,
     },
     {
       id: 4,
-      title: 'Send Follow-up Emails',
-      time: '3:30 PM',
-      type: 'task',
-      status: 'completed'
+      title: 'Update Email Templates',
+      date: 'Sep 18, 2025',
+      priority: 'low',
+      completed: true,
     },
     {
       id: 5,
-      title: 'Strategy Planning',
-      time: '4:00 PM',
-      type: 'meeting',
-      status: 'upcoming'
+      title: 'Customer Feedback Review',
+      date: 'Sep 20, 2025',
+      priority: 'high',
+      completed: false,
     },
   ];
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'upcoming':
-        return 'text-[#FFD700]';
-      case 'completed':
-        return 'text-emerald-400';
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'high':
+        return 'bg-rose-500';
+      case 'medium':
+        return 'bg-[#FFD700]';
+      case 'low':
+        return 'bg-emerald-500';
       default:
-        return 'text-white/70';
+        return 'bg-gray-400';
     }
   };
 
@@ -79,55 +109,71 @@ export function TopContacts() {
       <div className="p-6">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center">
-            <Calendar className="w-5 h-5 text-[#FFD700]" />
-            <h2 className="text-xl font-bold text-white ml-2">Today's Schedule</h2>
+            <Clock className="w-5 h-5 text-[#FFD700]" />
+            <h2 className="text-xl font-bold text-white ml-2">Upcoming Tasks</h2>
             {showEdit && (
-              <button className="p-1 hover:bg-white/10 rounded-lg transition-colors group ml-2 opacity-0 animate-fade-in">
+              <button 
+                className="p-1 hover:bg-white/10 rounded-lg transition-colors group ml-2 opacity-0 animate-fade-in"
+                onClick={() => {/* Open calendar modal */}}
+              >
                 <PenSquare className="w-4 h-4 text-white/40 group-hover:text-[#FFD700] transition-colors" />
               </button>
             )}
           </div>
-          <div className="flex items-center space-x-2">
-            <div className="text-[#FFD700] whitespace-nowrap">
-              {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-            </div>
-          </div>
+          <button className="text-[#B38B3F] hover:text-[#FFD700] text-sm font-medium transition-colors">
+            + Add Task
+          </button>
         </div>
 
-        <div className="space-y-4">
-          {events.map((event) => (
-            <div
-              key={event.id}
-              className={`p-3 rounded-lg border transition-colors ${
-                event.status === 'completed'
-                  ? 'bg-zinc-800/30 border-zinc-700/30'
-                  : 'bg-zinc-800/50 border-[#B38B3F]/20 hover:border-[#B38B3F]/40'
-              }`}
+        <div className="space-y-3">
+          {todaysEvents.length === 0 ? (
+            <div className="text-center py-6 text-white/40">
+              <Calendar className="w-12 h-12 mx-auto mb-2 opacity-40" />
+              <p>No events or tasks scheduled for today</p>
+            </div>
+          ) : todaysEvents.map((item) => (
+            <div 
+              key={item.id} 
+              className={`p-3 rounded-lg border group ${
+                item.type === 'task' 
+                  ? item.status === 'completed'
+                    ? 'border-white/10 bg-white/5'
+                    : 'border-[#B38B3F]/20 bg-[#B38B3F]/5'
+                  : 'border-[#FFD700]/20 bg-[#FFD700]/5'
+              } transition-all duration-200 hover:border-[#B38B3F]/30`}
             >
-              <div className="flex items-center justify-between mb-2 group">
-                <h4 className={`font-medium ${
-                  event.status === 'completed' ? 'text-white/50 line-through' : 'text-white'
-                }`}>{event.title}</h4>
-                <div className="flex items-center">
-                  <span className={`text-sm ${getStatusColor(event.status)} mr-2`}>
-                    {event.time}
-                  </span>
-                  <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button className="p-1 hover:bg-white/10 rounded-lg transition-colors">
+              <div className="flex items-start">
+                {item.type === 'task' ? (
+                  <button className="mt-0.5 flex-shrink-0">
+                    {item.status === 'completed' ? (
+                      <CheckCircle className="w-5 h-5 text-[#FFD700]" />
+                    ) : (
+                      <Circle className="w-5 h-5 text-white/50" />
+                    )}
+                  </button>
+                ) : (
+                  <div className="mt-0.5 flex-shrink-0">
+                    <Calendar className="w-5 h-5 text-[#FFD700]" />
+                  </div>
+                )}
+                <div className="ml-3 flex-1">
+                  <div className="flex items-center justify-between">
+                    <h4 className={`font-medium ${
+                      item.type === 'task' && item.status === 'completed' 
+                        ? 'text-white/50 line-through' 
+                        : 'text-white'
+                    }`}>
+                      {item.title}
+                    </h4>
+                    <button className="p-1 hover:bg-white/10 rounded-lg transition-colors opacity-0 group-hover:opacity-100">
                       <PenSquare className="w-3 h-3 text-white/40 hover:text-[#FFD700] transition-colors" />
                     </button>
                   </div>
+                  <div className="flex items-center mt-1">
+                    <Calendar className="w-3 h-3 text-white/40 mr-1" />
+                    <span className="text-xs text-white/50">{item.time}</span>
+                  </div>
                 </div>
-              </div>
-              <div className="flex items-center text-sm">
-                {event.status === 'completed' ? (
-                  <CheckCircle className="w-4 h-4 text-emerald-400 mr-1.5" />
-                ) : (
-                  <Clock className="w-4 h-4 text-[#FFD700] mr-1.5" />
-                )}
-                <span className={event.status === 'completed' ? 'text-white/40' : 'text-white/60'}>
-                  {event.type.charAt(0).toUpperCase() + event.type.slice(1)}
-                </span>
               </div>
             </div>
           ))}
@@ -137,10 +183,9 @@ export function TopContacts() {
       <div className="border-t border-[#B38B3F]/20 p-4">
         <button 
           onClick={() => setShowCalendar(true)}
-          className="w-full py-2 text-center text-[#B38B3F] hover:text-[#FFD700] font-medium transition-colors flex items-center justify-center"
+          className="w-full py-2 text-center text-[#B38B3F] hover:text-[#FFD700] font-medium transition-colors"
         >
-          View Full Calendar
-          <ArrowRight className="w-4 h-4 ml-1" />
+          View All Tasks
         </button>
       </div>
       

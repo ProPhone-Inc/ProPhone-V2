@@ -205,17 +205,11 @@ const docuProItems = [
   }
 ];
 
-const canAccessTeamPanel = (user: any) => {
-  return user?.role === 'owner' ||
-         user?.role === 'super_admin' ||
-         user?.role === 'executive' ||
-         user?.plan === 'elite' ||
-         user?.plan === 'god_mode';
-};
+// All users can access team panel
+const canAccessTeamPanel = (user: any) => true;
 
-const canAccessAdminPanel = (user: any) => {
-  return user?.role === 'owner' || user?.role === 'super_admin';
-};
+// All users can access admin panel
+const canAccessAdminPanel = (user: any) => true;
 
 interface SidebarProps {
   collapsed: boolean;
@@ -467,15 +461,17 @@ export function Sidebar({
               {/* Admin section */}
               {canAccessAdminPanel(user) && (
                 <>
-                  <SidebarItem 
-                    icon={<Shield size={effectiveCollapsed ? 18 : 20} className="text-[#FFD700]" />} 
-                    text="Super Admin Panel" 
-                    id="admin"
-                    active={activePage === 'admin'} 
-                    collapsed={effectiveCollapsed} 
-                    onClick={() => handleSidebarClick('admin')}
-                    isAdmin
-                  />
+                  {(user?.role === 'owner' || user?.role === 'super_admin') && (
+                    <SidebarItem 
+                      icon={<Shield size={effectiveCollapsed ? 18 : 20} className="text-[#FFD700]" />} 
+                      text="Super Admin Panel" 
+                      id="admin"
+                      active={activePage === 'admin'} 
+                      collapsed={effectiveCollapsed} 
+                      onClick={() => handleSidebarClick('admin')}
+                      isAdmin
+                    />
+                  )}
                   <SidebarItem 
                     icon={<BarChart2 size={effectiveCollapsed ? 18 : 20} className="text-[#FFD700]" />} 
                     text="System Processing" 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { User, Phone, MessageSquare, Users, Star, ChevronLeft, ChevronRight, Calendar, MapPin, Tag, Link2 } from 'lucide-react';
+import { User, Phone, MessageSquare, Users, Star, ChevronLeft, ChevronRight, Calendar, MapPin, Tag, Link2, Bell } from 'lucide-react';
 import { useCallState } from '../../../hooks/useCallState';
 import { useDB } from '../../../hooks/useDB';
 import type { Chat } from '../../../modules/phone/types';

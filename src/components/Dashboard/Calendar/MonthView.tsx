@@ -55,7 +55,7 @@ export function MonthView({
   return (
     <div className="flex-1 overflow-hidden flex flex-col h-full min-h-0">
       {displayMode === 'month' && (
-        <div className="grid grid-cols-7 gap-px bg-zinc-800/50 min-h-0">
+        <div className="grid grid-cols-7 gap-px bg-zinc-800/50 min-h-0 overflow-hidden">
           {dayNames.map((day) => (
             <div key={day} className="py-1 text-center text-white/50 font-medium text-xs border-b border-[#FFD700]/20">
               {day}
@@ -68,8 +68,11 @@ export function MonthView({
         <div className="flex flex-col h-full">
           <div className="grid grid-cols-7 gap-px bg-zinc-800/50">
             {Array.from({ length: 7 }, (_, i) => {
-              const date = new Date();
-              date.setDate(date.getDate() - date.getDay() + i);
+              // Create a new date to avoid reference issues
+              const today = new Date();
+              const date = new Date(today.getTime());
+              // Calculate the start of the week and add the day index
+              date.setDate(today.getDate() - today.getDay() + i);
               return (
                 <div key={i} className="p-2 text-center border-b border-[#FFD700]/20">
                   <div className="text-xs text-white/50 font-medium">{dayNames[i]}</div>
@@ -137,7 +140,7 @@ export function MonthView({
       )}
 
       {displayMode === 'month' && (
-        <div className="flex-1 overflow-y-auto min-h-0 border border-[#FFD700]/20 rounded-lg shadow-[0_0_20px_rgba(255,215,0,0.1)]">
+        <div className="flex-1 overflow-hidden min-h-0 border border-[#FFD700]/20 rounded-lg shadow-[0_0_20px_rgba(255,215,0,0.1)]">
         <CalendarDay
           currentMonth={currentMonth}
           currentYear={currentYear}
@@ -151,4 +154,17 @@ export function MonthView({
       )}
     </div>
   );
+  
+  // Helper function to format date as YYYY-MM-DD
+  function formatDateString(date: Date): string {
+    try {
+      const yyyy = date.getFullYear();
+      const mm = String(date.getMonth() + 1).padStart(2, '0');
+      const dd = String(date.getDate()).padStart(2, '0');
+      return `${yyyy}-${mm}-${dd}`;
+    } catch (error) {
+      console.error("Error formatting date:", error);
+      return new Date().toISOString().split('T')[0];
+    }
+  }
 }

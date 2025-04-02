@@ -3,7 +3,7 @@ import { Plus, Users, Calendar, X, Filter, Clock, ChevronLeft, ChevronRight, Ale
 import { CalendarHeader } from './CalendarHeader';
 import { MonthView } from './MonthView'; 
 import { TaskView } from './TaskView';
-import { EventFormModal } from '../EventFormModal';
+import { EventFormModal } from './EventFormModal';
 
 interface CalendarModalProps {
   onClose: () => void;
@@ -15,9 +15,9 @@ export function CalendarModal({ onClose, onAddEvent }: CalendarModalProps) {
   const [viewMode, setViewMode] = React.useState<'calendar' | 'tasks'>('calendar');
   const [showEventForm, setShowEventForm] = React.useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [isClosing, setIsClosing] = React.useState(false);
   const [currentMonth, setCurrentMonth] = React.useState(new Date().getMonth());
   const [currentYear, setCurrentYear] = React.useState(new Date().getFullYear());
-  const [isClosing, setIsClosing] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [taskStages, setTaskStages] = React.useState(['To Do', 'In Progress', 'Done']);
   const [displayMode, setDisplayMode] = React.useState<'month' | 'week' | 'day'>('month');
@@ -41,25 +41,22 @@ export function CalendarModal({ onClose, onAddEvent }: CalendarModalProps) {
   };
   const [eventForm, setEventForm] = React.useState(initialEventForm);
 
-  // Clean up event listeners on unmount
-  React.useEffect(() => {
-    return () => {
-      // Clean up any event listeners
-      document.removeEventListener('keydown', handleEscapeKey);
-    };
-  }, []);
-
   const handleEscapeKey = React.useCallback((e: KeyboardEvent) => {
     if (e.key === 'Escape' && !showEventForm) {
       handleClose();
     }
   }, [showEventForm]);
 
+  // Clean up event listeners on unmount
+  React.useEffect(() => {
+    document.addEventListener('keydown', handleEscapeKey);
+    return () => {
+      document.removeEventListener('keydown', handleEscapeKey);
+    };
+  }, [handleEscapeKey]);
+
   const handleClose = () => {
-    setIsClosing(true);
-    setTimeout(() => {
-      onClose();
-    }, 300);
+    onClose();
   };
 
   // Add escape key listener
@@ -68,7 +65,7 @@ export function CalendarModal({ onClose, onAddEvent }: CalendarModalProps) {
     return () => document.removeEventListener('keydown', handleEscapeKey);
   }, [handleEscapeKey]);
 
-  const [localEvents, setLocalEvents] = React.useState([
+  const [localEvents] = React.useState([
     {
       id: Math.random().toString(36).substr(2, 9),
       title: 'Welcome to Calendar',
@@ -121,7 +118,7 @@ export function CalendarModal({ onClose, onAddEvent }: CalendarModalProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    setError(null);
+    setError('');
     
     try {
       if (!eventForm.title?.trim()) {
@@ -137,7 +134,7 @@ export function CalendarModal({ onClose, onAddEvent }: CalendarModalProps) {
       }
 
       const newEvent = {
-        id: Math.random().toString(36).substr(2, 9),
+        id: `event-${Date.now()}`,
         title: eventForm.title,
         type: eventForm.type,
         date: eventForm.startDate,
@@ -159,7 +156,17 @@ export function CalendarModal({ onClose, onAddEvent }: CalendarModalProps) {
       
       // Clear form and close modal
       setShowEventForm(false);
-      setSelectedDate(new Date(eventForm.startDate));
+      
+      try {
+        const dateParts = eventForm.startDate.split('-');
+        const year = parseInt(dateParts[0]);
+        const month = parseInt(dateParts[1]) - 1; // Month is 0-indexed
+        const day = parseInt(dateParts[2]);
+        const newDate = new Date(year, month, day);
+        setSelectedDate(newDate);
+      } catch (err) {
+        console.error("Error parsing date:", err);
+      }
       
       // Reset form
       setEventForm(initialEventForm);
@@ -183,21 +190,49 @@ export function CalendarModal({ onClose, onAddEvent }: CalendarModalProps) {
   };
 
   const handleDateSelect = (date: Date) => {
-    setSelectedDate(date);
-    setEventForm({
-      ...initialEventForm,
-      startDate: date.toISOString().split('T')[0],
-      endDate: date.toISOString().split('T')[0]
-    });
-    setShowEventForm(true);
+    try {
+      // Validate the date object
+      // Create a new date object to avoid reference issues
+      const newDate = new Date(date.getTime());
+      // Reset time component
+      newDate.setHours(0, 0, 0, 0);
+      
+      setSelectedDate(newDate);
+      
+      // Format as YYYY-MM-DD
+      const yyyy = newDate.getFullYear();
+      const mm = String(newDate.getMonth() + 1).padStart(2, '0');
+      const dd = String(newDate.getDate()).padStart(2, '0');
+      const dateString = `${yyyy}-${mm}-${dd}`;
+      
+      setEventForm({
+        ...initialEventForm,
+        startDate: dateString,
+        endDate: dateString
+      });
+      setShowEventForm(true);
+    } catch (error) {
+      console.error("Error handling date selection:", error);
+    }
+  };
+
+  // Helper function to format date as YYYY-MM-DD
+  const formatDateString = (date: Date): string => {
+    try {
+      const yyyy = date.getFullYear();
+      const mm = String(date.getMonth() + 1).padStart(2, '0');
+      const dd = String(date.getDate()).padStart(2, '0');
+      return `${yyyy}-${mm}-${dd}`;
+    } catch (error) {
+      console.error("Error formatting date:", error);
+      return new Date().toISOString().split('T')[0];
+    }
   };
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center px-4">
       <div 
-        className={`absolute inset-0 bg-black/60 backdrop-blur-md transition-opacity duration-300 ${
-          isClosing ? 'opacity-0' : 'opacity-100'
-        }`} 
+        className="absolute inset-0 bg-black/60 backdrop-blur-md" 
         onClick={() => {
           if (!showEventForm) {
             handleClose();
@@ -214,8 +249,8 @@ export function CalendarModal({ onClose, onAddEvent }: CalendarModalProps) {
           onAddEvent={() => {
             setEventForm({
               ...initialEventForm,
-              startDate: selectedDate?.toISOString().split('T')[0] || new Date().toISOString().split('T')[0],
-              endDate: selectedDate?.toISOString().split('T')[0] || new Date().toISOString().split('T')[0]
+              startDate: selectedDate ? formatDateString(selectedDate) : formatDateString(new Date()),
+              endDate: selectedDate ? formatDateString(selectedDate) : formatDateString(new Date())
             });
             setShowEventForm(true);
           }}
@@ -338,42 +373,42 @@ export function CalendarModal({ onClose, onAddEvent }: CalendarModalProps) {
                   </>
                 )}
               </div>
-              </div>
-              <div className="max-w-[1100px] mx-auto">
-          {viewMode === 'tasks' ? (
-            <TaskView
-              taskStages={taskStages}
-              setTaskStages={setTaskStages}
-              events={events}
-              taskDisplayMode={taskDisplayMode}
-              selectedDate={selectedDate}
-              onTaskSelect={(task) => {
-                setEventForm({ ...task, startDate: task.date, endDate: task.date });
-                setShowEventForm(true);
-              }}
-            />
-          ) : (
-            <MonthView
-              currentMonth={currentMonth}
-              currentYear={currentYear}
-              displayMode={displayMode}
-              setCurrentMonth={setCurrentMonth}
-              setCurrentYear={setCurrentYear}
-              selectedDate={selectedDate}
-              onDateSelect={(date) => {
-                setSelectedDate(date);
-                setEventForm(prev => ({
-                  ...prev,
-                  startDate: date.toISOString().split('T')[0],
-                  endDate: date.toISOString().split('T')[0]
-                }));
-                setShowEventForm(true);
-              }}
-              events={events}
-              filters={filters}
-              onEventDrop={handleEventDrop}
-            /> 
-          )}
+            </div>
+            <div className="max-w-[1100px] mx-auto">
+              {viewMode === 'tasks' ? (
+                <TaskView
+                  taskStages={taskStages}
+                  setTaskStages={setTaskStages}
+                  events={events}
+                  taskDisplayMode={taskDisplayMode}
+                  selectedDate={selectedDate}
+                  onTaskSelect={(task) => {
+                    setEventForm({ ...task, startDate: task.date, endDate: task.date });
+                    setShowEventForm(true);
+                  }}
+                />
+              ) : (
+                <MonthView
+                  currentMonth={currentMonth}
+                  currentYear={currentYear}
+                  displayMode={displayMode}
+                  setCurrentMonth={setCurrentMonth}
+                  setCurrentYear={setCurrentYear}
+                  selectedDate={selectedDate}
+                  onDateSelect={(date) => {
+                    setSelectedDate(date);
+                    setEventForm(prev => ({
+                      ...prev,
+                      startDate: date.toISOString().split('T')[0],
+                      endDate: date.toISOString().split('T')[0]
+                    }));
+                    setShowEventForm(true);
+                  }}
+                  events={events}
+                  filters={filters}
+                  onEventDrop={handleEventDrop}
+                /> 
+              )}
             </div>
           </div>
           
@@ -388,63 +423,63 @@ export function CalendarModal({ onClose, onAddEvent }: CalendarModalProps) {
               </div>
             </div>
             <div className="p-6 overflow-y-auto h-full">
-            <div className="mb-4">
-              <h3 className="text-lg font-bold text-white">
-                {selectedDate?.toLocaleDateString('default', { 
-                  weekday: 'long',
-                  month: 'long',
-                  day: 'numeric',
-                  year: 'numeric'
-                })}
-              </h3>
-            </div>
-            
-            <div className="space-y-4">
-              {events
-                ?.filter(event => event.date === selectedDate?.toISOString().split('T')[0])
-                .sort((a, b) => a.time.localeCompare(b.time))
-                .map(event => (
-                  <div
-                    key={event.id}
-                    className={`p-4 rounded-lg border transition-colors cursor-pointer
-                      ${event.type === 'event' 
-                        ? 'bg-[#FFD700]/10 border-[#FFD700]/20 hover:border-[#FFD700]/40' 
-                        : event.type === 'out-of-office'
-                        ? 'bg-[#FF6B6B]/10 border-[#FF6B6B]/20 hover:border-[#FF6B6B]/40'
-                        : event.type === 'working-location'
-                        ? 'bg-[#4CAF50]/10 border-[#4CAF50]/20 hover:border-[#4CAF50]/40'
-                        : 'bg-[#2196F3]/10 border-[#2196F3]/20 hover:border-[#2196F3]/40'
-                      }`}
-                    onClick={() => {
-                      setEventForm({ ...event, startDate: event.date, endDate: event.date });
-                      setShowEventForm(true);
-                    }}
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-white font-medium">{event.title}</span>
-                      <span className="text-white/60 text-sm">{event.time}</span>
-                    </div>
-                    {event.description && (
-                      <p className="text-white/70 text-sm">{event.description}</p>
-                    )}
-                    {event.attendees?.length > 0 && (
-                      <div className="flex items-center mt-2 text-white/50 text-sm">
-                        <Users className="w-4 h-4 mr-2" />
-                        <span>{event.attendees.length} attendees</span>
+              <div className="mb-4">
+                <h3 className="text-lg font-bold text-white">
+                  {selectedDate?.toLocaleDateString('default', { 
+                    weekday: 'long',
+                    month: 'long',
+                    day: 'numeric',
+                    year: 'numeric'
+                  })}
+                </h3>
+              </div>
+              
+              <div className="space-y-4">
+                {events
+                  ?.filter(event => event.date === selectedDate?.toISOString().split('T')[0])
+                  .sort((a, b) => a.time.localeCompare(b.time))
+                  .map(event => (
+                    <div
+                      key={event.id}
+                      className={`p-4 rounded-lg border transition-colors cursor-pointer
+                        ${event.type === 'event' 
+                          ? 'bg-[#FFD700]/10 border-[#FFD700]/20 hover:border-[#FFD700]/40' 
+                          : event.type === 'out-of-office'
+                          ? 'bg-[#FF6B6B]/10 border-[#FF6B6B]/20 hover:border-[#FF6B6B]/40'
+                          : event.type === 'working-location'
+                          ? 'bg-[#4CAF50]/10 border-[#4CAF50]/20 hover:border-[#4CAF50]/40'
+                          : 'bg-[#2196F3]/10 border-[#2196F3]/20 hover:border-[#2196F3]/40'
+                        }`}
+                      onClick={() => {
+                        setEventForm({ ...event, startDate: event.date, endDate: event.date });
+                        setShowEventForm(true);
+                      }}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-white font-medium">{event.title}</span>
+                        <span className="text-white/60 text-sm">{event.time}</span>
                       </div>
-                    )}
-                  </div>
-                ))}
+                      {event.description && (
+                        <p className="text-white/70 text-sm">{event.description}</p>
+                      )}
+                      {event.attendees?.length > 0 && (
+                        <div className="flex items-center mt-2 text-white/50 text-sm">
+                          <Users className="w-4 h-4 mr-2" />
+                          <span>{event.attendees.length} attendees</span>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+              </div>
             </div>
-          </div>
           </div>
         </div>
 
         {showEventForm && (
           <EventFormModal
             selectedDate={selectedDate}
-            eventForm={eventForm}
-            setEventForm={setEventForm}
+            eventForm={{...eventForm}}
+            setEventForm={(form) => setEventForm(form)}
             error={error}
             onClose={() => {
               setShowEventForm(false);
@@ -452,7 +487,6 @@ export function CalendarModal({ onClose, onAddEvent }: CalendarModalProps) {
             }}
             onSubmit={handleSubmit}
             isSubmitting={isSubmitting}
-            modalRef={modalRef}
           />
         )}
       </div>

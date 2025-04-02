@@ -24,13 +24,21 @@ function AdminPanel() {
   // Redirect if not authorized
   React.useEffect(() => {
     if (currentUser?.role !== 'owner' && currentUser?.role !== 'super_admin') {
-      window.location.href = '/';
+      window.location.href = '/dashboard';
     }
   }, [currentUser]);
 
   // Don't render anything if not authorized
   if (currentUser?.role !== 'owner' && currentUser?.role !== 'super_admin') {
-    return null;
+    return (
+      <div className="flex flex-col items-center justify-center h-[60vh] text-center p-8">
+        <Shield className="w-16 h-16 text-[#B38B3F]/50 mb-4" />
+        <h2 className="text-2xl font-bold text-white mb-2">Access Restricted</h2>
+        <p className="text-white/60 max-w-md">
+          The Super Admin Panel is only available to Super Admins and the Platform Owner.
+        </p>
+      </div>
+    );
   }
 
   const [users, setUsers] = useState([...mockUsers]);
