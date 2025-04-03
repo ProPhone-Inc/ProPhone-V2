@@ -22,7 +22,21 @@ export async function handleGoogleAuth(): Promise<{ id: string; name: string; em
   const url = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
 
   return new Promise((resolve, reject) => {
-    let popup: Window | null;
+    const width = 600;
+    const height = 700;
+    const left = Math.max(0, (window.innerWidth - width) / 2 + window.screenX);
+    const top = Math.max(0, (window.innerHeight - height) / 2 + window.screenY);
+    
+    const popup = window.open(
+      url,
+      'google-auth',
+      `width=${width},height=${height},left=${left},top=${top},menubar=no,toolbar=no,location=no,status=no`
+    );
+    
+    if (!popup) {
+      reject(new Error('Please allow popups for this site to enable social login'));
+      return;
+    }
     
     const handleMessage = (event: MessageEvent) => {
       if (event.origin !== window.location.origin) return;
@@ -49,23 +63,6 @@ export async function handleGoogleAuth(): Promise<{ id: string; name: string; em
 
     window.addEventListener('message', handleMessage);
 
-    try {
-      popup = window.open(
-        url,
-        'google-auth',
-        `width=${width},height=${height},left=${left},top=${top},menubar=no,toolbar=no,location=no,status=no`
-      );
-    } catch (error) {
-      console.error('Failed to open popup:', error);
-      reject(new Error('Failed to open authentication window'));
-      return;
-    }
-
-    if (!popup) {
-      reject(new Error('Please allow popups for this site to enable social login'));
-      return;
-    }
-
     const checkClosed = setInterval(() => {
       if (popup?.closed) {
         cleanup();
@@ -89,26 +86,63 @@ export async function handleFacebookAuth(): Promise<{ id: string; name: string; 
       return; 
     }
 
-    if (!window.FB) {
-      reject(new Error('Facebook SDK not loaded'));
+    // Open a popup for Facebook auth
+    const width = 600;
+    const height = 700;
+    const left = Math.max(0, (window.innerWidth - width) / 2 + window.screenX);
+    const top = Math.max(0, (window.innerHeight - height) / 2 + window.screenY);
+    
+    const redirectUri = window.location.origin;
+    const url = `https://www.facebook.com/v18.0/dialog/oauth?` +
+      `client_id=${facebookAppId}` +
+      `&redirect_uri=${encodeURIComponent(redirectUri)}` +
+      `&response_type=token` +
+      `&scope=email,public_profile`;
+    
+    const popup = window.open(
+      url,
+      'facebook-auth',
+      `width=${width},height=${height},left=${left},top=${top},menubar=no,toolbar=no,location=no,status=no`
+    );
+    
+    if (!popup) {
+      reject(new Error('Please allow popups for this site to enable social login'));
       return;
     }
-
-    window.FB.login((response) => {
-      if (response.status === 'connected' && response.authResponse) {
-        // In a real app, you would make an API call to get user data
-        window.FB.api('/me', { fields: 'id,name,email' }, (userData) => {
-          resolve({
-            id: response.authResponse.userID,
-            name: userData.name || 'Facebook User',
-            email: userData.email || `${response.authResponse.userID}@facebook.com`
-          });
-        });
-      } else {
-        // User likely cancelled the login, resolve without error
+    
+    const handleMessage = (event: MessageEvent) => {
+      if (event.origin !== window.location.origin) return;
+      
+      if (event.data.type === 'FB_AUTH_SUCCESS' && event.data.userData) {
+        cleanup();
+        resolve(event.data.userData);
+      } else if (event.data.type === 'FB_AUTH_ERROR') {
+        cleanup();
+        reject(new Error(event.data.error || 'Authentication failed'));
+      }
+    };
+    
+    const cleanup = () => {
+      clearInterval(checkClosed);
+      window.removeEventListener('message', handleMessage);
+      if (popup && !popup.closed) popup.close();
+    };
+    
+    window.addEventListener('message', handleMessage);
+    
+    const checkClosed = setInterval(() => {
+      if (popup?.closed) {
+        cleanup();
         resolve(null);
       }
-    }, { scope: 'public_profile,email' });
+    }, 1000);
+    
+    // Set timeout to prevent hanging
+    setTimeout(() => {
+      cleanup();
+      resolve(null);
+    }, 120000); // 2 minutes timeout
+
   });
 }
 

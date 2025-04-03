@@ -1,6 +1,7 @@
 import React from 'react';
 import { Mail, Lock, ArrowRight, Wand2, Facebook, User } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
+import { SocialVerificationModal } from '../components/SocialVerificationModal';
 import { SuccessModal } from './SuccessModal';
 import { useFireworks } from '../hooks/useFireworks';
 import { sendMagicCode, verifyMagicCode, registerUser } from '../utils/auth';
@@ -35,6 +36,7 @@ export function LoginForm({
   const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState('');
   const [showSuccess, setShowSuccess] = React.useState(false);
+  const [socialAuthProvider, setSocialAuthProvider] = React.useState<'google' | 'facebook' | null>(null);
   const { login } = useAuth();
   const [magicEmail, setMagicEmail] = React.useState('');
   const [verificationCode, setVerificationCode] = React.useState(['', '', '', '', '', '']);
@@ -186,8 +188,25 @@ export function LoginForm({
     }
   };
 
+  const handleSocialAuth = (provider: 'google' | 'facebook') => {
+    setSocialAuthProvider(provider);
+  };
+
   return (
     <form className="space-y-6" onSubmit={handleSubmit}>
+      {socialAuthProvider && (
+        <SocialVerificationModal
+          provider={socialAuthProvider}
+          onClose={() => setSocialAuthProvider(null)}
+          onVerify={() => {
+            setShowSuccess(true);
+            launchFireworks();
+            setTimeout(() => {
+              window.location.href = '/dashboard';
+            }, 1500);
+          }}
+        />
+      )}
       {showSuccess && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <SuccessModal 
@@ -430,7 +449,7 @@ export function LoginForm({
         <div className="grid grid-cols-2 gap-4">
           <button
             type="button"
-            onClick={() => onShowAuth('google')}
+            onClick={() => handleSocialAuth('google')}
             disabled={isLoading}
             className="flex items-center justify-center space-x-2 py-2.5 px-4 rounded-xl bg-white/10 hover:bg-white/15 border border-white/10 transition-all duration-200 group relative overflow-hidden"
           >
@@ -458,7 +477,7 @@ export function LoginForm({
           </button>
           <button
             type="button"
-            onClick={() => onShowAuth('facebook')}
+            onClick={() => handleSocialAuth('facebook')}
             disabled={isLoading}
             className="flex items-center justify-center space-x-2 py-2.5 px-4 rounded-xl bg-white/10 hover:bg-white/15 border border-white/10 transition-all duration-200 group relative overflow-hidden"
           >
