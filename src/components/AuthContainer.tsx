@@ -7,6 +7,11 @@ import { SuccessModal } from './SuccessModal';
 import { useFireworks } from '../hooks/useFireworks';
 import { useMagicSparkles } from '../hooks/useMagicSparkles';
 import { useAuth } from '../hooks/useAuth';
+import { useCopilot } from '../hooks/useCopilot';
+import { useCallState } from '../hooks/useCallState';
+import { useIncomingCalls } from '../hooks/useIncomingCalls';
+import { useReporting } from '../hooks/useReporting';
+import { ReportingModal } from './Dashboard/AdminPanel/ReportingModal';
 
 const backgroundImage = 'https://dallasreynoldstn.com/wp-content/uploads/2025/02/7FD4503E-BCAE-4AAE-8852-9F7926E959A4.jpeg';
 const logoUrl = 'https://dallasreynoldstn.com/wp-content/uploads/2025/02/26F25F1E-C8E9-4DE6-BEE2-300815C83882.png';
@@ -43,10 +48,15 @@ export function AuthContainer({ onVerified, teamInviteData }: AuthContainerProps
   const [showAuthModal, setShowAuthModal] = React.useState(false);
   const [formData, setFormData] = React.useState<any>(null);
   const [authMode, setAuthMode] = React.useState<'login' | 'signup' | 'magic' | 'google' | 'facebook'>('login');
-  const [showEmailDropdown, setShowEmailDropdown] = React.useState(false);
   const [showRemoveAdsModal, setShowRemoveAdsModal] = React.useState(false);
   const [actionSuccess, setActionSuccess] = React.useState<{message: string, type: string} | null>(null);
   const [currentPage, setCurrentPage] = React.useState(1);
+  const [showAdminModal, setShowAdminModal] = React.useState(false);
+  const [showTeamPanel, setShowTeamPanel] = React.useState(false);
+  const [showCopilot, setShowCopilot] = React.useState(false);
+  const [showReportingModal, setShowReportingModal] = React.useState(false);
+  const [showCalendar, setShowCalendar] = React.useState(false);
+  const [showCallLogs, setShowCallLogs] = React.useState(false);
   const usersPerPage = 10;
 
   const resetAllStates = () => {
@@ -102,6 +112,8 @@ export function AuthContainer({ onVerified, teamInviteData }: AuthContainerProps
           }}
         />
       )}
+      
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
 
       <div 
         style={{ backgroundImage: `url(${backgroundImage})` }}

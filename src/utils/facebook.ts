@@ -9,17 +9,18 @@ export function initFacebookSDK(appId: string) {
     // Wait for the Facebook SDK to be loaded
     window.fbAsyncInit = function() {
       FB.init({
-        appId,
+        appId: appId,
         cookie: true,
         xfbml: true,  // Enable XFBML parsing for social plugins
         version: 'v18.0'
       });
       
+      console.log('Facebook SDK initialized');
       resolve();
     };
 
     // Load the SDK if it's not already loaded
-    if (typeof FB === 'undefined') {
+    if (typeof window.FB === 'undefined') {
       const script = document.createElement('script');
       script.src = 'https://connect.facebook.net/en_US/sdk.js';
       script.id = 'facebook-jssdk';
@@ -28,6 +29,7 @@ export function initFacebookSDK(appId: string) {
       script.crossOrigin = 'anonymous';
       document.head.appendChild(script);
     } else {
+      console.log('Facebook SDK already loaded');
       resolve();
     }
   });
