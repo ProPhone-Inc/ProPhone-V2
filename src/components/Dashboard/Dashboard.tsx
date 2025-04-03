@@ -90,6 +90,19 @@ export function Dashboard() {
   const [callContact, setCallContact] = useState<{name?: string; number: string} | null>(null);
   const [showDocuPro, setShowDocuPro] = useState(false);
   const [isIncomingCall, setIsIncomingCall] = useState(false);
+  
+  // Listen for the custom event to open team panel
+  React.useEffect(() => {
+    const handleOpenTeamPanel = () => {
+      setShowTeamPanel(true);
+    };
+    
+    window.addEventListener('open-team-panel', handleOpenTeamPanel);
+    
+    return () => {
+      window.removeEventListener('open-team-panel', handleOpenTeamPanel);
+    };
+  }, []);
 
   const handleMakeCall = (number: string) => {
     const chat = messages.find(m => m.sender.name === number || m.chatId === number);

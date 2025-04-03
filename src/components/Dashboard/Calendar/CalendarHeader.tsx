@@ -10,8 +10,8 @@ interface CalendarHeaderProps {
   setTaskDisplayMode?: (mode: string) => void;
   filters: any;
   setFilters: (filters: any) => void;
-  statusFilter: string;
-  setStatusFilter: (filter: string) => void;
+  statusFilter?: string;
+  setStatusFilter?: (filter: string) => void;
   onClose: () => void;
   onAddEvent: () => void;
 }
@@ -37,7 +37,7 @@ export function CalendarHeader({
           onClick={() => setViewMode('calendar')}
           className={`px-4 py-2 rounded-lg transition-colors ${
             viewMode === 'calendar'
-              ? 'bg-[#FFD700]/90 text-black font-medium text-sm'
+              ? 'bg-[#FFD700] text-black font-medium text-sm'
               : 'text-white/70 hover:text-white hover:bg-white/5 text-sm'
           }`}
         >
@@ -47,7 +47,7 @@ export function CalendarHeader({
           onClick={() => setViewMode('tasks')}
           className={`px-4 py-2 rounded-lg transition-colors ${
             viewMode === 'tasks'
-              ? 'bg-[#FFD700]/90 text-black font-medium text-sm'
+              ? 'bg-[#FFD700] text-black font-medium text-sm'
               : 'text-white/70 hover:text-white hover:bg-white/5 text-sm'
           }`}
         >

@@ -131,7 +131,7 @@ export function MonthView({
                 <div className="absolute -left-12 -top-3 text-xs text-white/40">
                   {hour === 0 ? '12 AM' : 
                    hour === 12 ? '12 PM' : 
-                   hour > 12 ? `${hour - 12} PM` : `${hour} AM`}
+                 hour > 12 ? `${hour - 12} PM` : `${hour} AM`}
                 </div>
               </div>
             ))}

@@ -210,4 +210,27 @@ export class TwilioProvider implements PhoneProvider {
       throw new Error(`Twilio Message History Error: ${error.message}`);
     }
   }
+
+  async getStatusCounts(): Promise<Record<string, number>> {
+    try {
+      // In a real implementation, this would query the Twilio API
+      // For now, we'll return mock data
+      return {
+        'New': 12,
+        'Hot': 15,
+        'Warm': 24,
+        'Follow Up': 18,
+        'Prospecting': 31,
+        'Appointment Set': 8,
+        'Needs Analysis': 9,
+        'Make Offer': 5,
+        'Not Interested': 7,
+        'DNC': 3,
+        'Conversion': 8
+      };
+    } catch (error) {
+      console.error('Failed to get status counts:', error);
+      throw new Error(`Twilio Status Counts Error: ${error.message}`);
+    }
+  }
 }

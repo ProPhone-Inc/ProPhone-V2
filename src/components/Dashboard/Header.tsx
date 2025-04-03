@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Bell, Menu, X, User, LogOut, Calendar, MessageSquare, Shield, HelpCircle, Phone, Settings, Mail, CreditCard, Ban, ExternalLink } from 'lucide-react';
+import { Bell, Menu, X, User, LogOut, Calendar, MessageSquare, Shield, HelpCircle, Phone, Settings, Mail, CreditCard, Ban } from 'lucide-react';
 import { useClickOutside } from '../../hooks/useClickOutside';
 import { CalendarModal } from './Calendar';
 import { useAuth } from '../../hooks/useAuth'; 
@@ -10,6 +10,7 @@ import { useDB } from '../../hooks/useDB';
 import { SettingsModal } from '../SettingsModal';
 import { AppDrawer } from './AppDrawer';
 import { useSMSUsage } from '../../hooks/useSMSUsage';
+import { RemoveAdsModal } from './RemoveAdsModal';
 import { MessageSquareText } from 'lucide-react';
 
 interface Message {
@@ -122,6 +123,26 @@ function Header({ user, onLogout, collapsed, activePage, messages, onPageChange 
       <div className="flex-1" />
 
       <div className="flex items-center space-x-2">
+
+        <button 
+          onClick={() => setShowRemoveAdsModal(true)}
+          className="w-full bg-gradient-to-r from-[#B38B3F]/20 via-[#FFD700]/10 to-[#B38B3F]/20 font-medium py-2.5 px-4 rounded-xl flex items-center justify-center space-x-2 hover:shadow-xl hover:shadow-[#B38B3F]/20 relative overflow-hidden group animate-pulse"
+          title="Remove Ads"
+        >
+          {/* Button shine effect */}
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-all duration-1000 pointer-events-none" />
+          
+          <Ban className="w-4 h-4 text-[#FFD700]" />
+          <span className="text-[#FFD700]">Remove Ads - $10/month</span>
+          
+          {/* Button sparkles */}
+          <div className="absolute left-0 top-1/2 -translate-y-1/2 w-8 animate-[sparkle-left_3s_infinite] pointer-events-none">
+            <Ban className="w-4 h-4 text-[#FFD700]/40" />
+          </div>
+          <div className="absolute right-0 top-1/2 -translate-y-1/2 w-8 animate-[sparkle-right_3s_infinite] pointer-events-none">
+            <Ban className="w-4 h-4 text-[#FFD700]/40" />
+          </div>
+        </button>
 
         {activePage !== 'dashboard' && (
           <button 
@@ -351,7 +372,18 @@ function Header({ user, onLogout, collapsed, activePage, messages, onPageChange 
         </div>
 
         {showSettings && (
-          <SettingsModal isOpen={showSettings} onClose={() => setShowSettings(false)} />
+          <SettingsModal isOpen={showSettings} onClose={() => setShowSettings(false)} initialSection="billing" />
+        )}
+        
+        {/* Remove Ads Modal */}
+        {showRemoveAdsModal && (
+          <RemoveAdsModal
+            onClose={() => setShowRemoveAdsModal(false)}
+            onSubscribe={() => {
+              // Handle subscription
+              setShowRemoveAdsModal(false);
+            }}
+          />
         )}
 
         <div className="relative ml-2">
@@ -389,6 +421,8 @@ function Header({ user, onLogout, collapsed, activePage, messages, onPageChange 
                   onClick={() => {
                     setShowUserMenu(false);
                     setShowSettings(true); 
+                    // Set initial section to profile
+                    localStorage.setItem('settingsSection', 'profile');
                   }}
                   className="w-full flex items-center px-4 py-2 text-sm hover:bg-white/10 transition-colors text-left"
                 >
@@ -399,6 +433,8 @@ function Header({ user, onLogout, collapsed, activePage, messages, onPageChange 
                   onClick={() => {
                     setShowUserMenu(false);
                     setShowSettings(true); 
+                    // Set initial section to billing
+                    localStorage.setItem('settingsSection', 'billing');
                   }}
                   className="w-full flex items-center px-4 py-2 text-sm hover:bg-white/10 transition-colors text-left"
                 >
@@ -409,6 +445,8 @@ function Header({ user, onLogout, collapsed, activePage, messages, onPageChange 
                   onClick={() => {
                     setShowUserMenu(false);
                     setShowSettings(true); 
+                    // Set initial section to profile
+                    localStorage.setItem('settingsSection', 'profile');
                   }}
                   className="w-full flex items-center px-4 py-2 text-sm hover:bg-white/10 transition-colors text-left"
                 >
@@ -510,7 +548,7 @@ function Header({ user, onLogout, collapsed, activePage, messages, onPageChange 
                     </li>
                     <li className="flex items-center">
                       <span className="w-2 h-2 bg-[#FFD700] rounded-full mr-2" />
-                      Faster loading times
+                      Support further development
                     </li>
                   </ul>
                 </div>

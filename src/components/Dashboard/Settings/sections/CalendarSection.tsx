@@ -1,5 +1,5 @@
 import React from 'react';
-import { Clock, Calendar, Globe, Users, Bell, Link2 } from 'lucide-react';
+import { Clock, Calendar, Globe, Users, Bell, Link2, Mail } from 'lucide-react';
 
 export function CalendarSection() {
   const [schedule, setSchedule] = React.useState({

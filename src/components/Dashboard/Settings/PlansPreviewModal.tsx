@@ -177,7 +177,7 @@ export function PlansPreviewModal({ onClose }: PlansPreviewModalProps) {
                 <div className="flex items-center justify-between mb-6">
                   <div>
                     <h3 className="text-xl font-semibold text-white">{plan.name}</h3>
-                    <div className="text-2xl font-bold text-[#FFD700] mt-1">{plan.price}</div>
+                    <div className="text-2xl font-bold text-[#FFD700] mt-1 transform-none">{plan.price}</div>
                     <div className="text-sm text-white/60 mt-1">{plan.additionalInfo}</div>
                   </div>
                   <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#B38B3F]/10 to-[#FFD700]/5 flex items-center justify-center border border-[#B38B3F]/20">
@@ -187,7 +187,7 @@ export function PlansPreviewModal({ onClose }: PlansPreviewModalProps) {
 
                 <div className="space-y-4">
                   {editedFeatures[plan.id]?.map((feature, index) => (
-                    <div key={index} className="flex items-center space-x-2">
+                    <div key={index} className="flex items-center space-x-2 transform-none">
                       <input
                         type="text"
                         value={feature}
@@ -203,7 +203,7 @@ export function PlansPreviewModal({ onClose }: PlansPreviewModalProps) {
                     </div>
                   ))}
 
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center space-x-2 transform-none">
                     <input
                       type="text"
                       value={newFeature}

@@ -102,7 +102,7 @@ export function ChatsList({
     { value: 'new', label: 'New', icon: <Home className="w-4 h-4" />, color: 'text-emerald-400 bg-emerald-400/20' },
     { value: 'hot', label: 'Hot', icon: <Flame className="w-4 h-4" />, color: 'text-red-400 bg-red-400/20' },
     { value: 'warm', label: 'Warm', icon: <Sun className="w-4 h-4" />, color: 'text-amber-400 bg-amber-400/20' },
-    { value: 'follow-up', label: 'Follow Up', icon: <Bell className="w-4 h-4" />, color: 'text-purple-400 bg-purple-400/20' },
+    { value: 'follow-up', label: 'Follow Up', icon: <Bell className="w-4 h-4" />, color: 'text-purple-500 bg-purple-500/20' },
     { value: 'prospecting', label: 'Prospecting', icon: <Megaphone className="w-4 h-4" />, color: 'text-blue-400 bg-blue-400/20' },
     { value: 'appointment-set', label: 'Appointment Set', icon: <Calendar className="w-4 h-4" />, color: 'text-indigo-400 bg-indigo-400/20' },
     { value: 'needs-analysis', label: 'Needs Analysis', icon: <BarChart2 className="w-4 h-4" />, color: 'text-cyan-400 bg-cyan-400/20' },

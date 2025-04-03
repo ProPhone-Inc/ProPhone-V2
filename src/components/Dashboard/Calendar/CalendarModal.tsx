@@ -7,12 +7,13 @@ import { EventFormModal } from './EventFormModal';
 
 interface CalendarModalProps {
   onClose: () => void;
-  onAddEvent: () => void;
+  onAddEvent?: () => void;
+  initialView?: 'calendar' | 'tasks';
 }
 
-export function CalendarModal({ onClose, onAddEvent }: CalendarModalProps) {
+export function CalendarModal({ onClose, onAddEvent, initialView = 'calendar' }: CalendarModalProps) {
   const modalRef = React.useRef<HTMLDivElement>(null);
-  const [viewMode, setViewMode] = React.useState<'calendar' | 'tasks'>('calendar');
+  const [viewMode, setViewMode] = React.useState<'calendar' | 'tasks'>(initialView || 'calendar');
   const [showEventForm, setShowEventForm] = React.useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [isClosing, setIsClosing] = React.useState(false);
@@ -62,8 +63,12 @@ export function CalendarModal({ onClose, onAddEvent }: CalendarModalProps) {
   // Add escape key listener
   React.useEffect(() => {
     document.addEventListener('keydown', handleEscapeKey);
+    
+    // Log the initial view mode for debugging
+    console.log('Calendar Modal initialized with view mode:', initialView);
+    
     return () => document.removeEventListener('keydown', handleEscapeKey);
-  }, [handleEscapeKey]);
+  }, [handleEscapeKey, initialView]);
 
   const [localEvents] = React.useState([
     {
@@ -247,12 +252,16 @@ export function CalendarModal({ onClose, onAddEvent }: CalendarModalProps) {
           viewMode={viewMode}
           setViewMode={setViewMode}
           onAddEvent={() => {
-            setEventForm({
-              ...initialEventForm,
-              startDate: selectedDate ? formatDateString(selectedDate) : formatDateString(new Date()),
-              endDate: selectedDate ? formatDateString(selectedDate) : formatDateString(new Date())
-            });
-            setShowEventForm(true);
+            if (onAddEvent) {
+              onAddEvent();
+            } else {
+              setEventForm({
+                ...initialEventForm,
+                startDate: selectedDate ? formatDateString(selectedDate) : formatDateString(new Date()),
+                endDate: selectedDate ? formatDateString(selectedDate) : formatDateString(new Date())
+              });
+              setShowEventForm(true);
+            }
           }}
           displayMode={displayMode}
           setDisplayMode={setDisplayMode}

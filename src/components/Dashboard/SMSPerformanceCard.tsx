@@ -1,5 +1,5 @@
 import React from 'react';
-import { MessageSquare, ArrowUpRight, ArrowDownRight, Search, Filter, ChevronDown } from 'lucide-react';
+import { MessageSquare, Search, Filter, ChevronDown } from 'lucide-react';
 
 export function SMSPerformanceCard() {
   const [searchQuery, setSearchQuery] = React.useState('');
@@ -11,45 +11,45 @@ export function SMSPerformanceCard() {
     {
       id: '1',
       name: 'Spring Property Campaign',
+      prospects: 3000,
       sent: 2451,
       delivered: 2389,
       failed: 62,
       responses: 342,
-      leads: 89,
-      roi: '+12.4%',
+      deliverabilityRate: '97.5%',
       status: 'active'
     },
     {
       id: '2',
       name: 'Investment Opportunity',
+      prospects: 2500,
       sent: 1892,
       delivered: 1845,
       failed: 47,
       responses: 256,
-      leads: 64,
-      roi: '+8.7%',
+      deliverabilityRate: '97.5%',
       status: 'completed'
     },
     {
       id: '3',
       name: 'New Listing Alert',
+      prospects: 4000,
       sent: 3241,
       delivered: 3198,
       failed: 43,
       responses: 521,
-      leads: 147,
-      roi: '+15.2%',
+      deliverabilityRate: '98.7%',
       status: 'active'
     },
     {
       id: '4',
       name: 'Open House Reminder',
+      prospects: 1200,
       sent: 982,
       delivered: 967,
       failed: 15,
       responses: 203,
-      leads: 45,
-      roi: '+6.8%',
+      deliverabilityRate: '98.5%',
       status: 'scheduled'
     }
   ];
@@ -113,13 +113,13 @@ export function SMSPerformanceCard() {
             <thead>
               <tr className="border-b border-[#B38B3F]/20">
                 <th className="text-left py-3 px-4 text-white/70 font-medium">Campaign</th>
-                <th className="text-left py-3 px-4 text-white/70 font-medium">Sent</th>
-                <th className="text-left py-3 px-4 text-white/70 font-medium">Delivered</th>
-                <th className="text-left py-3 px-4 text-white/70 font-medium">Failed</th>
-                <th className="text-left py-3 px-4 text-white/70 font-medium">Responses</th>
-                <th className="text-left py-3 px-4 text-white/70 font-medium">Leads</th>
-                <th className="text-left py-3 px-4 text-white/70 font-medium">ROI</th>
-                <th className="text-left py-3 px-4 text-white/70 font-medium">Status</th>
+                <th className="text-left py-4 px-4 text-white/70 font-medium">Prospects</th>
+                <th className="text-left py-4 px-4 text-white/70 font-medium">Sent</th>
+                <th className="text-left py-4 px-4 text-white/70 font-medium">Delivered</th>
+                <th className="text-left py-4 px-4 text-white/70 font-medium">Failed</th>
+                <th className="text-left py-4 px-4 text-white/70 font-medium">Responses</th>
+                <th className="text-left py-4 px-4 text-white/70 font-medium">Deliverability Rate</th>
+                <th className="text-left py-4 px-4 text-white/70 font-medium">Status</th>
               </tr>
             </thead>
             <tbody>
@@ -128,6 +128,7 @@ export function SMSPerformanceCard() {
                   <td className="py-4 px-4">
                     <div className="font-medium text-white">{campaign.name}</div>
                   </td>
+                  <td className="py-4 px-4 text-white">{campaign.prospects.toLocaleString()}</td>
                   <td className="py-4 px-4 text-white">{campaign.sent.toLocaleString()}</td>
                   <td className="py-4 px-4">
                     <div className="flex items-center">
@@ -153,19 +154,8 @@ export function SMSPerformanceCard() {
                       </span>
                     </div>
                   </td>
-                  <td className="py-4 px-4">
-                    <div className="flex items-center">
-                      <span className="text-white">{campaign.leads.toLocaleString()}</span>
-                      <span className="text-[#FFD700] text-sm ml-2">
-                        ({((campaign.leads / campaign.responses) * 100).toFixed(1)}%)
-                      </span>
-                    </div>
-                  </td>
-                  <td className="py-4 px-4">
-                    <div className="flex items-center text-emerald-400">
-                      <ArrowUpRight className="w-4 h-4 mr-1" />
-                      {campaign.roi}
-                    </div>
+                  <td className="py-4 px-4 text-white">
+                    {campaign.deliverabilityRate}
                   </td>
                   <td className="py-4 px-4">
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(campaign.status)}`}>

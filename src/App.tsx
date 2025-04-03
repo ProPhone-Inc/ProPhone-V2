@@ -2,7 +2,7 @@ import React, { Suspense } from 'react';
 import { useAuth } from './hooks/useAuth';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { AuthContainer } from './components/AuthContainer';
-const Dashboard = React.lazy(() => import('./components/Dashboard/Dashboard'));
+import Dashboard from './components/Dashboard/Dashboard';
 import { useCallState } from './hooks/useCallState';
 import { useIncomingCalls } from './hooks/useIncomingCalls';
 import { PhoneCallModal } from './components/Phone/components/PhoneCallModal';

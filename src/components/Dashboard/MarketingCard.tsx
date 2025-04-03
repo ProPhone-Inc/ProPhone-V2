@@ -2,12 +2,16 @@ import React from 'react';
 import { Zap, ArrowRight, Sparkles, Bolt, Users } from 'lucide-react';
 import { useFireworks } from '../../hooks/useFireworks';
 import { useAuth } from '../../hooks/useAuth';
+import { SettingsModal } from '../SettingsModal';
+import { TeamPanelModal } from './TeamPanel/components/TeamPanelModal';
 
 export function MarketingCard() {
   const containerRef = React.useRef<HTMLDivElement>(null);
   const { launchFireworks } = useFireworks(containerRef);
   const [isHovered, setIsHovered] = React.useState(false);
   const [showSparkles, setShowSparkles] = React.useState(false);
+  const [showSettings, setShowSettings] = React.useState(false);
+  const [showTeamPanelLocal, setShowTeamPanelLocal] = React.useState(false);
 
   // Create sparkle effect
   const createSparkle = (e: React.MouseEvent) => {
@@ -92,10 +96,16 @@ export function MarketingCard() {
         </p>
         
         <button 
-          onClick={() => {
-            launchFireworks();
-            // Additional upgrade logic here
+          onClick={(e) => {
+            launchFireworks(e);
+            // If user wants to add team members, show team panel directly
+            if (e.currentTarget.getAttribute('data-action') === 'team') {
+              setShowTeamPanelLocal(true);
+            } else {
+              setShowSettings(true);
+            }
           }}
+          data-action="upgrade"
           className="w-full bg-gradient-to-r from-[#B38B3F] via-[#FFD700] to-[#B38B3F] text-black font-medium py-2.5 px-4 rounded-xl flex items-center justify-center space-x-2 transform transition-all duration-500 hover:scale-[1.02] bg-[length:200%_100%] hover:bg-[100%_0] bg-[0%_0] shadow-lg hover:shadow-[#FFD700]/20 relative overflow-hidden group"
         >
           {/* Button shine effect */}
@@ -117,6 +127,25 @@ export function MarketingCard() {
           )}
         </button>
       </div>
+      
+      {showSettings && (
+        <SettingsModal 
+          isOpen={showSettings && !showTeamPanelLocal} 
+          onClose={() => setShowSettings(false)}
+          initialSection="billing"
+          setShowTeamPanel={setShowTeamPanelLocal}
+        />
+      )}
+      
+      {showTeamPanelLocal && (
+        <TeamPanelModal
+          isOpen={showTeamPanelLocal}
+          onClose={() => {
+            setShowTeamPanelLocal(false);
+            setShowSettings(false);
+          }}
+        />
+      )}
 
       {/* Add styles for animations */}
       <style jsx>{`

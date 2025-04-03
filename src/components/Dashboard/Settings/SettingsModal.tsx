@@ -3,8 +3,13 @@ import { X, User, Bot, CreditCard } from 'lucide-react';
 import { useAuth } from '../../../hooks/useAuth';
 import { useDB } from '../../../hooks/useDB';
 import { db } from '../../../db';
-import { ProfileSection } from './ProfileSection';
+import { ProfileSection } from './sections/ProfileSection';
 import { BillingSection } from './BillingSection';
+import { PhoneNumbersSection } from './sections/PhoneNumbersSection';
+import { useEffect } from 'react';
+import { IntegrationsSection } from './sections/IntegrationsSection';
+import { CalendarSection } from './sections/CalendarSection';
+import { SMSSettings } from './sections/SMSSettings';
 import { CopilotSection } from './CopilotSection';
 
 interface SettingsModalProps {
@@ -22,16 +27,28 @@ type Section = {
   beta?: boolean;
 };
 
-export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
+export function SettingsModal({ isOpen, onClose, initialSection = 'profile' }: SettingsModalProps) {
   const { user } = useAuth();
   const { isLoading } = useDB();
-  const [activeSection, setActiveSection] = React.useState(() => {
-    const savedSection = localStorage.getItem('settingsSection');
-    return savedSection || 'profile';
-  });
+  const [activeSection, setActiveSection] = React.useState(initialSection);
+  const [showTeamPanel, setShowTeamPanel] = React.useState(false);
   const [isNavExpanded, setIsNavExpanded] = React.useState(false);
   const [userData, setUserData] = React.useState<any>(null);
   const navRef = React.useRef<HTMLDivElement>(null);
+
+  // If team panel should be shown, close settings first then show team panel
+  useEffect(() => {
+    if (showTeamPanel) {
+      onClose();
+      // Use a timeout to ensure settings modal is fully closed before opening team panel
+      const timer = setTimeout(() => {
+        // This will trigger the team panel to open in the Dashboard component
+        window.dispatchEvent(new CustomEvent('open-team-panel'));
+      }, 300);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [showTeamPanel, onClose]);
 
   const sections: Section[] = [
     {
@@ -46,7 +63,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       label: 'Subscription & Billing',
       description: 'Manage your subscription and payments',
       icon: <CreditCard className="w-5 h-5" />,
-      component: <BillingSection userData={userData} />
+      component: <BillingSection userData={user} onClose={onClose} setShowTeamPanel={setShowTeamPanel} />
     },
     {
       id: 'copilot',

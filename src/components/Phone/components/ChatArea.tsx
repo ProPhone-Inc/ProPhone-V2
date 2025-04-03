@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowRight, Paperclip, Mic, MoreVertical, Home, ChevronDown, Phone, CheckCircle, Smile, Bot, Clock, Info, MessageSquare, Eye, EyeOff, Users, Trash2, Zap, Bell } from 'lucide-react';
+import { ArrowRight, Paperclip, Mic, MoreVertical, Home, ChevronDown, Phone, CheckCircle, Smile, Bot, Clock, Info, MessageSquare, Eye, EyeOff, Users, Trash2, Zap, Bell, Flame, Sun, Megaphone, Calendar, BarChart2, DollarSign, ThumbsDown, Ban } from 'lucide-react';
 import { QuickReplyModal } from './QuickReplyModal';
 import { useClickOutside } from '../../../hooks/useClickOutside';
 import { useCallState } from '../../../hooks/useCallState';
@@ -8,6 +8,20 @@ import { formatPhoneNumber, isValidPhoneNumber } from '../../../utils/phone';
 import { Dialpad } from './Dialpad';
 import { ScheduleMessageModal } from './ScheduleMessageModal';
 import type { Chat } from '../../../modules/phone/types';
+
+const statusOptions = [
+  { value: 'new', label: 'New', icon: <Home className="w-4 h-4" />, color: 'text-emerald-400 bg-emerald-400/20' },
+  { value: 'hot', label: 'Hot', icon: <Flame className="w-4 h-4" />, color: 'text-red-400 bg-red-400/20' },
+  { value: 'warm', label: 'Warm', icon: <Sun className="w-4 h-4" />, color: 'text-amber-400 bg-amber-400/20' },
+  { value: 'follow-up', label: 'Follow Up', icon: <Bell className="w-4 h-4" />, color: 'text-purple-500 bg-purple-500/20' },
+  { value: 'prospecting', label: 'Prospecting', icon: <Megaphone className="w-4 h-4" />, color: 'text-blue-400 bg-blue-400/20' },
+  { value: 'appointment-set', label: 'Appointment Set', icon: <Calendar className="w-4 h-4" />, color: 'text-indigo-400 bg-indigo-400/20' },
+  { value: 'needs-analysis', label: 'Needs Analysis', icon: <BarChart2 className="w-4 h-4" />, color: 'text-cyan-400 bg-cyan-400/20' },
+  { value: 'make-offer', label: 'Make Offer', icon: <DollarSign className="w-4 h-4" />, color: 'text-green-400 bg-green-400/20' },
+  { value: 'not-interested', label: 'Not Interested', icon: <ThumbsDown className="w-4 h-4" />, color: 'text-gray-400 bg-gray-400/20' },
+  { value: 'dnc', label: 'DNC', icon: <Ban className="w-4 h-4" />, color: 'text-red-700 bg-red-700/20' },
+  { value: 'conversion', label: 'Conversion', icon: <CheckCircle className="w-4 h-4" />, color: 'text-emerald-400 bg-emerald-400/20' }
+];
 
 interface ChatAreaProps {
   selectedChat: Chat | null;

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Ban, CreditCard, Plus, Download, ArrowRight, Receipt, Wallet, AlertTriangle } from 'lucide-react';
+import { Ban, CreditCard, Plus, Download, ArrowRight, Receipt, Wallet, AlertTriangle, Users } from 'lucide-react';
 import { useAuth } from '../../../hooks/useAuth';
 import { RemoveAdsModal } from '../RemoveAdsModal';
 import { BillingTabs } from './components/BillingTabs';
@@ -9,12 +9,15 @@ import { PaymentMethodList } from './components/PaymentMethodList';
 import { GenerateReportModal } from './components/GenerateReportModal';
 import { PaymentMethodModal } from './PaymentMethodModal';
 import { PlansPreviewModal } from './PlansPreviewModal';
+import { TeamPanelModal } from '../TeamPanel/components/TeamPanelModal';
 
 interface BillingSectionProps {
   userData: any;
+  onClose: () => void;
+  setShowTeamPanel: (show: boolean) => void;
 }
 
-export function BillingSection({ userData }: BillingSectionProps) {
+export function BillingSection({ userData, onClose, setShowTeamPanel }: BillingSectionProps) {
   const [showRemoveAdsModal, setShowRemoveAdsModal] = React.useState(false);
   const [currentTab, setCurrentTab] = React.useState<string>('plans');
   const [invoices, setInvoices] = React.useState<any[]>([
@@ -76,6 +79,7 @@ export function BillingSection({ userData }: BillingSectionProps) {
   const [saveStatus, setSaveStatus] = React.useState<string>('idle');
   const [showReportModal, setShowReportModal] = React.useState<boolean>(false);
   const [showPlansModal, setShowPlansModal] = React.useState<boolean>(false);
+  const [showTeamPanelLocal, setShowTeamPanelLocal] = React.useState(false);
 
   const handleDownloadInvoices = (ids: string[]) => {
     setIsDownloading(true);
@@ -115,8 +119,8 @@ export function BillingSection({ userData }: BillingSectionProps) {
       {/* Subscription Plans Tab */}
       {currentTab === 'plans' && (
         <div className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            <div className="bg-gradient-to-br from-[#B38B3F]/20 to-[#FFD700]/10 border border-[#B38B3F]/30 rounded-xl p-6 backdrop-blur-sm">
+          <div className="grid grid-cols-1 gap-6 mb-8">
+            <div className="bg-gradient-to-br from-[#B38B3F]/20 to-[#FFD700]/10 border border-[#B38B3F]/30 rounded-xl p-6 backdrop-blur-sm w-full">
               <h3 className="text-lg font-bold text-white mb-4">Current Plan Status</h3>
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
@@ -143,28 +147,69 @@ export function BillingSection({ userData }: BillingSectionProps) {
                   <span className="text-white/70">Team Members</span>
                   <span className="text-white font-medium">2 members ($5/month each)</span>
                 </div>
+                <button
+                  onClick={() => setShowTeamPanel(true)}
+                  className="text-[#FFD700] hover:text-[#FFD700]/80 text-sm flex items-center space-x-1 mt-2"
+                >
+                  <span>View Team</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
               </div>
-            </div>
-            
-            <div className="bg-gradient-to-br from-[#B38B3F]/20 to-[#FFD700]/10 border border-[#B38B3F]/30 rounded-xl p-6">
-              <div className="flex items-center space-x-3 mb-4">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#B38B3F]/20 to-[#FFD700]/10 flex items-center justify-center border border-[#B38B3F]/30">
-                  <Ban className="w-6 h-6 text-[#FFD700]" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold text-white">Remove Ads</h3>
-                  <p className="text-white/60">Enjoy an ad-free experience</p>
-                </div>
-              </div>
-              <button
-                onClick={() => setShowRemoveAdsModal(true)}
-                className="w-full py-3 bg-gradient-to-r from-[#B38B3F] via-[#FFD700] to-[#B38B3F] text-black font-medium rounded-lg hover:opacity-90 transition-opacity flex items-center justify-center space-x-2"
-              >
-                <Ban className="w-4 h-4" />
-                <span>Remove Ads ($10/month)</span>
-              </button>
             </div>
           </div>
+          
+          <div className="grid grid-cols-2 gap-6 mb-12 w-full">
+            <div className="bg-gradient-to-br from-[#B38B3F]/20 to-[#FFD700]/10 border border-[#B38B3F]/30 rounded-xl p-6 transform-none">
+                <div className="flex items-center space-x-3 mb-4">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#B38B3F]/20 to-[#FFD700]/10 flex items-center justify-center border border-[#B38B3F]/30">
+                    <Ban className="w-6 h-6 text-[#FFD700]" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-white">Remove Ads</h3>
+                    <p className="text-white/60">Enjoy an ad-free experience</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowRemoveAdsModal(true)}
+                  className="w-full py-3 bg-gradient-to-r from-[#B38B3F] via-[#FFD700] to-[#B38B3F] text-black font-medium rounded-lg hover:opacity-90 transition-opacity flex items-center justify-center space-x-2"
+                >
+                  <Ban className="w-4 h-4" />
+                  <span>Remove Ads ($10/month)</span>
+                </button>
+              </div>
+            
+            <div className="bg-gradient-to-br from-[#B38B3F]/20 to-[#FFD700]/10 border border-[#B38B3F]/30 rounded-xl p-6 transform-none">
+                <div className="flex items-center space-x-3 mb-4">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#B38B3F]/20 to-[#FFD700]/10 flex items-center justify-center border border-[#B38B3F]/30">
+                    <Users className="w-6 h-6 text-[#FFD700]" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-white">Add Team Members</h3>
+                    <p className="text-white/60">Each member is $5/month</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    if (onClose) {
+                      onClose();
+                      // Small delay to ensure settings modal is fully closed before opening team panel
+                      setTimeout(() => {
+                        setShowTeamPanel(true);
+                      }, 50);
+                    } else {
+                      setShowTeamPanelLocal(true);
+                    }
+                  }}
+                  className="w-full py-3 bg-gradient-to-r from-[#B38B3F] via-[#FFD700] to-[#B38B3F] text-black font-medium rounded-lg hover:opacity-90 transition-opacity flex items-center justify-center space-x-2"
+                >
+                  <Users className="w-4 h-4" />
+                  <span>Open Team Panel</span>
+                </button>
+              </div>
+          </div>
+          
+          {/* Add more spacing at the bottom for a cleaner look */}
+          <div className="h-16"></div>
         </div>
       )}
 
@@ -252,6 +297,16 @@ export function BillingSection({ userData }: BillingSectionProps) {
           onSubscribe={() => {
             // Handle subscription
             setShowRemoveAdsModal(false);
+          }}
+        />
+      )}
+      
+      {/* Team Panel Modal */}
+      {showTeamPanelLocal && (
+        <TeamPanelModal
+          isOpen={showTeamPanelLocal}
+          onClose={() => {
+            setShowTeamPanelLocal(false);
           }}
         />
       )}

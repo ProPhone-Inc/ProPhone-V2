@@ -22,6 +22,7 @@ export interface PhoneProvider {
   // Messaging
   getMessageStatus(messageId: string): Promise<MessageStatus>;
   getMessageHistory(phoneNumber: string): Promise<Message[]>;
+  getStatusCounts?(): Promise<Record<string, number>>;
 }
 
 export interface ProviderConfig {

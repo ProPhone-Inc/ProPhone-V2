@@ -11,11 +11,17 @@ import { SMSSettings } from './Dashboard/Settings/sections/SMSSettings';
 interface SettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
+  initialSection?: string; 
+  setShowTeamPanel?: (show: boolean) => void;
 }
 
-export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
+export function SettingsModal({ isOpen, onClose, initialSection = 'profile', setShowTeamPanel }: SettingsModalProps) {
   const { user } = useAuth();
-  const [activeSection, setActiveSection] = React.useState('profile');
+  const [activeSection, setActiveSection] = React.useState(() => {
+    // Get the section from localStorage or use the initialSection prop
+    const savedSection = localStorage.getItem('settingsSection');
+    return savedSection || initialSection;
+  });
 
   if (!isOpen) return null;
 
@@ -125,8 +131,16 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
           </div>
 
           {/* Content Area */}
-          <div className="p-6 overflow-y-auto">
-            {sections.find(s => s.id === activeSection)?.component}
+          <div className="p-6 overflow-y-auto pb-12">
+            {activeSection === 'billing' ? (
+              <BillingSection 
+                userData={user} 
+                onClose={onClose} 
+                setShowTeamPanel={setShowTeamPanel || (() => {})} 
+              />
+            ) : (
+              sections.find(s => s.id === activeSection && s.id !== 'billing')?.component
+            )}
           </div>
         </div>
       </div>
