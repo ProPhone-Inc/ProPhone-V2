@@ -18,6 +18,11 @@ function App() {
   const { activeCall } = useCallState();
   const { incomingCall } = useIncomingCalls();
 
+  const handleVerification = (email: string, userData: { firstName: string; lastName: string; email: string }) => {
+    // Handle verification logic here
+    console.log('User verified:', email, userData);
+  };
+
   if (isLoading) {
     return <LoadingSpinner />;
   }
@@ -49,7 +54,7 @@ function App() {
           <Dashboard />
         </Suspense>
       ) : (
-        <AuthContainer />
+        <AuthContainer onVerified={handleVerification} />
       )}
     </ErrorBoundary>
   );

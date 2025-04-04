@@ -113,7 +113,7 @@ export function AuthContainer({ onVerified, teamInviteData }: AuthContainerProps
         />
       )}
       
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
 
       <div 
         style={{ backgroundImage: `url(${backgroundImage})` }}
