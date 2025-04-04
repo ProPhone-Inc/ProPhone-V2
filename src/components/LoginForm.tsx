@@ -2,6 +2,7 @@ import React from 'react';
 import { Mail, Lock, ArrowRight, Wand2, Facebook, User } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useFireworks } from '../hooks/useFireworks';
+import { SocialVerificationModal } from './SocialVerificationModal';
 import { SuccessModal } from './SuccessModal';
 import { sendMagicCode, verifyMagicCode, registerUser, handleGoogleAuth, handleFacebookAuth } from '../utils/auth';
 
@@ -37,6 +38,7 @@ export function LoginForm({
   const [showSuccess, setShowSuccess] = React.useState(false);
   const { login } = useAuth();
   const [magicEmail, setMagicEmail] = React.useState('');
+  const [showSocialModal, setShowSocialModal] = React.useState<'google' | 'facebook' | null>(null);
   const [verificationCode, setVerificationCode] = React.useState(['', '', '', '', '', '']);
   const [signupStep, setSignupStep] = React.useState<'form' | 'verify' | 'password'>('form');
   const [formData, setFormData] = React.useState({
@@ -186,45 +188,19 @@ export function LoginForm({
     }
   };
 
-  const handleSocialAuth = async (provider: 'google' | 'facebook') => {
-    try {
-      setIsLoading(true);
-      setError('');
-      
-      // Directly call the social auth handler without showing verification modal
-      let userData = null;
-      if (provider === 'google') {
-        userData = await handleGoogleAuth();
-      } else {
-        userData = await handleFacebookAuth();
-      }
-      
-      if (userData) {
-        setShowSuccess(true);
-        launchFireworks();
-        
-        // Store user data in localStorage directly
-        localStorage.setItem('auth_user', JSON.stringify({
-          id: userData.id,
-          name: userData.name,
-          email: userData.email,
-          role: 'user'
-        }));
-        
-        // Set auth token (in a real app this would come from the backend)
-        localStorage.setItem('auth_token', 'test-token-' + Math.random().toString(36).substr(2));
-        
-        // Force redirect to dashboard after a delay
-        setTimeout(() => {
-          window.location.href = '/dashboard';
-        }, 1500);
-      }
-    } catch (error) {
-      console.error('Social auth error:', error);
-      setError(error instanceof Error ? error.message : 'Authentication failed');
-    } finally {
-      setIsLoading(false);
-    }
+  const handleSocialAuthClick = (provider: 'google' | 'facebook') => {
+    setShowSocialModal(provider);
+  };
+
+  const handleSocialAuthSuccess = () => {
+    setShowSocialModal(null);
+    setShowSuccess(true);
+    launchFireworks();
+    
+    // Force redirect to dashboard after a delay
+    setTimeout(() => {
+      window.location.href = '/dashboard';
+    }, 1500);
   };
 
   return (
@@ -232,11 +208,20 @@ export function LoginForm({
       {showSuccess && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <SuccessModal 
-            onClose={() => {}} 
+            onClose={() => setShowSuccess(false)} 
             message={isRegistering ? `Welcome to ProPhone, ${formData.firstName}!` : "Successfully signed in!"} 
           />
         </div>
       )}
+      
+      {showSocialModal && (
+        <SocialVerificationModal
+          provider={showSocialModal}
+          onClose={() => setShowSocialModal(null)}
+          onVerify={handleSocialAuthSuccess}
+        />
+      )}
+      
       <div className="space-y-4">
         {(!codeSent) && (
           <>
@@ -471,7 +456,7 @@ export function LoginForm({
         <div className="grid grid-cols-2 gap-4">
           <button
             type="button"
-            onClick={() => onShowAuth('google')}
+            onClick={() => handleSocialAuthClick('google')}
             disabled={isLoading}
             className="flex items-center justify-center space-x-2 py-2.5 px-4 rounded-xl bg-white/10 hover:bg-white/15 border border-white/10 transition-all duration-200 group relative overflow-hidden"
           >
@@ -499,7 +484,7 @@ export function LoginForm({
           </button>
           <button
             type="button"
-            onClick={() => onShowAuth('facebook')}
+            onClick={() => handleSocialAuthClick('facebook')}
             disabled={isLoading}
             className="flex items-center justify-center space-x-2 py-2.5 px-4 rounded-xl bg-white/10 hover:bg-white/15 border border-white/10 transition-all duration-200 group relative overflow-hidden"
           >
