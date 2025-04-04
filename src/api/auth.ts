@@ -23,41 +23,55 @@ export const auth = {
         return { user: ownerData, token: 'owner-token' };
       }
 
-      try {
-        // Use fetch directly to avoid axios interceptors
-        const response = await fetch('/api/auth/login', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(credentials),
-          credentials: 'include'
-        });
-        
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({ error: 'Invalid credentials' }));
-          throw new Error(errorData.error || 'Invalid credentials');
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(credentials),
+        credentials: 'include'
+      });
+
+      const contentType = response.headers.get('content-type');
+      let errorMessage = 'Login failed';
+      
+      if (!response.ok) {
+        if (contentType && contentType.includes('application/json')) {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorData.message || 'Invalid credentials';
+        } else {
+          errorMessage = await response.text() || 'Invalid credentials';
         }
-        
-        const data = await response.json();
-        return data;
-      } catch (error) {
-        if (error.response?.status === 401 || error.message.includes('credentials')) {
-          throw new Error('Invalid email or password');
-        }
-        if (!error.response) {
-          throw new Error('Network error. Please check your connection.');
-        }
-        throw error;
+        throw new Error(errorMessage);
       }
+
+      let data;
+      const responseText = await response.text();
+      
+      if (!responseText || responseText.trim() === '') {
+        throw new Error('Server returned an empty response');
+      }
+
+      try {
+        data = JSON.parse(responseText);
+      } catch (e) {
+        console.error('Failed to parse response:', responseText);
+        throw new Error('Invalid response format from server');
+      }
+
+      if (!data.user || !data.token) {
+        throw new Error('Invalid response format from server');
+      }
+
+      return data;
     } catch (error) {
+      console.error('Login error:', error);
       throw error;
     }
   },
 
   async register(userData: RegisterData) {
     try {
-      // Use fetch directly to avoid axios interceptors
       const response = await fetch('/api/auth/register', {
         method: 'POST',
         headers: {

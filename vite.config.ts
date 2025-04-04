@@ -5,12 +5,12 @@ export default defineConfig({
   plugins: [react()],
   server: {
     host: '0.0.0.0',
-    port: 3000,
+    port: 4173,
     hmr: {
       protocol: 'ws',
       host: '0.0.0.0',
-      port: 3000,
-      clientPort: 3000,
+      port: 4173,
+      clientPort: 4173,
       timeout: 120000
     }
   },
@@ -39,7 +39,6 @@ export default defineConfig({
     reportCompressedSize: false,
     emptyOutDir: true,
     assetsInlineLimit: 8192,
-    // Ensure source maps are generated for debugging
     sourcemap: true
   },
   optimizeDeps: {
@@ -53,10 +52,9 @@ export default defineConfig({
       treeShaking: true,
       minify: true
     }
-    // Configure server for both development and production
   },
   preview: {
-    port: 3000,
+    port: 4173,
     host: '0.0.0.0',
     strictPort: true,
     cors: true,

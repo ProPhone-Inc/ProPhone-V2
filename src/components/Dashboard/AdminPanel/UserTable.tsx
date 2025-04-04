@@ -183,10 +183,13 @@ export function UserTable({ users, onEdit, onDelete, onSuspend, onBan, onReactiv
                     <button
                       onClick={() => login(user)}
                       disabled={user.role === 'super_admin' && currentUser?.role !== 'owner'}
-                      className="p-2 hover:bg-[#B38B3F]/20 rounded-lg transition-colors group"
+                      className="p-2 hover:bg-[#B38B3F]/20 rounded-lg transition-colors group relative"
                       title="Login as User"
                     >
                       <LogIn className={`w-4 h-4 ${user.role === 'super_admin' && currentUser?.role !== 'owner' ? 'text-[#B38B3F]/40' : 'text-[#B38B3F] group-hover:text-[#FFD700]'}`} />
+                      <span className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-black/80 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                        Login as User
+                      </span>
                     </button>
                   </div>
                 )}

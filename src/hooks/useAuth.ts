@@ -8,11 +8,12 @@ interface User {
   avatar?: string;
   role?: string;
   showAds?: boolean;
-  parentUser?: {
+  originalUser?: {
     id: string;
     name: string;
     email: string;
     role: string;
+    avatar?: string;
   };
 }
 
@@ -81,49 +82,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setIsLoading(true);
       setError(null);
 
-      // Special case for owner login
-      if (credentials.email === 'dallas@prophone.io' && credentials.password === 'owner') {
-        const ownerData = {
-          id: '0',
-          name: 'Dallas Reynolds',
-          email: 'dallas@prophone.io',
-          role: 'owner',
-          avatar: 'https://dallasreynoldstn.com/wp-content/uploads/2025/02/26F25F1E-C8E9-4DE6-BEE2-300815C83882.png'
-        };
-        await handleLogin(ownerData);
-        setIsAuthenticated(true);
-        return;
+      const { user: userData, token } = await auth.login(credentials);
+      
+      if (!userData || !token) {
+        throw new Error('Invalid response from server');
       }
 
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(credentials)
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: 'Invalid credentials' }));
-        throw new Error(errorData.error || 'Invalid credentials');
-      }
-
-      try {
-        const { user, token } = await response.json();
-        
-        if (!token) {
-          throw new Error('No authentication token received');
-        }
-        
-        localStorage.setItem('auth_token', token);
-        
-        // Ensure user is properly set and authentication state is updated
-        await handleLogin(user);
-        setIsAuthenticated(true);
-      } catch (parseError) {
-        console.error('Error parsing login response:', parseError);
-        throw new Error('Invalid credentials');
-      }
+      localStorage.setItem('auth_token', token);
+      await handleLogin(userData);
       
     } catch (error) {
       const errorMessage = error instanceof Error 

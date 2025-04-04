@@ -1,5 +1,5 @@
 import React from 'react';
-import { PenSquare, Trash2, Shield, Ban, LogIn, UserCheck } from 'lucide-react';
+import { PenSquare, Trash2, Shield, Ban, LogIn, UserCheck, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../../../../hooks/useAuth';
 
 interface TeamMemberListProps {
@@ -136,23 +136,28 @@ export function TeamMemberList({ members, canManageTeam, onEdit, onDelete, onSus
                       <Trash2 className="w-4 h-4 text-red-400/70 group-hover:text-red-400" />
                     </button>
                     {member.status !== 'suspended' && (
-                      <button
-                        disabled={!canEditMember(member)}
-                        onClick={() => canEditMember(member) && onSuspend(member)}
-                        className={`p-2 ${canEditMember(member) ? 'hover:bg-amber-500/20' : 'opacity-50 cursor-not-allowed'} rounded-lg transition-colors group`}
-                        title="Suspend Member"
-                      >
-                        <Ban className="w-4 h-4 text-amber-400/70 group-hover:text-amber-400" />
-                      </button>
+                      <>
+                        <button
+                          disabled={!canEditMember(member)}
+                          onClick={() => canEditMember(member) && onSuspend(member)}
+                          className={`p-2 ${canEditMember(member) ? 'hover:bg-amber-500/20' : 'opacity-50 cursor-not-allowed'} rounded-lg transition-colors group`}
+                          title="Suspend Member"
+                        >
+                          <Ban className="w-4 h-4 text-amber-400/70 group-hover:text-amber-400" />
+                        </button>
+                        <button
+                          disabled={!canEditMember(member)}
+                          onClick={() => canEditMember(member) && onLogin(member)}
+                          className={`p-2 ${canEditMember(member) ? 'hover:bg-[#B38B3F]/20' : 'opacity-50 cursor-not-allowed'} rounded-lg transition-colors group relative`}
+                          title="Login as User"
+                        >
+                          <LogIn className={`w-4 h-4 ${canEditMember(member) ? 'text-[#B38B3F] group-hover:text-[#FFD700]' : 'text-[#B38B3F]/40'}`} />
+                          <span className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-black/80 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                            Login as User
+                          </span>
+                        </button>
+                      </>
                     )}
-                    <button
-                      disabled={!canEditMember(member)}
-                      onClick={() => canEditMember(member) && onLogin(member)}
-                      className={`p-2 ${canEditMember(member) ? 'hover:bg-[#B38B3F]/20' : 'opacity-50 cursor-not-allowed'} rounded-lg transition-colors group`}
-                      title="Login as Member"
-                    >
-                      <LogIn className={`w-4 h-4 ${canEditMember(member) ? 'text-[#B38B3F] group-hover:text-[#FFD700]' : 'text-[#B38B3F]/40'}`} />
-                    </button>
                   </div>
                 )}
               </td>

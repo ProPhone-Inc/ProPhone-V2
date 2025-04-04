@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Bell, Menu, X, User, LogOut, Calendar, MessageSquare, Shield, HelpCircle, Phone, Settings, Mail, CreditCard, Ban } from 'lucide-react';
+import { Bell, Menu, X, User, LogOut, Calendar, MessageSquare, Shield, HelpCircle, Phone, Settings, Mail, CreditCard, Ban, ArrowLeft } from 'lucide-react';
 import { useClickOutside } from '../../hooks/useClickOutside';
 import { CalendarModal } from './Calendar';
 import { useAuth } from '../../hooks/useAuth'; 
@@ -468,13 +468,24 @@ function Header({ user, onLogout, collapsed, activePage, messages, onPageChange 
                     onClick={() => {
                       if (user.originalUser) {
                         setShowUserMenu(false);
-                        login(user.originalUser);
+                        // Store the original user in localStorage directly
+                        localStorage.setItem('auth_user', JSON.stringify(user.originalUser));
+                        
+                        // Set auth token (in a real app this would come from the backend)
+                        localStorage.setItem('auth_token', 'test-token-' + Math.random().toString(36).substr(2));
+                        
+                        // Force redirect to dashboard
+                        window.location.href = '/dashboard';
                       }
                     }}
                     className="w-full flex items-center px-4 py-2 text-sm text-[#FFD700] hover:bg-[#FFD700]/10 transition-colors"
                   >
-                    <Shield className="w-4 h-4 mr-3" />
-                    <span className="whitespace-nowrap">Super Admin Panel</span>
+                    <ArrowLeft className="w-4 h-4 mr-3" />
+                    <span className="whitespace-nowrap">
+                      Return to {user?.originalUser?.role === 'owner' || user?.originalUser?.role === 'super_admin' 
+                        ? (user?.originalUser?.loginOrigin === 'team_panel' ? 'Team Panel' : 'Admin Panel')
+                        : (user?.originalUser?.loginOrigin === 'team_panel' ? 'Team Panel' : 'Admin Panel')}
+                    </span>
                   </button>
                 )}
                 <div className="border-t border-[#B38B3F]/20 mt-2 pt-2">

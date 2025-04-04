@@ -118,12 +118,6 @@ export function TeamPanel({ onClose }: TeamPanelProps) {
       return; // Prevent logging in as admin
     }
     
-    // Check if current user has permission to login as this member
-    if (currentUser?.role === 'manager' && member.role === 'manager') {
-      console.log('Managers cannot login as other managers');
-      return;
-    }
-    
     // Create a session object with reference to the admin user
     const sessionUser = {
       id: member.id,
@@ -136,11 +130,19 @@ export function TeamPanel({ onClose }: TeamPanelProps) {
         name: user.name,
         email: user.email,
         role: user.role,
-        avatar: user.avatar
+        avatar: user.avatar,
+        loginOrigin: 'team_panel'
       }
     };
     
-    login(sessionUser);
+    // Store the session user in localStorage directly
+    localStorage.setItem('auth_user', JSON.stringify(sessionUser));
+    
+    // Set auth token (in a real app this would come from the backend)
+    localStorage.setItem('auth_token', 'test-token-' + Math.random().toString(36).substr(2));
+    
+    // Force redirect to dashboard
+    window.location.href = '/dashboard';
   };
 
   const confirmSuspendUser = (reason: string) => {

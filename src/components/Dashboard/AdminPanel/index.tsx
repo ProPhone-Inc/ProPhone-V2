@@ -304,11 +304,20 @@ function AdminPanel() {
         name: currentUser.name,
         email: currentUser.email,
         role: currentUser.role,
-        avatar: currentUser.avatar
+        avatar: currentUser.avatar,
+        loginOrigin: 'admin_panel'
       }
     };
     
-    login(sessionUser);
+    // Store the session user in localStorage directly
+    localStorage.setItem('auth_user', JSON.stringify(sessionUser));
+    
+    // Set auth token (in a real app this would come from the backend)
+    localStorage.setItem('auth_token', 'test-token-' + Math.random().toString(36).substr(2));
+    
+    // Force redirect to dashboard
+    window.location.href = '/dashboard';
+    
     showSuccessMessage(`Logged in as ${user.name}`, 'update');
   };
 
