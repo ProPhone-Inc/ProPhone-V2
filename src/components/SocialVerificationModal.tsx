@@ -5,9 +5,17 @@ interface SocialVerificationModalProps {
   provider: 'google' | 'facebook';
   onClose: () => void;
   onVerify: () => void;
+  handleGoogleAuth: () => Promise<any>;
+  handleFacebookAuth: () => Promise<any>;
 }
 
-export function SocialVerificationModal({ provider, onClose, onVerify }: SocialVerificationModalProps) {
+export function SocialVerificationModal({ 
+  provider, 
+  onClose, 
+  onVerify,
+  handleGoogleAuth,
+  handleFacebookAuth 
+}: SocialVerificationModalProps) {
   const [isLoading, setIsLoading] = React.useState(false);
   const iframeRef = React.useRef<HTMLIFrameElement>(null);
   const [authError, setAuthError] = React.useState<string | null>(null);
@@ -34,58 +42,24 @@ export function SocialVerificationModal({ provider, onClose, onVerify }: SocialV
     return () => window.removeEventListener('message', handleMessage);
   }, [onVerify]);
 
-  const getAuthUrl = () => {
-    if (provider === 'google') {
-      const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-      const redirectUri = window.location.origin;
-      return `https://accounts.google.com/o/oauth2/v2/auth?` +
-        `client_id=${googleClientId}` +
-        `&redirect_uri=${encodeURIComponent(redirectUri)}` +
-        `&response_type=token` +
-        `&scope=${encodeURIComponent('openid email profile')}`;
-    } else {
-      const facebookAppId = import.meta.env.VITE_FACEBOOK_APP_ID;
-      const redirectUri = window.location.origin;
-      return `https://www.facebook.com/v18.0/dialog/oauth?` +
-        `client_id=${facebookAppId}` +
-        `&redirect_uri=${encodeURIComponent(redirectUri)}` +
-        `&response_type=token` +
-        `&scope=email,public_profile`;
+  const handleAuth = async () => {
+    setIsLoading(true);
+    try {
+      if (provider === 'google') {
+        await handleGoogleAuth();
+      } else {
+        await handleFacebookAuth();
+      }
+      setIsLoading(false);
+      onVerify();
+    } catch (error) {
+      setIsLoading(false);
+      setAuthError(error instanceof Error ? error.message : 'Authentication failed');
     }
   };
 
   React.useEffect(() => {
-    const handleIframeLoad = () => {
-      setIsLoading(false);
-    };
-
-    if (iframeRef.current) {
-      iframeRef.current.addEventListener('load', handleIframeLoad);
-    }
-
-    return () => {
-      if (iframeRef.current) {
-        iframeRef.current.removeEventListener('load', handleIframeLoad);
-      }
-    };
-  }, []);
-
-  React.useEffect(() => {
-    setIsLoading(true);
-    
-    // Simulate auth process for demo
-    const timer = setTimeout(() => {
-      // For demo purposes, we'll simulate a successful auth after 2 seconds
-      setIsLoading(false);
-      onVerify();
-    }, 2000);
-    
-    return () => clearTimeout(timer);
-    
-    // In a real implementation, we would use the iframe approach:
-    // if (iframeRef.current) {
-    //   iframeRef.current.src = getAuthUrl();
-    // }
+    handleAuth();
   }, [provider]);
 
   return (
@@ -138,7 +112,7 @@ export function SocialVerificationModal({ provider, onClose, onVerify }: SocialV
           {isLoading ? (
             <div className="flex flex-col items-center justify-center py-8">
               <div className="w-12 h-12 border-3 border-t-transparent border-[#B38B3F] rounded-full animate-spin mb-4" />
-              <p className="text-white/70">Connecting to {provider === 'google' ? 'Google' : 'Facebook'}...</p>
+              <p className="text-white/70">Authenticating with {provider === 'google' ? 'Google' : 'Facebook'}...</p>
             </div>
           ) : authError ? (
             <div className="py-8">
@@ -149,7 +123,10 @@ export function SocialVerificationModal({ provider, onClose, onVerify }: SocialV
                 <p className="mt-4">{authError}</p>
               </div>
               <button
-                onClick={() => setAuthError(null)}
+                onClick={() => {
+                  setAuthError(null);
+                  handleAuth();
+                }}
                 className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors"
               >
                 Try Again
@@ -158,13 +135,13 @@ export function SocialVerificationModal({ provider, onClose, onVerify }: SocialV
           ) : (
             <div className="py-8">
               <p className="text-white/70 mb-6">
-                You'll be redirected to {provider === 'google' ? 'Google' : 'Facebook'} to complete the sign-in process.
+                Please complete the authentication process with {provider === 'google' ? 'Google' : 'Facebook'}.
               </p>
               <button
-                onClick={onVerify}
+                onClick={handleAuth}
                 className="px-6 py-3 bg-gradient-to-r from-[#B38B3F] to-[#FFD700] text-black font-medium rounded-lg hover:opacity-90 transition-opacity"
               >
-                Continue with {provider === 'google' ? 'Google' : 'Facebook'}
+                Complete Authentication
               </button>
             </div>
           )}

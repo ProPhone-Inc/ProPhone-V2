@@ -3,7 +3,7 @@ import { Mail, Lock, ArrowRight, Wand2, Facebook, User } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useFireworks } from '../hooks/useFireworks';
 import { SocialVerificationModal } from './SocialVerificationModal';
-import { SuccessModal } from './SuccessModal';
+import { SuccessModal } from './SuccessModal'; 
 import { sendMagicCode, verifyMagicCode, registerUser, handleGoogleAuth, handleFacebookAuth } from '../utils/auth';
 
 interface LoginFormProps {
@@ -54,6 +54,37 @@ export function LoginForm({
       ...prev,
       [e.target.name]: e.target.value
     }));
+  };
+
+  const handleSocialAuthClick = (provider: 'google' | 'facebook') => {
+    setShowSocialModal(provider);
+  };
+
+  const handleSocialAuthSuccess = async (provider: 'google' | 'facebook', data: any) => {
+    setIsLoading(true);
+    setError('');
+    try {
+      if (provider === 'google') {
+        await handleGoogleAuth(data);
+      } else {
+        await handleFacebookAuth(data);
+      }
+      setShowSuccess(true);
+      launchFireworks();
+      setTimeout(() => {
+        window.location.href = '/dashboard';
+      }, 1500);
+    } catch (err) {
+      const errorMessage = err instanceof Error 
+        ? err.message 
+        : typeof err === 'object' && err && 'message' in err
+          ? String(err.message)
+          : 'Authentication failed';
+      setError(errorMessage);
+    } finally {
+      setIsLoading(false);
+      setShowSocialModal(null);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -175,7 +206,6 @@ export function LoginForm({
       setTimeout(() => {
         window.location.href = '/dashboard';
       }, 1500);
-      return;
     } catch (err) {
       const errorMessage = err instanceof Error 
         ? err.message 
@@ -186,21 +216,6 @@ export function LoginForm({
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleSocialAuthClick = (provider: 'google' | 'facebook') => {
-    setShowSocialModal(provider);
-  };
-
-  const handleSocialAuthSuccess = () => {
-    setShowSocialModal(null);
-    setShowSuccess(true);
-    launchFireworks();
-    
-    // Force redirect to dashboard after a delay
-    setTimeout(() => {
-      window.location.href = '/dashboard';
-    }, 1500);
   };
 
   return (

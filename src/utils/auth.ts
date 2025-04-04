@@ -5,17 +5,6 @@ export async function handleGoogleAuth(): Promise<{ id: string; name: string; em
     throw new Error('Google authentication is not properly configured');
   }
 
-  // In a real implementation, this would authenticate with Google
-  // For demo purposes, we'll simulate a successful authentication
-  await new Promise(resolve => setTimeout(resolve, 1000));
-  
-  return {
-    id: Math.random().toString(36).substr(2, 9),
-    name: 'Google User',
-    email: 'user@google.com'
-  };
-  
-  /* Commented out actual implementation for demo
   const redirectUri = window.location.origin; 
   const width = 600;
   const height = 700;
@@ -91,21 +80,9 @@ export async function handleGoogleAuth(): Promise<{ id: string; name: string; em
       resolve(null);
     }, 120000); // 2 minutes timeout
   });
-  */
 }
 
 export async function handleFacebookAuth(): Promise<{ id: string; name: string; email: string }> {
-  // In a real implementation, this would authenticate with Facebook
-  // For demo purposes, we'll simulate a successful authentication
-  await new Promise(resolve => setTimeout(resolve, 1000));
-  
-  return {
-    id: Math.random().toString(36).substr(2, 9),
-    name: 'Facebook User',
-    email: 'user@facebook.com'
-  };
-  
-  /* Commented out actual implementation for demo
   return new Promise((resolve, reject) => {
     const facebookAppId = import.meta.env.VITE_FACEBOOK_APP_ID;
     if (!facebookAppId) {
@@ -136,7 +113,6 @@ export async function handleFacebookAuth(): Promise<{ id: string; name: string; 
       }
     }, { scope: 'public_profile,email' });
   });
-  */
 }
 
 export async function sendMagicCode(email: string): Promise<void> {
