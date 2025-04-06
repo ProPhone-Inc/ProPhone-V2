@@ -18,6 +18,22 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-      - name: Deploy via SSH (with wait)
+      - name: Deploy via SSH (with env and wait)
         run: |
-          ssh -o StrictHostKeyChecking=no -p 37980 root@103.120.48.189 'cd /var/www/main && echo "Waiting..." && sleep 5 && ./deploy.sh'
+          ssh -o StrictHostKeyChecking=no -p 37980 root@103.120.48.189 '
+            echo "Starting remote deploy..."
+
+            # Change to app directory
+            cd /var/www/main
+
+            # Optional delay to let file system settle
+            sleep 5
+
+            # Load environment (important)
+            if [ -f ~/.bashrc ]; then source ~/.bashrc; fi
+            if [ -f ~/.profile ]; then source ~/.profile; fi
+            if [ -f .env ]; then export $(grep -v "^#" .env | xargs); fi
+
+            # Run deploy script
+            ./deploy.sh
+          '
