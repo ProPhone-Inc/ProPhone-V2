@@ -1,0 +1,25 @@
+#!/bin/bash
+
+# Force-load full shell environment
+source ~/.bashrc >/dev/null 2>&1 echo "Pulling 
+latest updates from GitHub..." git pull origin 
+main source ~/.profile >/dev/null 2>&1 echo 
+"Installing dependencies..." npm install
+
+echo "Building project (forced success)..." npm 
+run build || true echo "User: $(whoami)" echo 
+"Committing local changes..." git add . git 
+commit -m "Auto-deploy commit from server" || 
+echo "No new changes to commit." echo "Node: 
+$(which node)" echo "Pushing committed changes to 
+GitHub..." git push origin main echo "NPM: 
+$(which npm)" echo "Restarting PM2 
+application..." pm2 restart prophone-server
+echo "PATH: $PATH"
+echo "Configuring PM2 startup (failsafe)..."
+pm2 startup
+
+echo "Saving PM2 state..."
+pm2 save
+
+echo "Deployment complete!"
