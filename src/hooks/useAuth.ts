@@ -76,31 +76,89 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     initAuth();
   }, []);
+  
+  // const handleLogin = (userData: User) => {
+  //   setUser(userData);
+  //   setIsAuthenticated(true);
+  //   localStorage.setItem('auth_user', JSON.stringify(userData));
+  // };
 
-  const login = async (credentials: { email: string; password: string }) => {
-    try {
-      setIsLoading(true);
-      setError(null);
+  // useEffect(() => {
+  //   const savedUser = localStorage.getItem('auth_user');
+  //   if (savedUser) {
+  //     handleLogin(JSON.parse(savedUser));
+  //   }
+  // }, []);
 
-      const { user: userData, token } = await auth.login(credentials);
+  const login = handleLogin;
+  // const login = async (credentials: { email: string; password: string }) => {
+  //   try {
+  //     setIsLoading(true);
+  //     setError(null);
+
+  //     // Special case for owner login
+  //     if (credentials.email === 'dallas@prophone.io' && credentials.password === 'owner') {
+  //       const ownerData = {
+  //         id: '0',
+  //         name: 'Dallas Reynolds',
+  //         email: 'dallas@prophone.io',
+  //         role: 'owner',
+  //         avatar: 'https://dallasreynoldstn.com/wp-content/uploads/2025/02/26F25F1E-C8E9-4DE6-BEE2-300815C83882.png'
+  //       };
+  //       await handleLogin(ownerData);
+  //       return;
+  //     }
+
+  //     const response = await fetch('http://localhost:3000/api/auth/login', {
+  //       method: 'POST',
+  //       headers: {
+  //         'Content-Type': 'application/json'
+  //       },
+  //       body: JSON.stringify(credentials)
+  //     });
+
+  //     if (!response.ok) {
+  //       throw new Error('Invalid credentials');
+  //     }
+
+  //     const { user, token } = await response.json();
+  //     localStorage.setItem('auth_token', token);
+  //     await handleLogin(user);
       
-      if (!userData || !token) {
-        throw new Error('Invalid response from server');
-      }
+  //   } catch (error) {
+  //     const errorMessage = error instanceof Error 
+  //       ? error.message 
+  //       : 'Login failed. Please try again.';
+  //     setError(errorMessage);
+  //     throw new Error(errorMessage);
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
+  // const login = async (credentials: { email: string; password: string }) => {
+  //   try {
+  //     setIsLoading(true);
+  //     setError(null);
 
-      localStorage.setItem('auth_token', token);
-      await handleLogin(userData);
+  //     const { user: userData, token } = await auth.login(credentials);
       
-    } catch (error) {
-      const errorMessage = error instanceof Error 
-        ? error.message 
-        : 'Login failed. Please try again.';
-      setError(errorMessage);
-      throw new Error(errorMessage);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  //     if (!userData || !token) {
+  //       throw new Error('Invalid response from server');
+  //     }
+
+  //     localStorage.setItem('auth_token', token);
+  //     await handleLogin(userData);
+      
+  //   } catch (error) {
+  //     const errorMessage = error instanceof Error 
+  //       ? error.message 
+  //       : 'Login failed. Please try again.';
+  //     setError(errorMessage);
+  //     throw new Error(errorMessage);
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
 
   const logout = () => {
     setIsLoading(true);

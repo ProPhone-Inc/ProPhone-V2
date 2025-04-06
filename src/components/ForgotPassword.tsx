@@ -1,4 +1,5 @@
 import React from 'react';
+import axios from 'axios';
 import { Mail, Lock, Key, ArrowLeft, Send } from 'lucide-react';
 
 interface ForgotPasswordProps {
@@ -16,7 +17,6 @@ interface ForgotPasswordProps {
   setShowSuccess: (show: boolean) => void;
   setShowSuccessModal: (show: boolean) => void;
   setIsForgotPassword: (forgot: boolean) => void;
-  setCodeSent: (sent: boolean) => void;
 }
 
 export function ForgotPassword({
@@ -34,11 +34,21 @@ export function ForgotPassword({
   setShowSuccess,
   setShowSuccessModal,
   setIsForgotPassword,
-  setCodeSent
 }: ForgotPasswordProps) {
   const formRef = React.useRef<HTMLFormElement>(null);
 
+  const resendemail = async ()  => {
+
+    const response = await axios.post(`http://localhost:3000/api/auth/sendemail`, {
+      email: resetEmail,
+      forget: 'forget',
+    });
+  }
+
+
   const handleResetSubmit = async (e: React.FormEvent) => {
+ 
+    
     e.preventDefault();
     if (resetStep === 'email') {
       const email = (e.currentTarget as HTMLFormElement).email.value;
@@ -46,14 +56,24 @@ export function ForgotPassword({
         setError('Please enter your email address to begin the reset process');
         return;
       }
-      setError('');
-      setIsLoading(true);
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setResetEmail(email);
-      setCooldownTime(30);
-      setResetStep('code');
-      setIsLoading(false);
+      const response = await axios.post(`http://localhost:3000/api/auth/sendemail`, {
+        email: email,
+        forget: 'forget',
+      });
+      if (response.data == 1){
+        setError('');
+        setIsLoading(true);
+        // Simulate API call
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        setResetEmail(email);
+        setCooldownTime(30);
+        setResetStep('code');
+        setIsLoading(false);
+      }else{
+        setError('No Account Were Found ');
+
+      }
+      
       // Slide animation
       if (formRef.current) {
         formRef.current.style.transform = 'translateX(-50%) scale(0.9)';
@@ -70,12 +90,25 @@ export function ForgotPassword({
         setError('Please enter the 6-digit verification code sent to your email');
         return;
       }
-      setError('');
+      // const email = (e.currentTarget as HTMLFormElement).email.value;
+
+      const response = await axios.post(`http://localhost:3000/api/auth/verify-code`, {
+        email: resetEmail,
+        code: code,
+      });
+      if (response.data.ownerData){
+        setError('');
       setIsLoading(true);
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
       setResetStep('password');
       setIsLoading(false);
+      }else{
+        setError('invalid Code');
+
+      }
+
+      
       if (formRef.current) {
         formRef.current.style.transform = 'translateX(-50%) scale(0.9)';
         formRef.current.style.opacity = '0';
@@ -96,16 +129,17 @@ export function ForgotPassword({
 
       setError('');
       setIsLoading(true);
-      
+      const response = await axios.post(`http://localhost:3000/api/auth/reset-password`, {
+        email: resetEmail,
+        password: newPassword,
+      });
       try {
         await new Promise(resolve => setTimeout(resolve, 1500));
         setShowSuccessModal(true);
         setShowSuccess(true);
-        setShowSuccess(true);
         
         setTimeout(() => {
           setShowSuccessModal(false);
-          setShowSuccess(false);
           setShowSuccess(false);
           setIsForgotPassword(false);
           setResetStep('email');
@@ -208,6 +242,7 @@ export function ForgotPassword({
                     setCooldownTime(30);
                     setIsLoading(true);
                     setTimeout(() => setIsLoading(false), 1000);
+                    resendemail();
                   }
                 }}
                 disabled={cooldownTime > 0}
@@ -317,7 +352,7 @@ export function ForgotPassword({
                 : 'Send Reset Code'
               : resetStep === 'code'
               ? 'Verify Code'
-              : 'Reset Password'} 
+              : 'Reset Password'}
           </span>
           <Send className="w-5 h-5 ml-2" />
         </button>
@@ -327,8 +362,7 @@ export function ForgotPassword({
           onClick={() => {
             setIsForgotPassword(false);
             setResetStep('email');
-            setCodeSent && setCodeSent(false);
-            setCodeSent && setCodeSent(false);
+            // setCodeSent(false);
             setResetEmail('');
             setCooldownTime(0);
             setError('');
@@ -341,5 +375,5 @@ export function ForgotPassword({
         </button>
       </div>
     </form>
-  ); 
+  );
 }

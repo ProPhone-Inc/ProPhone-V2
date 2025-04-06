@@ -5,6 +5,7 @@ import { useFireworks } from '../hooks/useFireworks';
 import { SocialVerificationModal } from './SocialVerificationModal';
 import { SuccessModal } from './SuccessModal'; 
 import { sendMagicCode, verifyMagicCode, registerUser, handleGoogleAuth, handleFacebookAuth } from '../utils/auth';
+import axios from 'axios';
 
 interface LoginFormProps {
   isCodeLogin: boolean;
@@ -57,9 +58,41 @@ export function LoginForm({
   };
 
   const handleSocialAuthClick = (provider: 'google' | 'facebook') => {
+   
+
     setShowSocialModal(provider);
   };
+  const handleSocialAuth = async (provider: 'google' | 'facebook') => {
+    setIsLoading(true);
+    setError('');
+    let userData;
 
+    try {
+      if (provider === 'google') {
+        if (!import.meta.env.VITE_GOOGLE_CLIENT_ID) {
+          throw new Error('Google client ID not configured');
+        }
+        userData = await handleGoogleAuth();
+      } else {
+        if (!import.meta.env.VITE_FACEBOOK_APP_ID) {
+          throw new Error('Facebook app ID not configured');
+        }
+        userData = await handleFacebookAuth();
+      }
+      
+      
+    } catch (err) {
+      const errorMessage = err instanceof Error 
+        ? err.message 
+        : typeof err === 'object' && err && 'message' in err
+          ? String(err.message)
+          : 'Authentication failed';
+      setError(errorMessage);
+      console.error('Social auth error:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
   const handleSocialAuthSuccess = async (provider: 'google' | 'facebook', data: any) => {
     setIsLoading(true);
     setError('');
@@ -87,125 +120,358 @@ export function LoginForm({
     }
   };
 
+  // const handleSubmit = async (e: React.FormEvent) => {
+  //   e.preventDefault();
+  //   setIsLoading(true);
+  //   setError('');
+
+  //   try {
+  //     const { email, password, firstName, lastName } = formData;
+      
+  //     // Handle signup flow
+  //     if (isRegistering) {
+  //       if (signupStep === 'form') {
+  //         // Validate form data
+  //         if (!firstName || !lastName || !email) {
+  //           throw new Error('Please fill in all fields');
+  //         }
+          
+  //         // Send verification code
+  //         await sendMagicCode(email);
+  //         setSignupStep('verify');
+  //         setIsLoading(false);
+  //         return;
+  //       }
+        
+  //       if (signupStep === 'verify') {
+  //         // Verify code
+  //         const code = verificationCode.join('');
+  //         await verifyMagicCode(email, code);
+  //         setSignupStep('password');
+  //         setIsLoading(false);
+  //         return;
+  //       }
+        
+  //       if (signupStep === 'password') {
+  //         // Create account with password
+  //         if (!password || !formData.confirmPassword) {
+  //           throw new Error('Please enter and confirm your password');
+  //         }
+          
+  //         if (password !== formData.confirmPassword) {
+  //           throw new Error('Passwords do not match');
+  //         }
+
+  //         // Register the user first
+  //         const userData = await registerUser({
+  //           firstName,
+  //           lastName,
+  //           email,
+  //           password
+  //         });
+
+  //         // Show success message with fireworks
+  //         setShowSuccess(true);
+  //         launchFireworks();
+
+  //         // Store user data in localStorage directly
+  //         localStorage.setItem('auth_user', JSON.stringify({
+  //           id: userData.id,
+  //           name: userData.name,
+  //           email: userData.email,
+  //           role: 'user'
+  //         }));
+          
+  //         // Set auth token (in a real app this would come from the backend)
+  //         localStorage.setItem('auth_token', 'test-token-' + Math.random().toString(36).substr(2));
+          
+  //         // Force redirect to dashboard after a delay
+  //         setTimeout(() => {
+  //           window.location.href = '/dashboard';
+  //         }, 1500);
+
+  //         return;
+  //       }
+  //     }
+
+
+  //     // Handle magic code login
+  //     if (isCodeLogin && !codeSent) {
+  //       setMagicEmail(email);
+  //       // Send magic code regardless of auth method
+  //       await sendMagicCode(email);
+  //       setCodeSent(true);
+  //       setIsLoading(false);
+  //       return;
+  //     }
+      
+  //     // Handle code verification
+  //     if (codeSent) {
+  //       const code = verificationCode.join('');
+  //       const userData = await verifyMagicCode(magicEmail, code);
+        
+  //       // Log in user directly after code verification
+  //       await login({ email: userData.email, password: 'magic-code' });
+  //       setShowSuccess(true);
+  //       launchFireworks();
+  //       setTimeout(() => {
+  //         window.location.href = '/dashboard';
+  //       }, 1500);
+  //       return;
+  //     }
+
+  //     // Regular password login
+  //     await login({ email, password });
+  //     setShowSuccess(true);
+  //     launchFireworks();
+
+  //     // Force redirect to dashboard after a delay
+  //     setTimeout(() => {
+  //       window.location.href = '/dashboard';
+  //     }, 1500);
+  //   } catch (err) {
+  //     const errorMessage = err instanceof Error 
+  //       ? err.message 
+  //       : typeof err === 'object' && err && 'message' in err
+  //         ? String(err.message)
+  //         : 'Authentication failed';
+  //     setError(errorMessage);
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
   const handleSubmit = async (e: React.FormEvent) => {
+    // alert("handlesubmit")
     e.preventDefault();
     setIsLoading(true);
+    const currentFormData = { ...formData };
     setError('');
+    const { email, password, firstName, lastName } = currentFormData;
 
     try {
-      const { email, password, firstName, lastName } = formData;
-      
-      // Handle signup flow
-      if (isRegistering) {
-        if (signupStep === 'form') {
-          // Validate form data
-          if (!firstName || !lastName || !email) {
-            throw new Error('Please fill in all fields');
+      if (!isRegistering){
+        try {
+          const response = await axios.post(`http://localhost:3000/api/auth/login`, {
+            email,
+            password,
+            firstName,
+            lastName,
+          });
+          // if (response.data.token ) {
+          //   sessionStorage.setItem("token", response.data.token);
+          //   login(response.data.token);
+          //   setShowSuccess(true);
+          //   setTimeout(() => {
+          //     setShowSuccess(false);
+          //     launchFireworks();
+          //   }, 1500);
+          // }
+          
+            if (response.data.ownerData ) {
+            sessionStorage.setItem("token", response.data.ownerData.token);
+            login(response.data.ownerData);
+            setShowSuccess(true);
+            setTimeout(() => {
+              setShowSuccess(false);
+              launchFireworks();
+              
+            }, 1500);
+          }else if (response.data == 2) {
+            setError('Incorrect Password');
+            // setProcessing(false)
+    
+          } else if (response.data.reason) {
+            setError('Account  Suspended');
+            // setReason(response.data.reason)
+            // setProcessing(false)
+          } 
+          else {
+            setError('Incorrect Credentials');
+    
           }
           
-          // Send verification code
-          await sendMagicCode(email);
-          setSignupStep('verify');
+            return;
+         
+        } catch (error: any) {
+          console.error('Login Error:', error);
+          setError(error.response?.data?.message || 'Something went wrong');
+        } finally {
           setIsLoading(false);
-          return;
-        }
+        } 
+      }else  {
         
-        if (signupStep === 'verify') {
-          // Verify code
+   
+      if (signupStep === 'verify') {
+                // Verify code
           const code = verificationCode.join('');
-          await verifyMagicCode(email, code);
-          setSignupStep('password');
+          const response = await axios.post(`http://localhost:3000/api/auth/verify-code`, {
+            email: email,
+            code: code,
+            register: 1,
+          });
+          
+          
+          if (response.data == 2) {
+            setError('Invalid verification code')
+            throw new Error('Invalid verification code');
+          }else if (response.data == 1) {
+            
+            setSignupStep('password');
           setIsLoading(false);
+          }
+          
           return;
-        }
-        
-        if (signupStep === 'password') {
+        }else if (signupStep === 'password') {
           // Create account with password
           if (!password || !formData.confirmPassword) {
             throw new Error('Please enter and confirm your password');
           }
           
           if (password !== formData.confirmPassword) {
+            
             throw new Error('Passwords do not match');
+          }else{
+            e.preventDefault();
+            // onVerified(magicEmail, {
+            //   firstName: formData.firstName,
+            //   lastName: formData.lastName,
+            //   email: magicEmail,
+            //   password: formData.password
+            // });
+            const userData = {
+              firstName: formData.firstName,
+              lastName: formData.lastName,
+              email: magicEmail,
+              password: formData.password, // Be careful storing passwords in localStorage
+            };
+            
+            localStorage.setItem("userData", JSON.stringify(userData));
+            const savedUserData = JSON.parse(localStorage.getItem("userData") || "{}");
+              const response = await axios.post(`http://localhost:3000/api/auth/register-user`, {
+                      data: savedUserData,
+                      plan: "free",
+                    });
+            if(response.data.ownerData ){
+              setTimeout(() => {
+                setShowSuccess(true);
+                launchFireworks();
+                
+                setTimeout(() => {
+              setShowSuccess(false);
+              setIsRegistering(false);
+              // setFormData(initialFormState);
+              login(response.data.ownerData);
+              localStorage.setItem("userData", JSON.stringify(response.data.ownerData));
+              setCodeSent(false);
+            }, 1000);
+              }, 1500);
+            }
+            // setShowSuccess(true);
+            // setTimeout(() => {
+            //   setShowSuccess(false);
+            //   setIsRegistering(false);
+            //   // setFormData(initialFormState);
+            //   setCodeSent(false);
+            // }, 1000);
           }
-
-          // Register the user first
-          const userData = await registerUser({
+        }else{
+          
+          setMagicEmail(email);
+          const response = await axios.post(`http://localhost:3000/api/auth/register`, {
+            email,
+            password,
             firstName,
             lastName,
-            email,
-            password
           });
-
-          // Show success message with fireworks
-          setShowSuccess(true);
-          launchFireworks();
-
-          // Store user data in localStorage directly
-          localStorage.setItem('auth_user', JSON.stringify({
-            id: userData.id,
-            name: userData.name,
-            email: userData.email,
-            role: 'user'
-          }));
-          
-          // Set auth token (in a real app this would come from the backend)
-          localStorage.setItem('auth_token', 'test-token-' + Math.random().toString(36).substr(2));
-          
-          // Force redirect to dashboard after a delay
-          setTimeout(() => {
-            window.location.href = '/dashboard';
-          }, 1500);
-
-          return;
+  
+  
+          if (response.data == 1) {
+           
+            setVerificationCode(['', '', '', '', '', '']);
+              // setFormData(currentFormData); // Preserve form data
+              // setCodeSent(true);
+              // setIsLoading(false);
+              await sendMagicCode(email);
+            setSignupStep('verify');
+            setIsLoading(false);
+          } else if (response.data == 2) {
+            setError('Email  Already Exists');
+            // setProcessing(false)
+            
+          }
+         return;
+         
         }
       }
-
-      // Special case for owner login
-      if (email === 'dallas@prophone.io' && password === 'owner') {
-        await login({ email, password });
-
-        // Redirect to dashboard after a delay
-        setTimeout(() => {
-          window.location.href = '/dashboard';
-        }, 1500);
-        return;
-      }
-
-      // Handle magic code login
-      if (isCodeLogin && !codeSent) {
-        setMagicEmail(email);
-        // Send magic code regardless of auth method
-        await sendMagicCode(email);
-        setCodeSent(true);
-        setIsLoading(false);
-        return;
-      }
-      
-      // Handle code verification
-      if (codeSent) {
-        const code = verificationCode.join('');
-        const userData = await verifyMagicCode(magicEmail, code);
+      // if (formData.confirmPassword) {
         
-        // Log in user directly after code verification
-        await login({ email: userData.email, password: 'magic-code' });
-        setShowSuccess(true);
-        launchFireworks();
-        setTimeout(() => {
-          window.location.href = '/dashboard';
-        }, 1500);
-        return;
+      //   if (password == formData.confirmPassword){
+      //     e.preventDefault();
+      //     // onVerified(magicEmail, {
+      //     //   firstName: formData.firstName,
+      //     //   lastName: formData.lastName,
+      //     //   email: magicEmail,
+      //     //   password: formData.password
+      //     // });
+      //     const userData = {
+      //       firstName: formData.firstName,
+      //       lastName: formData.lastName,
+      //       email: magicEmail,
+      //       password: formData.password, // Be careful storing passwords in localStorage
+      //     };
+          
+      //     localStorage.setItem("userData", JSON.stringify(userData));
+      //     setShowSuccess(true);
+      //     setTimeout(() => {
+      //       setShowSuccess(false);
+      //       setIsRegistering(false);
+      //       setFormData(initialFormState);
+      //       setCodeSent(false);
+      //       setShowPasswordCreation(false);
+      //     }, 1000);
+      //   }else{
+      //     setError('Password Do not match');
+      //     return;
+      //   }
+        
+      // }
+      if ((isCodeLogin || isRegistering) && codeSent) {
+        const code = verificationCode.join('');
+        const userData = await axios.post(`/api/auth/verify-code`, {
+          email: email,
+          code: code,
+          register: 1,
+        });
+        if(userData.data == 1){
+          if (isRegistering) {
+            setShowPasswordCreation(true);
+            setIsLoading(false);
+            return;
+          } else {
+            login(userData);
+            setShowSuccess(true);
+            setTimeout(() => {
+              setShowSuccess(false);
+              launchFireworks();
+            }, 1500);
+        }
+       
+        }else if(userData.data == 2){
+          setError("Invalid Code")
+        }
+      } else {
+        // Regular password login
+        if (isRegistering) {
+          if (!firstName?.trim() || !lastName?.trim() || !email?.trim() || !password?.trim()) {
+            setError('All fields are required');
+            setIsLoading(false);
+            return;
+          }
+          setFormData(currentFormData); // Preserve form data
+        }
+        
+       
       }
-
-      // Regular password login
-      await login({ email, password });
-      setShowSuccess(true);
-      launchFireworks();
-
-      // Force redirect to dashboard after a delay
-      setTimeout(() => {
-        window.location.href = '/dashboard';
-      }, 1500);
     } catch (err) {
       const errorMessage = err instanceof Error 
         ? err.message 
@@ -213,11 +479,11 @@ export function LoginForm({
           ? String(err.message)
           : 'Authentication failed';
       setError(errorMessage);
+      console.error('Login error:', err);
     } finally {
       setIsLoading(false);
     }
   };
-
   return (
     <form className="space-y-6" onSubmit={handleSubmit}>
       {showSuccess && (
@@ -471,7 +737,7 @@ export function LoginForm({
         <div className="grid grid-cols-2 gap-4">
           <button
             type="button"
-            onClick={() => handleSocialAuthClick('google')}
+            onClick={() => handleSocialAuth('google')}
             disabled={isLoading}
             className="flex items-center justify-center space-x-2 py-2.5 px-4 rounded-xl bg-white/10 hover:bg-white/15 border border-white/10 transition-all duration-200 group relative overflow-hidden"
           >
@@ -499,7 +765,7 @@ export function LoginForm({
           </button>
           <button
             type="button"
-            onClick={() => handleSocialAuthClick('facebook')}
+            onClick={() => handleSocialAuth('facebook')}
             disabled={isLoading}
             className="flex items-center justify-center space-x-2 py-2.5 px-4 rounded-xl bg-white/10 hover:bg-white/15 border border-white/10 transition-all duration-200 group relative overflow-hidden"
           >
