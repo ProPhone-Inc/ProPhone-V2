@@ -17,6 +17,7 @@ import { CopilotSettingsModal } from './CopilotSettingsModal';
 import { AISettingsModal } from './AISettingsModal';
 import { sendSuspensionEmail } from '../../../utils/email';
 import { mockUsers } from './mockData';
+import axios from "axios";
 
 function AdminPanel() {
   const { user: currentUser } = useAuth();
@@ -41,8 +42,9 @@ function AdminPanel() {
     );
   }
 
-  const [users, setUsers] = useState([...mockUsers]);
-  const [filteredUsers, setFilteredUsers] = useState([...mockUsers]);
+  const [users, setUsers] = useState([]);
+  // const [users, setUsers] = useState([...mockUsers]);
+  const [filteredUsers, setFilteredUsers] = useState([]);
   const { login } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -62,7 +64,31 @@ function AdminPanel() {
   const [actionSuccess, setActionSuccess] = useState<{message: string, type: string} | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const usersPerPage = 10;
-
+  useEffect(() => {
+    const fetchUsers = async () => {
+      const token = sessionStorage.getItem("token");
+      if (!token) return;
+  
+      // const token = JSON.parse(authUser);
+      // const token = parsed?.token;
+      if (!token) return;
+  
+      try {
+        const res = await axios.get("/api/auth/fetch-users", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        setUsers(res.data.users);
+        setFilteredUsers(res.data.users);
+        
+      } catch (err) {
+        console.error("Failed to fetch users:", err);
+      }
+    };
+  
+    fetchUsers();
+  }, []);
   // User statistics
   const userStats = {
     total: users.filter(user => !['owner', 'super_admin'].includes(user.role)).length,
@@ -325,6 +351,7 @@ function AdminPanel() {
   const indexOfLastUser = currentPage * usersPerPage;
   const indexOfFirstUser = indexOfLastUser - usersPerPage;
   const currentUsers = filteredUsers.slice(indexOfFirstUser, indexOfLastUser);
+  // alert(currentUsers)
   const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
 
   return (

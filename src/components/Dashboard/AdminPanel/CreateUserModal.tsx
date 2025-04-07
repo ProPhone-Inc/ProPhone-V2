@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import axios from 'axios';
 import { User, Mail, Lock, Shield } from 'lucide-react';
 import { useAuth } from '../../../hooks/useAuth';
 
@@ -23,6 +24,7 @@ export function CreateUserModal({ onClose, onSave }: CreateUserModalProps) {
   const [formData, setFormData] = React.useState({
     name: '',
     email: '',
+    password: '',
     role: 'user',
     status: 'active',
     permissions: [] as string[]
@@ -30,7 +32,7 @@ export function CreateUserModal({ onClose, onSave }: CreateUserModalProps) {
 
   const isOwner = currentUser?.role === 'owner';
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     
     // Prevent unauthorized role assignments
@@ -43,8 +45,10 @@ export function CreateUserModal({ onClose, onSave }: CreateUserModalProps) {
     
     const newUser = {
       id: Math.random().toString(36).substr(2, 9),
-      name: `${formData.firstName} ${formData.lastName}`,
+      firstname: formData.firstName ,
+      lastname: formData.lastName,
       email: formData.email,
+      password: formData.password,
       showAds: !(formData.role === 'owner' || formData.role === 'super_admin'),
       plan: isExecutiveOrSuperAdmin ? formData.plan : (canAssignGodMode && (formData.role === 'super_admin' || formData.role === 'executive') ? 'god_mode' : formData.plan),
       status: formData.status,
@@ -55,11 +59,25 @@ export function CreateUserModal({ onClose, onSave }: CreateUserModalProps) {
     };
 
     setIsGeneratingPassword(true);
-    // Simulate password generation and email sending
-    setTimeout(() => {
+    // alert(newUser)
+    const response = await axios.post(`/api/auth/add-user`, {
+      newUser,
+    });
+    if(response.data == 1){
+      alert("User Has Been Created")
+      window.location.reload()
+    }else{
+      alert("Email is Already Used")
+      
       setIsGeneratingPassword(false);
-      onSave(newUser);
-    }, 1500);
+
+    }
+
+    // Simulate password generation and email sending
+    // setTimeout(() => {
+    //   setIsGeneratingPassword(false);
+    //   onSave(newUser);
+    // }, 1500);
   };
 
   return (
@@ -173,14 +191,23 @@ export function CreateUserModal({ onClose, onSave }: CreateUserModalProps) {
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <Lock className="h-5 w-5 text-white/40" />
               </div>
-              <input
+              {/* <input
                 type="text"
                 disabled
                 className="w-full pl-10 pr-4 py-2 bg-zinc-800/50 border border-[#B38B3F]/20 rounded-lg text-white/50"
                 placeholder="Auto-generated secure password"
+              /> */}
+              <input
+                name="password"
+                type="password"
+                required
+                value={formData.password}
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                className="w-full pl-10 pr-4 py-2 bg-zinc-800 border border-[#B38B3F]/20 rounded-lg text-white placeholder-white/40"
+                placeholder="Enter User Password"
               />
             </div>
-            <p className="text-xs text-white/50 mt-1">A secure password will be generated and sent to the user's email</p>
+            {/* <p className="text-xs text-white/50 mt-1">A secure password will be generated and sent to the user's email</p> */}
           </div>
 
           <div className="flex space-x-3 pt-4">

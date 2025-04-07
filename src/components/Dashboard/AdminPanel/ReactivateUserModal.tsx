@@ -1,5 +1,6 @@
 import React from 'react';
 import { X, UserCheck } from 'lucide-react';
+import axios from 'axios';
 import { sendReactivationEmail } from '../../../utils/email';
 
 interface ReactivateUserModalProps {
@@ -15,8 +16,16 @@ export function ReactivateUserModal({ user, onClose, modalRef, onConfirm }: Reac
   const handleReactivate = async () => {
     setIsSubmitting(true);
     try {
-      await sendReactivationEmail(user.email);
-      onConfirm();
+      const response = await axios.post(`/api/auth/activate-user`, {
+        email:user.email,
+       
+      });
+      if(response.data ==1){
+        onConfirm();
+
+      }
+      // await sendReactivationEmail(user.email);
+      // onConfirm();
     } catch (error) {
       console.error('Failed to send reactivation email:', error);
     } finally {

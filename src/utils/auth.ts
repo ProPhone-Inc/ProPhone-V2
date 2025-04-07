@@ -1,4 +1,5 @@
 import axios from "axios";
+import { useAuth } from '../hooks/useAuth';
 
 // export async function handleGoogleAuth(): Promise<{ id: string; name: string; email: string }> {
 //   const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
@@ -83,10 +84,15 @@ import axios from "axios";
 //     }, 120000); // 2 minutes timeout
 //   });
 // }
-export async function handleGoogleAuth(): Promise<{ id: string; name: string; email: string }> {
+export async function handleGoogleAuth(): Promise<{
+  id: string;
+  name: string;
+  email: string;
+  picture: string;
+} | null> {
   const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
   if (!googleClientId) {
-    throw new Error('Google client ID not configured');
+    throw new Error("Google client ID not configured");
   }
 
   const redirectUri = window.location.origin;
@@ -95,75 +101,106 @@ export async function handleGoogleAuth(): Promise<{ id: string; name: string; em
   const left = Math.max(0, (window.innerWidth - width) / 2 + window.screenX);
   const top = Math.max(0, (window.innerHeight - height) / 2 + window.screenY);
 
-  // Construct URL using URLSearchParams for proper encoding
   const params = new URLSearchParams({
     client_id: googleClientId,
     redirect_uri: redirectUri,
-    response_type: 'token',
-    scope: 'openid email profile',
-    prompt: 'select_account'
+    response_type: "token",
+    scope: "openid email profile",
+    prompt: "select_account",
   });
 
   const url = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
 
   return new Promise((resolve, reject) => {
     let popup: Window | null;
-    
+    let hasResolved = false; // ✅ Prevent multiple submissions
+
     try {
       popup = window.open(
         url,
-        'google-auth',
+        "google-auth",
         `width=${width},height=${height},left=${left},top=${top},menubar=no,toolbar=no,location=no,status=no`
       );
     } catch (error) {
-      console.error('Failed to open popup:', error);
-      reject(new Error('Failed to open authentication window'));
+      console.error("Failed to open popup:", error);
+      reject(new Error("Failed to open authentication window"));
       return;
     }
 
     if (!popup) {
-      reject(new Error('Please allow popups for this site to enable social login'));
+      reject(new Error("Please allow popups for this site to enable social login"));
       return;
     }
 
-    const checkClosed = setInterval(() => {
-      if (popup?.closed) {
-        clearInterval(checkClosed);
-        window.removeEventListener('message', handleAuth);
+    const checkPopup = setInterval(async () => {
+      try {
+        if (popup.closed) {
+          clearInterval(checkPopup);
+          if (!hasResolved) resolve(null);
+        }
+
+        const popupUrl = popup.location.href;
+        if (popupUrl.includes("access_token") && !hasResolved) {
+          hasResolved = true;
+
+          const hash = new URLSearchParams(popup.location.hash.substring(1));
+          const accessToken = hash.get("access_token");
+
+          if (!accessToken) {
+            clearInterval(checkPopup);
+            popup.close();
+            reject(new Error("Access token not found"));
+            return;
+          }
+
+          const res = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+          });
+          popup.close();
+
+          const userData = await res.json();
+
+          const user = {
+            name: userData.name,
+            email: userData.email,
+            avatar: userData.picture,
+          };
+          try{
+            const apiResponse = await axios.post(`/api/auth/register-user`, {
+              data: user,
+              plan: "free",
+              google: 1,
+            });
+  
+            clearInterval(checkPopup);
+            popup.close();
+  
+            resolve(apiResponse.data.ownerData);
+          }catch (err) {
+            resolve(null);
+
+          }
+          
+        }
+      } catch (err) {
+        // Cross-origin access will throw error before Google redirects
+      }
+    }, 500);
+
+    // Timeout after 2 minutes
+    setTimeout(() => {
+      clearInterval(checkPopup);
+      if (!hasResolved) {
+        if (popup && !popup.closed) popup.close();
         resolve(null);
       }
-    }, 1000);
-
-    function handleAuth(event: MessageEvent) {
-      // alert("s")
-      if (event.origin !== window.location.origin) return;
-
-      if (event.data.type === 'GOOGLE_AUTH_SUCCESS') {
-        console.log(event.data.userData)
-        
-        clearInterval(checkClosed);
-        window.removeEventListener('message', handleAuth);
-        if (popup) popup.close();
-        resolve(event.data.userData);
-      } else if (event.data.type === 'GOOGLE_AUTH_ERROR') {
-        clearInterval(checkClosed);
-        window.removeEventListener('message', handleAuth);
-        if (popup) popup.close();
-        reject(new Error(event.data.error || 'Authentication failed'));
-      }
-    }
-
-    window.addEventListener('message', handleAuth);
-
-    // Set timeout to prevent hanging
-    setTimeout(() => {
-      clearInterval(checkClosed);
-      window.removeEventListener('message', handleAuth);
-      if (popup && !popup.closed) popup.close();
-      resolve(null);
-    }, 120000); // 2 minutes timeout
+    }, 120000);
   });
 }
+
+
 
 export async function handleFacebookAuth(): Promise<{ id: string; name: string; email: string }> {
   return new Promise((resolve, reject) => {
@@ -197,7 +234,8 @@ export async function handleFacebookAuth(): Promise<{ id: string; name: string; 
             // Send data to backend
             const apiResponse = await axios.post(`/api/auth/register-user`, {
               data: user,
-              plan: "",
+              plan: "free",
+              fb: 1,
             });
     
             console.log("User registered:", apiResponse.data);
@@ -247,7 +285,7 @@ export async function sendMagicCode(email: string): Promise<void> {
 }
 export async function verifyMagicCode(email: string, code: string): Promise<{ id: string; name: string; email: string }> {
   // const validCode = "123456";
-  const response = await axios.post(`http://localhost:3000/api/auth/verify-code`, {
+  const response = await axios.post(`/api/auth/verify-code`, {
     email: email,
     code: code,
   });

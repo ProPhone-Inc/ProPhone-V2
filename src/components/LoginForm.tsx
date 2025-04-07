@@ -73,6 +73,11 @@ export function LoginForm({
           throw new Error('Google client ID not configured');
         }
         userData = await handleGoogleAuth();
+        if(userData){
+          login(userData)
+
+        }
+        console.log(userData)
       } else {
         if (!import.meta.env.VITE_FACEBOOK_APP_ID) {
           throw new Error('Facebook app ID not configured');
@@ -87,7 +92,8 @@ export function LoginForm({
         : typeof err === 'object' && err && 'message' in err
           ? String(err.message)
           : 'Authentication failed';
-      setError(errorMessage);
+      setError("Authentication failed");
+      // setError(errorMessage);
       console.error('Social auth error:', err);
     } finally {
       setIsLoading(false);
@@ -251,7 +257,7 @@ export function LoginForm({
     try {
       if (!isRegistering){
         try {
-          const response = await axios.post(`http://localhost:3000/api/auth/login`, {
+          const response = await axios.post(`/api/auth/login`, {
             email,
             password,
             firstName,
@@ -304,7 +310,7 @@ export function LoginForm({
       if (signupStep === 'verify') {
                 // Verify code
           const code = verificationCode.join('');
-          const response = await axios.post(`http://localhost:3000/api/auth/verify-code`, {
+          const response = await axios.post(`/api/auth/verify-code`, {
             email: email,
             code: code,
             register: 1,
@@ -347,7 +353,7 @@ export function LoginForm({
             
             localStorage.setItem("userData", JSON.stringify(userData));
             const savedUserData = JSON.parse(localStorage.getItem("userData") || "{}");
-              const response = await axios.post(`http://localhost:3000/api/auth/register-user`, {
+              const response = await axios.post(`/api/auth/register-user`, {
                       data: savedUserData,
                       plan: "free",
                     });
@@ -377,7 +383,7 @@ export function LoginForm({
         }else{
           
           setMagicEmail(email);
-          const response = await axios.post(`http://localhost:3000/api/auth/register`, {
+          const response = await axios.post(`/api/auth/register`, {
             email,
             password,
             firstName,

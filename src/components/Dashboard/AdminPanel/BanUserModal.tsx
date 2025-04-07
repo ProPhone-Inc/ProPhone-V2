@@ -1,11 +1,14 @@
 import React from 'react';
+import axios from 'axios';
 import { X, Ban } from 'lucide-react';
 import { sendBanEmail } from '../../../utils/email';
 
 interface BanUserModalProps {
   user: any;
   onClose: () => void;
-  onConfirm: (reason: string) => void;
+  onConfirm: () => void;
+
+  // onConfirm: (reason: string) => void;
 }
 
 export function BanUserModal({ user, onClose, onConfirm }: BanUserModalProps) {
@@ -17,11 +20,18 @@ export function BanUserModal({ user, onClose, onConfirm }: BanUserModalProps) {
     
     setIsSubmitting(true);
     try {
+      const response = await axios.post(`/api/auth/ban-user`, {
+        email:user.email,
+        reason,
+      });
+      if(response.data ==1){
+        onConfirm();
+
+      }
       // Send ban notification email
-      await sendBanEmail(user.email, reason);
+      // await sendBanEmail(user.email, reason);
       
       // Confirm ban and trigger account deletion
-      onConfirm(reason);
     } finally {
       setIsSubmitting(false);
     }
