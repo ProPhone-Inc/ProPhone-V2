@@ -11,7 +11,8 @@
     "build": "rimraf dist && tsc -p tsconfig.server.json || true && vite build",
     "start": "NODE_ENV=production pm2 start ecosystem.config.js --no-daemon",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "build:dev": "vite build --mode development"
   },
   "dependencies": {
     "@google-cloud/local-auth": "^2.1.0",
