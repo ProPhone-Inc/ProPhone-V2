@@ -1,0 +1,51 @@
+# Authentication-related files and directories
+backend/auth/
+middleware/auth/
+src/pages/login.*
+src/pages/signup.*
+src/pages/auth/
+src/components/Auth/
+hooks/useAuth.*
+context/Auth.*
+utils/auth.*
+.env
+.env.*
+
+# Build and generated files
+dist/
+build/
+out/
+coverage/
+node_modules/
+.temp/
+.next/
+.cache/
+.vite/
+
+# Large or unnecessary files and directories
+public/vendor/
+public/libs/
+src/libs/
+src/vendor/
+src/assets/large-json/
+src/assets/mock-data/
+src/data/fixtures/
+src/data/generated/
+
+# Legacy or unused code
+src/legacy/
+src/old/
+old/
+legacy/
+
+# Test files and directories
+tests/
+__tests__/
+spec/
+*.spec.ts
+*.test.ts
+
+# Log files
+*.log
+logs/
+debug/
